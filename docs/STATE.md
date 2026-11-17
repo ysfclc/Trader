@@ -6,7 +6,7 @@ Last updated: 2026-11-17
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 0 — product definition and repository lock**
+- Status: **Phase 0 — product lock and targeted reuse audit**
 - Android source code: not yet implemented.
 - APK: not yet built.
 - Device acceptance: not yet performed.
@@ -14,34 +14,52 @@ Last updated: 2026-11-17
 
 ## Completed in this checkpoint
 - [x] Initialized the previously empty repository with a first commit.
-- [x] Added README and product-definition documents.
-- [x] Added the phased roadmap, implementation task ledger and this state file.
-- [x] Established the first pilot market as industrial tooling and machining between Türkiye and Poland/EU, without hard-coding the product category into the architecture.
+- [x] Added README and locked product/architecture/data/operating documents.
+- [x] Added the phased roadmap, implementation task ledger and state ledger.
+- [x] Established industrial tooling and machining between Türkiye and Poland/EU as the first pilot, without hard-coding that category into the product architecture.
+- [x] Inspected source files, tests, project status and CI metadata in Outbound Sourcer, VaultOS, BusyBee, Memo-2 and selected EBO files.
+- [x] Added `docs/REUSE_AUDIT.md` with exact source paths, reusable patterns, known limitations, build-history observations and the no-fork/no-dependency decision.
+- [x] Verified the current Trader tree contains the README and all linked baseline documents.
 
-## Not yet verified
-- [ ] Full document consistency and link audit.
-- [ ] Android build and signing pipeline.
-- [ ] Local database and capture.
+## Reuse audit conclusion
+- Outbound Sourcer: adapt source registry/schema, streaming pipeline, incremental persistence, cancellation and truthful warnings. Do not reuse its business-directory lead score or generic-company schema.
+- VaultOS: adapt Compose/Room/local-first and Android import concepts. Do not copy its database, backup code, signing identity or unencrypted backup behavior as-is. Its three latest observed GitHub main-branch Android runs failed; device acceptance remains open in its own ledger.
+- BusyBee: adapt raw-evidence, transactional import, deterministic fingerprinting and unknown-value handling. Do not reuse driver-specific storage or claim its notification listener is general app automation. Its latest inspected Android workflow on 2026-11-06 succeeded in CI.
+- Memo-2: adapt approval-hash, crash-recovery, bounded-context and redaction concepts with Trader-owned tests. It is not a runtime or source dependency. Its own status says browser/app automation and on-device LiteRT-LM inference are not implemented.
+- EBO: retain signal-first and explicit-gate principles only. Its own documents record enforcement gaps; do not port its sequence/executor path.
+
+The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
+
+## Not yet verified in Trader
+- [ ] Final Android/Gradle/Kotlin version pin and clean reproducible build.
+- [ ] Local Room database, migrations and encrypted backup/restore.
+- [ ] Android share/manual capture and offline retrieval.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
 - [ ] Communication adapters and outreach.
 - [ ] Any real buyer/supplier match, reply, deal or revenue.
 
-## Known constraints
-- Memo is not a dependency. Trader must own its runtime, data and recovery behavior.
-- EBO paid AI credits are not a core dependency.
-- Unipile is not a core dependency; channel alternatives must be evaluated individually.
-- Free-first means core capture, storage, qualification, matching and drafting remain usable without paid API credits. It does not mean unlimited free scraping, messaging or third-party infrastructure.
-- External contact and commercial commitments require explicit user approval.
-- No claims of live customer discovery or outreach until those actions have actually happened and their evidence is recorded.
+## Locked constraints
+- Memo is not a dependency; Trader owns its runtime, workflow, storage and recovery behavior.
+- EBO, n8n, Unipile, Apollo, hosted CRM and paid AI are not core dependencies.
+- Core capture, storage, qualification, matching and drafting must work without paid API credits.
+- Buyer requirements and supplier offers remain distinct domain objects.
+- Every external fact has source provenance, capture time and verification state.
+- External communication and commercial commitments require explicit user approval.
+- Do not bypass authentication, CAPTCHA, paywalls, bot protection or access controls.
+- Unknown technical/commercial values are not treated as passing requirements or zero-cost values.
+- Preserve every bug, regression and user requirement in the task ledger until verified resolved.
 
-## Next checkpoint
-1. Audit the locked documents for contradictions and missing links.
-2. Inspect reusable code from the user's existing GitHub projects before choosing the Android stack.
-3. Create the smallest useful Android vertical slice: capture a buyer need or supplier offer, preserve its source/evidence, and retrieve it offline.
-4. Build and test it on the user's Android device before expanding discovery automation.
+## Next implementation checkpoint
+1. Pin a clean Android toolchain for Trader, based on compatible tested versions rather than copying any other app wholesale.
+2. Create the first standalone Android foundation and CI workflow with a new application ID and CI-only signing secrets.
+3. Implement one vertical slice: share/manual capture → evidence persistence → offline retrieval → process-death recovery.
+4. Build and install on Redmi Note 12 Pro 5G before adding large-scale discovery or app automation.
 
 ## Change log
 ### 2026-11-17 — Initial repository lock
 Repository initialized and product definition committed. No application implementation claimed.
+
+### 2026-11-17 — Targeted repository reuse audit
+Inspected relevant implementation files and test coverage across five existing codebases. Added `docs/REUSE_AUDIT.md`. Decision: Trader is built independently, adapting patterns only and retaining no required dependency on existing apps. Android source and APK still do not exist.
