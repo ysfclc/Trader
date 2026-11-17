@@ -64,3 +64,11 @@ dependencies {
     androidTestImplementation("androidx.room:room-testing:2.8.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
 }
+
+
+tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
