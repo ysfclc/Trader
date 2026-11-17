@@ -99,7 +99,7 @@ private fun InboxContent(problems: List<ProblemEntity>, onOpen: (ProblemEntity) 
                 Text(stringResource(R.string.your_workspace), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
                 Text(stringResource(R.string.problem_inbox), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             }
-            Text("${problems.size} captured", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.problems_captured, problems.size), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
         }
         Spacer(Modifier.height(18.dp))
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -150,7 +150,7 @@ private fun ProblemCard(problem: ProblemEntity, onClick: () -> Unit) {
                 Text(problem.description, maxLines = 2, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.height(12.dp))
-            Text("Updated ${formatDate(problem.updatedAt)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.updated_at, formatDate(problem.updatedAt)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -275,7 +275,7 @@ private fun CreateProblemDialog(onDismiss: () -> Unit, onCreate: (String, String
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.what_needs_solving)) }, singleLine = true)
-                OutlinedTextField(description, { description = it }, label = { Text("Context / what's happening") }, minLines = 2)
+                OutlinedTextField(description, { description = it }, label = { Text(stringResource(R.string.context_prompt)) }, minLines = 2)
                 OutlinedTextField(outcome, { outcome = it }, label = { Text(stringResource(R.string.good_result_prompt)) }, minLines = 2)
                 OutlinedTextField(constraints, { constraints = it }, label = { Text(stringResource(R.string.constraints_optional)) }, minLines = 1)
                 Text(stringResource(R.string.classify_later), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
