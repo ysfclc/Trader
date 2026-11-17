@@ -111,4 +111,5 @@
     <string name="workflow_step_review_title">Flag step for review</string>
     <string name="workflow_step_review_hint">Describe what is uncertain or needs checking.</string>
 
+    <string name="workflow_skip_step">Skip this unavailable step</string>
 </resources>
