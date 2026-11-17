@@ -1,6 +1,6 @@
 # Capability Registry
 
-**Status:** Implemented in the domain layer; CI verification pending.  
+**Status:** Merged in PR #4; CI runs 129 and 130 passed all 30 unit/Robolectric tests.  
 **Purpose:** Make Trader's available operations, permission requirements and side-effect policies explicit. A planned capability is not automatically an executable capability.
 
 ## Capability contract
@@ -62,3 +62,8 @@ This prevents a workflow definition from claiming that a browser submit, message
 - Permission discovery and runtime permission checks still need concrete Android adapters.
 - Each executable adapter must provide typed inputs/outputs, cancellation, timeouts, idempotency, evidence capture and a verifiable postcondition.
 - External sends/submits must bind approval to the exact recipient, channel and payload hash immediately before execution.
+
+
+## Merge and verification record
+
+PR #4 merged at `959eb52f677ccdeae2548b76c096e61a799ff135`. CI runs 129 and 130 passed the full Android pipeline. The capability registry tests verify unique IDs, mandatory approval for external effects, non-retryable external actions, explicit permission declarations and plan-only treatment of unknown/unimplemented capabilities.
