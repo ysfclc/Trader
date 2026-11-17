@@ -12,7 +12,7 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "problem_cases", indices = [Index("updatedAt"), Index("status")])
+@Entity(tableName = "problem_cases", indices = [Index(value = ["updatedAt"]), Index(value = ["status"])])
 data class ProblemEntity(
     @PrimaryKey val id: String,
     val title: String,
@@ -32,7 +32,7 @@ data class ProblemEntity(
 @Entity(
     tableName = "plan_steps",
     foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index("problemId"), Index(value = ["problemId", "position"], unique = true)]
+    indices = [Index(value = ["problemId"]), Index(value = ["problemId", "position"], unique = true)]
 )
 data class PlanStepEntity(
     @PrimaryKey val id: String,
@@ -50,7 +50,7 @@ data class PlanStepEntity(
 @Entity(
     tableName = "activity_events",
     foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index("problemId"), Index("occurredAt")]
+    indices = [Index(value = ["problemId"]), Index(value = ["occurredAt"])]
 )
 data class ActivityEventEntity(
     @PrimaryKey val id: String,
