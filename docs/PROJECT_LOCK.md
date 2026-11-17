@@ -29,6 +29,15 @@ The general loop is:
 
 **Capture the situation → understand the desired outcome and constraints → gather evidence and context → discover options, people, tools or resources → create a justified plan → execute bounded steps → verify the result → retain useful learning.**
 
+The general-purpose capabilities required to make this real are:
+- **Universal capture:** receive a problem or context from Android share actions, URLs, visible browser sessions, supported installed apps, files, screenshots, voice and direct input.
+- **Research and context gathering:** search, inspect and connect relevant sources while preserving where each fact came from.
+- **Prompt and context feeding:** assemble a bounded, evidence-linked context for a selected local or external model; let the operator inspect and edit instructions and inputs. AI providers remain replaceable and optional.
+- **Workflow orchestration:** combine deterministic operations, model calls, browser/app steps, human tasks and approval gates into durable workflows that can pause, resume, recover and report failures.
+- **Browser and app automation:** use visible, permissioned sessions with clear scope, user takeover, stop controls and verified postconditions. A capability must never be implied where Android or an app does not expose it.
+- **Continuity:** keep the problem, decisions, evidence, files, prompts, tasks and execution history connected so work does not restart from zero every time.
+- **Outcome verification:** distinguish a suggested answer, a generated draft, an attempted action and a confirmed result.
+
 The system must distinguish:
 - a **problem** the operator wants to resolve;
 - a **goal** or desired outcome;
