@@ -1,6 +1,6 @@
 # Trader Roadmap
 
-This roadmap is ordered by commercial proof and reliability, not by feature count. Each phase must leave a usable, testable result.
+This roadmap is ordered by real problem outcomes, evidence and execution reliability, not feature count. Commercial proof is one important outcome, not the only acceptance target. Each phase must leave a usable, testable result.
 
 ## Phase 0 — Product lock
 - [x] Establish Trader as an independent Android-first product.
@@ -11,7 +11,7 @@ This roadmap is ordered by commercial proof and reliability, not by feature coun
 
 Exit gate: product vision, architecture, data model and operating rules agree.
 
-## Phase 1 — Local field notebook
+## Phase 1 — Local problem workspace
 - [ ] Create Android project, build configuration and repeatable signed debug/release APK workflow.
 - [ ] Implement local database, migrations, backup/export and import.
 - [ ] Add universal Problem Inbox for URLs, shared text, notes, screenshots, voice, documents and manually described problems/goals.
@@ -21,7 +21,7 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 - [ ] Implement goals, plans, plan steps, capability requirements and verifiable completion criteria.
 - [ ] Add search, filters, deduplication and an audit trail.
 
-Exit gate: capture and manage real leads offline; no account, paid AI or cloud required.
+Exit gate: capture and manage a real non-commercial problem as well as a commercial opportunity, preserve its original context and evidence, and retrieve it offline; no account, paid AI or cloud required.
 
 ## Phase 2 — Context, discovery and qualification
 - [ ] Build a capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; every capability declares limits and postconditions.
@@ -33,7 +33,7 @@ Exit gate: capture and manage real leads offline; no account, paid AI or cloud r
 - [ ] Add optional local AI adapter for translation, extraction, classification and drafting.
 - [ ] Build qualification checklists and evidence-backed buyer/supplier profiles.
 
-Exit gate: a user can capture and qualify a buyer or supplier with traceable evidence.
+Exit gate: a user can investigate a real ProblemCase, distinguish facts from unknowns, and produce evidence-backed candidate paths. A trade case must also be capable of buyer/supplier qualification with traceable evidence.
 
 ## Phase 3 — Matching and commercial workflow
 - [ ] Match buyer requirements to supplier capabilities with explainable scoring.
