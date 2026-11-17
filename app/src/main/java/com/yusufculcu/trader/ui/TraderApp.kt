@@ -140,7 +140,7 @@ private fun ProblemCard(problem: ProblemEntity, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(problem.category.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.2.sp)
+                Text(stringResource(when (problem.category) { "General" -> R.string.category_general; "Captured" -> R.string.category_captured; else -> R.string.category_other }), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.2.sp)
                 StatusPill(ProblemStatus.from(problem.status))
             }
             Spacer(Modifier.height(8.dp))
@@ -178,7 +178,7 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
         contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
     ) {
         item {
-            Text(problem.category.uppercase(), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelMedium, letterSpacing = 1.5.sp)
+            Text(stringResource(when (problem.category) { "General" -> R.string.category_general; "Captured" -> R.string.category_captured; else -> R.string.category_other }), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelMedium, letterSpacing = 1.5.sp)
             Text(problem.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             StatusPill(ProblemStatus.from(problem.status))
         }
