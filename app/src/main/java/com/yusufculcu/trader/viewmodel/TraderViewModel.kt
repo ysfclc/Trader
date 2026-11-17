@@ -117,6 +117,10 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
         viewModelScope.launch { repository.transitionWorkflowStep(stepId, WorkflowStepStatus.COMPLETED, details = "User confirmed step completion") }
     }
 
+    fun skipWorkflowStep(stepId: String) {
+        viewModelScope.launch { repository.transitionWorkflowStep(stepId, WorkflowStepStatus.SKIPPED, details = "User skipped an unavailable or unnecessary step") }
+    }
+
     fun flagWorkflowStepForReview(stepId: String, note: String) {
         viewModelScope.launch {
             repository.transitionWorkflowStep(stepId, WorkflowStepStatus.NEEDS_REVIEW, errorMessage = note, details = note)
