@@ -133,7 +133,9 @@ class WorkflowPersistenceTest {
         assertEquals(WorkflowRunStatus.NEEDS_REVIEW.name, database.workflowRunDao().getById(runId)?.status)
 
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY, reviewResolved = true))
-        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.PENDING, reviewResolved = true))
+        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.PENDING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.PENDING, reviewResolved = true))
+        assertEquals(WorkflowStepStatus.PENDING.name, database.workflowStepDao().getById(step.id)?.status)
     }
 
     @Test
