@@ -14,15 +14,15 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T1 — Android shell and local data
 
-- [ ] T1.0 Implement universal ProblemCase and Goal models: original request, desired outcome, constraints, urgency, uncertainty, evidence links and closure criteria.
+- [x] T1.0 Implement initial ProblemCase model: original request, desired outcome, constraints, category, source metadata, status and timestamps. A separate Goal entity, urgency, uncertainty and evidence records remain open.
 - [ ] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
-- [ ] T1.0b Add durable plans/plan steps with dependencies, required capabilities, approval requirements and verifiable postconditions.
-- [ ] T1.1 Create native Android project with a clean, premium, responsive mobile UI and a unique application ID.
-- [ ] T1.2 Establish navigation around Inbox, Discover, Matches, Contacts and Activity; keep trade/service/career types separate.
-- [ ] T1.3 Add Room database, exported schemas, migrations and migration tests.
+- [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
+- [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID and first dark mobile UI. Device visual acceptance remains open.
+- [ ] T1.2 Expand navigation beyond the first Inbox and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workflows.
+- [ ] T1.3 Room v1 entities/DAOs and schema export are implemented; migration strategy and migration tests remain open.
 - [ ] T1.4 Add encrypted local backup/export and integrity-verified restore.
-- [ ] T1.5 Add universal capture: Android share URL/text, quick note, manual entry and document import.
-- [ ] T1.6 Store original source evidence, timestamps, language, parser version and verification state before enrichment.
+- [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
+- [ ] T1.6 Initial capture preserves original text/URL, input kind, capture timestamps and source URI. Evidence entities, language metadata, parser version and verification states remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
 - [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
 
