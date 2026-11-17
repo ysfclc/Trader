@@ -351,8 +351,8 @@ class TraderRepository(private val database: TraderDatabase) {
             status = target.name,
             attemptCount = if (from == WorkflowStepStatus.PENDING && target == WorkflowStepStatus.RUNNING) step.attemptCount + 1 else step.attemptCount,
             lastError = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) errorMessage.takeIf { it.isNotBlank() } else null,
-            approvedPayloadHash = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedPayloadHash,
-            approvedAt = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedAt,
+            approvedPayloadHash = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW || target == WorkflowStepStatus.WAITING_FOR_APPROVAL) null else step.approvedPayloadHash,
+            approvedAt = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW || target == WorkflowStepStatus.WAITING_FOR_APPROVAL) null else step.approvedAt,
             updatedAt = now,
             startedAt = if (target == WorkflowStepStatus.RUNNING && step.startedAt == null) now else step.startedAt,
             finishedAt = if (target == WorkflowStepStatus.COMPLETED || target == WorkflowStepStatus.SKIPPED || target == WorkflowStepStatus.CANCELLED) now else null
