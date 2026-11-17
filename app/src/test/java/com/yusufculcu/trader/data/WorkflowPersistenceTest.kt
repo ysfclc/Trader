@@ -190,15 +190,18 @@ class WorkflowPersistenceTest {
         val runId = repository.createWorkflow(
             problemId,
             "External action",
-            listOf(WorkflowStepDraft("External action", capabilityId = "browser.submit")),
+            listOf(WorkflowStepDraft("External action", capabilityId = "manual.task", retrySafe = false)),
             "workflow-request-nonretryable-failure"
         )!!
         val step = database.workflowStepDao().getForRun(runId).single()
 
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
-        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
-        assertEquals(WorkflowRunStatus.READY.name, database.workflowRunDao().getById(runId)?.status)
-        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.FAILED))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.FAILED, errorMessage = "Manual step failed"))
+        assertEquals(WorkflowRunStatus.FAILED.name, database.workflowRunDao().getById(runId)?.status)
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY, retryAuthorized = true))
+        assertEquals(WorkflowRunStatus.FAILED.name, database.workflowRunDao().getById(runId)?.status)
     }
 
     @Test
