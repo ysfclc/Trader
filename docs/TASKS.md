@@ -14,6 +14,9 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T1 — Android shell and local data
 
+- [ ] T1.0 Implement universal ProblemCase and Goal models: original request, desired outcome, constraints, urgency, uncertainty, evidence links and closure criteria.
+- [ ] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
+- [ ] T1.0b Add durable plans/plan steps with dependencies, required capabilities, approval requirements and verifiable postconditions.
 - [ ] T1.1 Create native Android project with a clean, premium, responsive mobile UI and a unique application ID.
 - [ ] T1.2 Establish navigation around Inbox, Discover, Matches, Contacts and Activity; keep trade/service/career types separate.
 - [ ] T1.3 Add Room database, exported schemas, migrations and migration tests.
@@ -35,6 +38,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T3 — Discovery and browser/app automation
 
+- [ ] T3.0 Define a capability registry for every tool/automation operation, including inputs/outputs, availability, permissions, side effects, cost, limits and postconditions.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
@@ -71,6 +75,10 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T6.4 Run approved individualized outreach and record actual outcomes.
 - [ ] T6.5 Verify capture → qualify → match → draft → approve → contact → follow-up on device.
 - [ ] T6.6 Record APK hash, source commit, test evidence, CI run and known issues.
+
+## Product-scope guardrail
+
+Do not treat trade, services and careers as an exhaustive list of supported problems. Every user problem must have a universal ProblemCase path, even when no specialized workflow exists yet. Do not promise a solution when required data, permissions, tools, professional judgment or external decisions are unavailable.
 
 ## Current execution rule
 
