@@ -122,3 +122,13 @@ Trader's primary purpose is to help the operator move problems and goals from fr
 Trader must accept problems from outside its current specialized workflows, but it must clearly state whether it can solve, partially assist, or only organize/research a case. It cannot promise to resolve every problem or replace qualified professional judgment, external authority, money, consent or real-world action. Every automated capability must declare its permissions, limits, side effects and verifiable postconditions.
 
 **Reason:** Broad usefulness requires extensible intake and orchestration, not pretending the app has universal access or authority.
+
+
+## Decision — QRKey reuse boundaries
+
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Trader will reuse engineering principles from QRKey's product and automation repositories, not its code or runtime. Adopt idempotent side-effect keys, append-only event history, deterministic workflow routing, bounded context loading, pre-flight state checks, approval gates, cancellation, timeouts and explicit recovery states. Do not import the Node/Claude development-agent pipeline, web product stack or treat web QA automation as Android app automation.
+
+**Reason:** QRKey's most useful automation system is designed to orchestrate software-development agents and repository tasks. It is not a consumer mobile automation engine. Trader needs an independent Android runtime with explicit capability contracts and user-visible execution.
