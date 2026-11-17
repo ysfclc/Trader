@@ -38,7 +38,7 @@ Trader is not a promise that software can solve every human problem, an open mar
 
 ## Current state
 
-**Phase 1 — first Android problem workspace in progress.** The implementation branch now contains a Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history, unit tests and Android CI. CI and real-device acceptance are still pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
+**Phase 1 — first Android problem workspace built.** The Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history and English/Turkish/Polish UI pass clean CI (unit tests, lint and debug APK assembly). The debug APK is available from the [latest successful workflow](https://github.com/ysfclc/Trader/actions/runs/44101851705). Physical-device acceptance remains pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
 
 The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
 
