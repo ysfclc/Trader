@@ -5,7 +5,9 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 ## T0 — Repository and product foundation
 
 - [x] T0.1 Establish the fresh-start ledger and canonical source of truth in `ysfclc/Trader`.
-- [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md`. Scope is targeted to Outbound Sourcer, VaultOS, BusyBee, Memo-2 and selected EBO paths, not a line-by-line audit of all 43 repositories.
+- [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
+- [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.
+- [ ] T0.7 Complete source-level audit of QRKey variants and remaining mobile/automation prototypes before deciding whether any component is reusable.
 - [ ] T0.3 Pin a compatible Android/Gradle/Kotlin/SDK toolchain for Trader and verify it with a clean CI build.
 - [ ] T0.4 Add reproducible build and signing instructions using CI secrets only; no signing material in Git.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
