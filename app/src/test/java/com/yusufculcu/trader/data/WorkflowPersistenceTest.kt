@@ -162,6 +162,30 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun waitingForApprovalRequiresFreshPayloadApprovalBeforeResume() = runBlocking {
+        val problemId = repository.createProblem("Approve a consequential step")
+        val runId = repository.createWorkflow(
+            problemId,
+            "Approval gate",
+            listOf(WorkflowStepDraft("Confirm external action", requiresApproval = true)),
+            "workflow-request-approval-resume"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.approveWorkflowStep(step.id, "Initial approval"))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.WAITING_FOR_APPROVAL))
+        assertNull(database.workflowStepDao().getById(step.id)?.approvedPayloadHash)
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING, approvalGranted = true))
+
+        assertTrue(repository.approveWorkflowStep(step.id, "Fresh approval for the waiting action"))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING, approvalGranted = true))
+        assertEquals(WorkflowStepStatus.RUNNING.name, database.workflowStepDao().getById(step.id)?.status)
+    }
+
+    @Test
     fun unimplementedExternalCapabilityIsPlannableButCannotStart() = runBlocking {
         val problemId = repository.createProblem("Prepare an external submission")
         val runId = repository.createWorkflow(
