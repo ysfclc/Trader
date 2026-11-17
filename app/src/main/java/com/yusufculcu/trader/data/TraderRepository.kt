@@ -229,6 +229,18 @@ class TraderRepository(private val database: TraderDatabase) {
         val stepStatuses = steps.map { WorkflowStepStatus.from(it.status) }
 
         if (target == WorkflowRunStatus.VERIFIED && details.isBlank()) return@withTransaction false
+        if (target == WorkflowRunStatus.RUNNING) {
+            val hasExecutableWork = steps.any { step ->
+                val stepStatus = WorkflowStepStatus.from(step.status)
+                val capabilityAvailable = CapabilityRegistry.assess(step.capabilityId).canExecute
+                capabilityAvailable && stepStatus in setOf(
+                    WorkflowStepStatus.PENDING,
+                    WorkflowStepStatus.RUNNING,
+                    WorkflowStepStatus.WAITING_FOR_APPROVAL
+                )
+            }
+            if (!hasExecutableWork) return@withTransaction false
+        }
         if (from == WorkflowRunStatus.WAITING_FOR_APPROVAL && target == WorkflowRunStatus.RUNNING) {
             val waiting = steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.WAITING_FOR_APPROVAL }
             if (waiting.isEmpty() || waiting.any {
