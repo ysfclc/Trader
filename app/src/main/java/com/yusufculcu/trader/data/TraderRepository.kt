@@ -55,7 +55,7 @@ class TraderRepository(private val database: TraderDatabase) {
         database.withTransaction {
             database.planStepDao().updateStatus(step.id, next, now)
             database.problemDao().touch(step.problemId, now)
-            addEvent(step.problemId, "plan_step_changed", if (next == "DONE") "Step completed" else "Step reopened", step.title, now)
+            addEvent(step.problemId, if (next == "DONE") "plan_step_done" else "plan_step_reopened", if (next == "DONE") "Step completed" else "Step reopened", step.title, now)
         }
     }
 
