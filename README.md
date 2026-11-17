@@ -32,12 +32,13 @@ Trader is not an open marketplace, a generic CRM, a bulk email sender or an auto
 | [Decisions](docs/DECISIONS.md) | Locked decisions and reasons |
 | [Roadmap](docs/ROADMAP.md) | Phases and acceptance gates |
 | [Task ledger](docs/TASKS.md) | Ordered implementation queue |
-| [Market and portfolio research](docs/RESEARCH/2026-11-17_MARKET_AND_PORTFOLIO.md) | First Poland–Türkiye pilot, repository reuse map, channels and prospects |
+| [Market and portfolio research](docs/RESEARCH/2026-11-17_MARKET_AND_PORTFOLIO.md) | First Poland–Türkiye pilot, repository map, channels and prospects |
+| [Reuse audit](docs/REUSE_AUDIT.md) | Actual code inspection, reusable patterns, limitations and CI evidence |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
 
 ## Current state
 
-**Phase 0 — product definition and repository lock.** The project is documented. Android source code, APK generation, device acceptance and live channel integrations have not yet been implemented in this repository.
+**Phase 0 — product definition and targeted repository audit.** The product boundaries and reuse strategy are documented. Android source code, APK generation, device acceptance and live channel integrations have not yet been implemented in Trader.
 
 The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
 
