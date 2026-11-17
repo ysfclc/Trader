@@ -227,3 +227,8 @@ These are observations at the time of audit, not guarantees about later reposito
 ## Important audit boundary
 
 This audit inspected relevant files and recent action metadata. It did not run any source repository's test suite, build any APK or install an app on a physical device. Existing CI results are attributed to their repository and exact run dates above; they are not evidence that Trader works.
+
+
+## Expanded follow-up audit
+
+The initial pass omitted several important repositories. The follow-up audit now covers BOS, Oddo, Troy, Kovan, Zommo and Nexus, with exact findings and reuse decisions: [Additional repository audit](ADDITIONAL_REUSE_AUDIT.md).
