@@ -4,6 +4,22 @@ The model distinguishes a buyer's requirement from a supplier's offer. It does n
 
 ## Core entities
 
+### ProblemCase
+
+A user-owned problem, question, objective or situation that needs a useful outcome. This is the general entry point and must not be restricted to commercial opportunities.
+
+Store the original user statement and input references (URL, shared text, file, screenshot, voice transcript or manual note); desired outcome and completion criteria; constraints, urgency, risk/stakes and deadline; user-confirmed context, source-derived facts, inferences, assumptions and unknowns as distinct items; linked evidence, related records, candidate paths and selected workflow specialization; status and privacy/retention controls.
+
+A ProblemCase may link to a trade, service, career or future specialized record, but remains valid without any such link. It is not automatically an opportunity or a task list.
+
+### Goal
+
+A measurable or reviewable desired state associated with a ProblemCase. Store outcome statement, acceptance criteria, priority, constraints and target date if any. Success must be user-confirmed, source-confirmed or otherwise verified; generating advice or a plan is not completion.
+
+### Plan and PlanStep
+
+A proposed or selected sequence of work for a ProblemCase or opportunity. Each step records rationale, dependencies, required capability, inputs, expected postcondition, risk/side-effect level, approval requirement, current state and evidence of completion. Plans can be revised; execution history is not silently rewritten.
+
 ### Organization
 A company, manufacturer, supplier, buyer, importer, distributor, service provider, employer or other institution. Store legal/trading names separately where known, domains, country, registration identifiers when legitimately sourced, sectors, addresses, languages, status and source-linked claims.
 
@@ -87,7 +103,11 @@ A company need backed by public or user-provided evidence. Links the observed pr
 A public vacancy or hiring request. Stores role, employer, location, work model, compensation if published, requirements, deadlines, source and last checked. Fit analysis references actual user evidence and explicitly records gaps.
 
 ### Task
-A human or system task tied to an organization, requirement, offer, match, communication, service need, job or deal. Has due date, priority, owner, status and source event.
+A human or system task tied to a ProblemCase, Goal, PlanStep, organization, requirement, offer, match, communication, service need, job or deal. Has due date, priority, owner, status and source event.
+
+### Capability
+
+A registered operation Trader can perform through internal logic or an adapter. It declares input/output schema, preconditions, permissions, availability, cost, limits, side-effect classification, approval policy and expected postconditions. A capability declaration is not proof that a provider or device supports it; availability and execution results must be checked.
 
 ### Event
 Append-only record of material state changes. Includes event ID, timestamp, actor, entity type/ID, action, prior state, new state, evidence IDs and correlation/run ID. Corrections append events rather than erasing history.
