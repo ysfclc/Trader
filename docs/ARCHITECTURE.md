@@ -41,11 +41,17 @@ The first device target is Redmi Note 12 Pro 5G, but core logic must remain test
 
 ## 3. Layers and modules
 
+### problem
+A user-owned ProblemCase/Goal intake and resolution model. It preserves the original request, desired outcome, constraints, stakes, relevant context, unresolved questions, evidence, candidate paths, selected plan and verified outcome. It can route a case to a specialized workflow (trade, services, careers or a future domain) without forcing every case into one of those types.
+
+### capabilities
+A Trader-owned registry of available capabilities: source discovery, browser sessions, file parsing, app handoff, repository operations, deterministic analysis, optional AI, communication and other tool adapters. Each capability declares inputs, outputs, permissions, cost/availability, limits, side effects, preconditions and verifiable postconditions. A plan may only invoke capabilities actually registered and available.
+
 ### app
 Compose surfaces, navigation, permission explanations, user-triggered workflows, browser session UI and lifecycle integration.
 
 ### domain
-Entities and invariants: Organization, Person, Product, BuyerRequirement, SupplierOffer, ServiceNeed, JobOpening, Source, Evidence, Match, Quote, Deal, Communication, ConsentBasis, Task and Event.
+Entities and invariants: ProblemCase, Goal, Plan, PlanStep, Capability, Organization, Person, Product, BuyerRequirement, SupplierOffer, ServiceNeed, JobOpening, Source, Evidence, Match, Quote, Deal, Communication, ConsentBasis, Task and Event.
 
 ### data
 Room entities/DAOs, repository implementations, migrations, encrypted local secrets, backup/restore, import/export and database integrity checks.
@@ -157,7 +163,23 @@ Trader must use independent channel adapters:
 
 The UI must show per-channel capability truthfully. "Connected" does not mean every operation is available. Read, send, sync history and reply ingestion are separate capabilities.
 
-## 9. Data and event flow
+## 9. General problem-solving workflow
+
+The problem workflow is not an AI chat that merely returns advice. It is a durable, inspectable process:
+
+1. Capture the user's problem, goal or situation in its original form.
+2. Clarify the desired outcome, constraints, urgency, risk and missing information.
+3. Gather relevant sources, files, app-provided information and user-approved context.
+4. Separate source facts, user statements, inferences, assumptions and unknowns.
+5. Identify candidate solutions, people, services, products, jobs, projects or tools.
+6. Build a plan from capabilities that are actually available, with dependencies and expected postconditions.
+7. Execute reversible/read-only steps where authorized; pause for approval before consequential side effects.
+8. Verify each important result and preserve failures, partial completion and next steps.
+9. Let the user close, revise or resume the case; retain only useful learning under user-controlled privacy and retention settings.
+
+A problem may be handled manually, through a specialized workflow or with tool automation. A plan must expose what Trader can do itself, what requires the user, what requires an external service and what is currently unsupported. Never manufacture a solution path just to make a case appear actionable.
+
+## 10. Data and event flow
 
 All meaningful activity is recorded as events:
 - source discovered;
@@ -176,7 +198,7 @@ All meaningful activity is recorded as events:
 
 Events are append-only. Current UI state is a derived projection and can be rebuilt. Corrections append a new event referencing the superseded fact; they do not silently rewrite audit history.
 
-## 10. Reliability and recovery
+## 11. Reliability and recovery
 
 - Every background job has a durable ID, state, timestamps, source, progress counters and warnings.
 - Work is committed in bounded units; cancellation is honored between units.
@@ -188,13 +210,13 @@ Events are append-only. Current UI state is a derived projection and can be rebu
 - App process death resumes read-only work safely; side-effecting actions require renewed verification/approval.
 - Database migration tests, backup round-trips and corruption recovery are release gates.
 
-## 11. Network and hosting
+## 12. Network and hosting
 
 The initial workflow should not require a backend. Use local persistence and user-triggered network access.
 
 A backend may be introduced only for a specific evidenced need such as shared multi-device sync, scheduled source monitoring, team use or secure webhook receipt. Before doing so, document provider cost, data residency, encryption, backup, authentication, retention, abuse controls and exit/migration path.
 
-## 12. Security
+## 13. Security
 
 - Secrets and OAuth tokens are kept outside ordinary logs and source records.
 - Credentials are never inserted into AI prompts or screenshots.
