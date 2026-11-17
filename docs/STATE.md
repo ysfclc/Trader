@@ -85,9 +85,9 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Merge commit: `0a6dd7ca3fe4ec072058523cae07af22f940424a`
 - Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd` (same application source included in the merge)
 - Successful push CI run: `44102991766` (run 74)
-- Successful pull-request CI run: `44103004289` (run 75)\n- Successful workflow lifecycle branch CI run: `44106532286` (run 83)
+- Successful pull-request CI run: `44103004289` (run 75)\n- Successful workflow lifecycle branch CI run: `44106902964` (run 93)
 - Push run 74 artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01).
-- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.\n- Workflow lifecycle run 83 artifact ID: `14339147875` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `8946ac1fdf8305942495f4990b143b00cd24c0d2e8b0fe6b70a2bbb974400ede`.
+- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.\n- Workflow lifecycle run 93 artifact ID: `14339431799` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`.
 - APK: `app-debug.apk`, 18,820,225 bytes
 - APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
 - Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
@@ -139,9 +139,9 @@ PR #1 was marked ready and squash-merged to `main` at `0a6dd7ca3fe4ec072058523ca
 
 Completed a targeted source-level audit of all ten identified QRKey repositories. QRKey 2 contributes useful idempotency, transactional side-effect, append-only event and evidence patterns. QRKey's developer automation contributes deterministic workflow routing, bounded context loading, pre-flight state checks, approval gates, timeouts, locking and recovery lessons. None provides a reusable native Android browser/app automation runtime. No QRKey code or runtime dependency is being copied.
 
-Added a pure Kotlin workflow run/step state machine and JVM tests on `build/workflow-lifecycle-and-qrkey-audit`. The state contract distinguishes approval, safe retry, manual review and outcome verification. It does not yet persist workflow runs, execute capabilities or claim that a workflow has been completed. CI verification is pending.
+Added a pure Kotlin workflow run/step state machine and JVM tests on `build/workflow-lifecycle-and-qrkey-audit`. The state contract distinguishes approval, safe retry, manual review and outcome verification. GitHub Actions run 93 passed the full Android CI pipeline. Workflow runs are not yet persisted, capabilities are not yet executed, and no workflow completion is claimed.
 
 
 ### 2026-11-17 — Workflow lifecycle CI verified
 
-GitHub Actions run 83 (`44106532286`) passed the complete Android pipeline on `build/workflow-lifecycle-and-qrkey-audit`: JVM unit tests (including the new workflow rules), lint, debug APK assembly, APK signature verification and package identity assertion. Artifact `14339147875` was uploaded. This verifies compilation and CI tests, not physical-device behavior or durable workflow execution.
+GitHub Actions run 93 (`44106902964`) passed the complete Android pipeline on `build/workflow-lifecycle-and-qrkey-audit`: JVM unit tests (including the new workflow rules), lint, debug APK assembly, APK signature verification and package identity assertion. Artifact `14339431799` was uploaded (GitHub digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`). This verifies compilation and CI tests, not physical-device behavior or durable workflow execution.
