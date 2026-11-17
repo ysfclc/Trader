@@ -69,6 +69,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T6 — Pilot and verification
 
+- [ ] T6.0 Verify one non-commercial ProblemCase end-to-end: capture → context/evidence → plan → supported actions → postcondition verification → user-confirmed closure.
+- [ ] T6.0a Verify pause, resume, cancellation and process-death recovery for a multi-step workflow, including truthful partial/failed states.
 - [ ] T6.1 Start with industrial tooling and machining between Türkiye and Poland/EU.
 - [ ] T6.2 Build manually verified buyer and supplier records from live, cited evidence.
 - [ ] T6.3 Validate one real buyer requirement against supplier technical evidence.
