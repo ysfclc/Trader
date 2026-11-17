@@ -69,8 +69,10 @@ interface ProblemDao {
     fun observeById(id: String): Flow<ProblemEntity?>
     @Query("SELECT * FROM problem_cases WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ProblemEntity?
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(problem: ProblemEntity)
+    @Query("UPDATE problem_cases SET updatedAt = :updatedAt WHERE id = :id")
+    suspend fun touch(id: String, updatedAt: Long)
     @Query("UPDATE problem_cases SET status = :status, outcomeNote = :note, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateStatus(id: String, status: String, note: String, updatedAt: Long)
     @Query("SELECT COUNT(*) FROM problem_cases")
