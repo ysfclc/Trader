@@ -1,18 +1,16 @@
 # Trader
 
-**Find demand. Find supply. Make the connection. Turn it into a deal.**
+**Bring a problem. Find a path. Do the work. Verify the result.**
 
-Trader is an Android-first, local-first commercial discovery and execution workspace. It helps one operator find people and companies that want to buy something, find manufacturers and suppliers that can provide it, establish whether the two sides genuinely fit, and manage an authorized commercial introduction.
+Trader is an Android-first, local-first personal problem-solving and opportunity-execution system. Its purpose is broader than trading: help the operator understand problems, discover useful information and people, connect needs with available skills or resources, plan work, use tools and automations, and follow through until there is a verifiable result.
 
-It also supports two related opportunity lanes:
-- **Services:** find businesses with a visible operational problem that can be solved through software, automation, data or implementation services.
-- **Careers:** find relevant jobs and hiring contacts, assess fit honestly, prepare applications and track follow-up.
+Trade, services and careers are initial specialized workflows, not the limit of the problems Trader may accept. A general problem inbox must also support practical, technical, administrative, research and project problems that do not fit a commercial pipeline.
 
-Trader is not an open marketplace, a generic CRM, a bulk email sender or an autonomous agent with permission to act on the user's behalf.
+Trader is not a promise that software can solve every human problem, an open marketplace, a generic CRM, a bulk sender or an autonomous agent with unrestricted authority.
 
 ## Product laws
 
-1. **The commercial outcome comes first.** A crawler, dashboard or AI answer is not a successful outcome. A verified buyer need, qualified supplier, credible introduction, response or commercial next step is.
+1. **A real problem and its outcome come first.** A crawler, dashboard, AI answer or task count is not success. Trader must help move a clearly stated problem toward a verified outcome, whether commercial, professional, technical or personal/administrative.
 2. **Trader owns its own runtime and data.** It does not depend on Memo, EBO, Unipile, n8n, a paid model, a paid scraping vendor or a hosted CRM.
 3. **Evidence before claims.** Every external fact has a source, capture time and verification state. Unknown is not true.
 4. **AI proposes; deterministic code and the user decide.** AI may extract, translate, classify, match and draft. It cannot invent evidence, approve a match, claim representation or send a consequential message on its own.
@@ -25,7 +23,7 @@ Trader is not an open marketplace, a generic CRM, a bulk email sender or an auto
 
 | Document | Purpose |
 |---|---|
-| [Project lock](docs/PROJECT_LOCK.md) | Canonical product vision, target user, scope and non-goals |
+| [Project lock](docs/PROJECT_LOCK.md) | Canonical problem-solving vision, opportunity workflows, scope and non-goals |
 | [Architecture](docs/ARCHITECTURE.md) | Independent Android runtime, discovery, automation, AI and channel boundaries |
 | [Data model](docs/DATA_MODEL.md) | Buyer needs, supplier offers, organizations, evidence, matches and deals |
 | [Operating rules](docs/OPERATING_RULES.md) | Safety, quality, privacy, approval, provenance and recovery laws |
