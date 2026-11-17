@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (first Android CI build verified)
+Last updated: 2026-11-17 (APK signature and package identity verified)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -19,8 +19,9 @@ Last updated: 2026-11-17 (first Android CI build verified)
 - [x] Added system-locale English, Turkish and Polish UI strings and localized activity labels.
 - [x] Added pinned Gradle 8.13 wrapper and checksum, plus `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
 - [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
-- [x] Clean CI run passed: tests, lint and debug APK assembly; artifact package uploaded successfully.
-- [x] Downloaded the APK artifact and verified it is a valid Android package archive containing DEX and resources; recorded SHA-256 below.
+- [x] Clean CI run passed: unit tests, lint, debug APK assembly, APK signature verification and package identity assertion; artifact uploaded successfully.
+- [x] Downloaded the latest APK artifact, verified the package archive and recorded its SHA-256 below.
+- [x] CI ran apksigner verification and asserted the exact debug package ID/version before upload.
 - [x] Localized the complete first-slice UI, category labels, statuses and activity event labels for English, Turkish and Polish.
 - [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
@@ -79,23 +80,21 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 
 ## Verified build record
 - Source branch: `build/problem-core-android`
-- Source commit used for the APK: `7a1acf0abd4f0bbac525b7f3566fa1c49af16840`
-- Successful push CI run: `44101836481` (run 65)
-- Successful pull-request CI run: `44101851705` (run 66)
-- Artifact ID: `14336942344` (`trader-debug-apk`, expires 2026-12-01)
+- Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd`
+- Successful push CI run: `44102991766` (run 74)
+- Successful pull-request CI run: `44103004289` (run 75)
+- Artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01)
 - APK: `app-debug.apk`, 18,820,225 bytes
-- APK SHA-256: `da19aa0aec33aced27801504f1480c48336a4b962978d41df24e0ec2c94c1db6`
-- Package ID: `com.yusufculcu.trader.debug`; version `0.1.0` (debug build)
-- CI tasks passed: `testDebugUnitTest`, `assembleDebug`, `lintDebug`
-- Signature verification is being added as an explicit CI gate in the next workflow revision; the downloaded artifact came from AGP's debug build.
+- APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
+- Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
+- CI tasks passed: `testDebugUnitTest`, `assembleDebug`, `lintDebug`, `apksigner verify` and exact `aapt` package/version assertion.
 - Device installation, launch, share-intent behavior and process-death persistence are not yet verified.
 
 ## Next implementation checkpoint
-1. Add explicit APK signature/package-identity verification to CI.
-2. Install and exercise this APK on the Redmi Note 12 Pro 5G; verify create/share/reopen/plan/status flows and process-death persistence.
-3. Fix issues found on-device before extending capture to files/screenshots and adding the capability registry.
-4. Implement durable workflow state, pause/resume/cancellation and evidence records.
-5. Add browser session and bounded app handoff as independently testable capabilities; only then layer optional AI/prompt-context adapters.
+1. Install and exercise this APK on the Redmi Note 12 Pro 5G; verify create/share/reopen/plan/status flows and process-death persistence.
+2. Fix issues found on-device before extending capture to files/screenshots and adding the capability registry.
+3. Implement durable workflow state, pause/resume/cancellation and evidence records.
+4. Add browser session and bounded app handoff as independently testable capabilities; only then layer optional AI/prompt-context adapters.
 
 ## Change log
 ### 2026-11-17 — Initial repository lock
@@ -122,3 +121,7 @@ The first wrapper-based CI attempt exposed that the initially selected wrapper J
 
 ### 2026-11-17 — First Android CI build verified
 The first local-first Android vertical slice compiled, passed JVM unit tests and lint, and produced a downloadable debug APK through GitHub Actions. The artifact was downloaded and inspected; SHA-256, source commit and CI run IDs are recorded above. A lint failure in the initial attempt was corrected by placing the API 27 navigation-bar theme attribute in `values-v27`. The physical-device acceptance gate remains open.
+
+
+### 2026-11-17 — APK signature and package identity verified
+Added explicit CI gates using apksigner and aapt. Both push run 74 and pull-request run 75 passed, including unit tests, lint, APK build, signature verification and the exact debug application ID/version assertion. Downloaded the latest artifact and updated its SHA-256 record above. Physical-device acceptance remains open.
