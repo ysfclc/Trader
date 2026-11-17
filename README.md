@@ -33,7 +33,8 @@ Trader is not an open marketplace, a generic CRM, a bulk email sender or an auto
 | [Roadmap](docs/ROADMAP.md) | Phases and acceptance gates |
 | [Task ledger](docs/TASKS.md) | Ordered implementation queue |
 | [Market and portfolio research](docs/RESEARCH/2026-11-17_MARKET_AND_PORTFOLIO.md) | First Poland–Türkiye pilot, repository map, channels and prospects |
-| [Reuse audit](docs/REUSE_AUDIT.md) | Actual code inspection, reusable patterns, limitations and CI evidence |
+| [Reuse audit](docs/REUSE_AUDIT.md) | Initial code inspection across discovery, Android and automation references |
+| [Additional reuse audit](docs/ADDITIONAL_REUSE_AUDIT.md) | BOS, Oddo, Troy, Kovan, Zommo, Nexus and remaining repository triage |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
 
 ## Current state
