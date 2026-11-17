@@ -19,7 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.yusufculcu.trader.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yusufculcu.trader.data.PlanStepEntity
@@ -48,8 +50,8 @@ fun TraderApp(viewModel: TraderViewModel) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(if (selected != null) "Problem" else "TRADER", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                        if (selected == null) Text("A workspace for getting things done", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (selected != null) stringResource(R.string.problem_label) else stringResource(R.string.app_name), fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        if (selected == null) Text(stringResource(R.string.workspace_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
@@ -60,8 +62,8 @@ fun TraderApp(viewModel: TraderViewModel) {
         },
         bottomBar = {
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text("Inbox") })
-                NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text("Activity") })
+                NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
             }
         },
         floatingActionButton = {
@@ -69,7 +71,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                 onClick = { showCreate = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
-            ) { Icon(Icons.Rounded.Add, contentDescription = "Capture a problem") }
+            ) { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.capture_problem)) }
         }
     ) { padding ->
         when {
@@ -94,8 +96,8 @@ private fun InboxContent(problems: List<ProblemEntity>, onOpen: (ProblemEntity) 
         Spacer(Modifier.height(18.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
             Column {
-                Text("YOUR WORKSPACE", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
-                Text("Problem inbox", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.your_workspace), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
+                Text(stringResource(R.string.problem_inbox), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             }
             Text("${problems.size} captured", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
         }
@@ -103,16 +105,16 @@ private fun InboxContent(problems: List<ProblemEntity>, onOpen: (ProblemEntity) 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Box(Modifier.background(Brush.linearGradient(listOf(Color(0xFF1C3430), Color(0xFF172226)))).padding(18.dp)) {
                 Column {
-                    Text("START WITH THE REAL THING", color = Color(0xFF9DE7C9), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
+                    Text(stringResource(R.string.start_with_real_thing), color = Color(0xFF9DE7C9), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
                     Spacer(Modifier.height(8.dp))
-                    Text("What needs to move forward?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
+                    Text(stringResource(R.string.what_needs_to_move), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
                     Spacer(Modifier.height(5.dp))
-                    Text("Capture a problem, goal, opportunity or piece of context. Trader keeps the thread and helps you work through it.", color = Color(0xFFB9C9C4), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.capture_intro), color = Color(0xFFB9C9C4), style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
         Spacer(Modifier.height(22.dp))
-        Text("RECENT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.6.sp)
+        Text(stringResource(R.string.recent), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.6.sp)
         Spacer(Modifier.height(10.dp))
         if (problems.isEmpty()) EmptyState()
         else LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
@@ -128,8 +130,8 @@ private fun EmptyState() {
             Icon(Icons.Rounded.Inbox, null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(28.dp))
         }
         Spacer(Modifier.height(14.dp))
-        Text("Nothing captured yet", fontWeight = FontWeight.SemiBold)
-        Text("Add a problem or share something into Trader.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.nothing_captured), fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.empty_inbox_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -162,7 +164,7 @@ private fun StatusPill(status: ProblemStatus) {
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     Surface(shape = CircleShape, color = tint.copy(alpha = 0.13f)) {
-        Text(status.label, Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = tint, style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(when (status) { ProblemStatus.OPEN -> R.string.status_open; ProblemStatus.IN_PROGRESS -> R.string.status_in_progress; ProblemStatus.WAITING -> R.string.status_waiting; ProblemStatus.RESOLVED -> R.string.status_resolved; ProblemStatus.VERIFIED -> R.string.status_verified }), Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = tint, style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -180,15 +182,15 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
             Text(problem.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             StatusPill(ProblemStatus.from(problem.status))
         }
-        if (problem.description.isNotBlank()) item { DetailSection("CONTEXT", problem.description) }
-        if (problem.desiredOutcome.isNotBlank()) item { DetailSection("DESIRED OUTCOME", problem.desiredOutcome) }
-        if (problem.constraintsText.isNotBlank()) item { DetailSection("CONSTRAINTS", problem.constraintsText) }
-        if (problem.originalContent.isNotBlank()) item { DetailSection("ORIGINAL CAPTURE", problem.originalContent) }
+        if (problem.description.isNotBlank()) item { DetailSection(stringResource(R.string.context), problem.description) }
+        if (problem.desiredOutcome.isNotBlank()) item { DetailSection(stringResource(R.string.desired_outcome), problem.desiredOutcome) }
+        if (problem.constraintsText.isNotBlank()) item { DetailSection(stringResource(R.string.constraints), problem.constraintsText) }
+        if (problem.originalContent.isNotBlank()) item { DetailSection(stringResource(R.string.original_capture), problem.originalContent) }
         item {
-            Text("PLAN", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.5.sp)
-            Text("Next steps", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.plan), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.5.sp)
+            Text(stringResource(R.string.next_steps), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
         }
-        if (steps.isEmpty()) item { Text("No steps yet. Add the next concrete action.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (steps.isEmpty()) item { Text(stringResource(R.string.no_steps), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         items(steps, key = { it.id }) { step ->
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -202,7 +204,7 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = { showStep = true }) { Icon(Icons.Rounded.Add, null); Spacer(Modifier.width(5.dp)); Text("Add step") }
+                Button(onClick = { showStep = true }) { Icon(Icons.Rounded.Add, null); Spacer(Modifier.width(5.dp)); Text(stringResource(R.string.add_step)) }
                 val status = ProblemStatus.from(problem.status)
                 val next = when (status) {
                     ProblemStatus.OPEN -> ProblemStatus.IN_PROGRESS
@@ -213,9 +215,9 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                 }
                 TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) "Outcome confirmed by user" else "") }) {
                     Text(when (status) {
-                        ProblemStatus.RESOLVED -> "Confirm outcome"
-                        ProblemStatus.VERIFIED -> "Reopen"
-                        else -> "Advance"
+                        ProblemStatus.RESOLVED -> stringResource(R.string.confirm_outcome)
+                        ProblemStatus.VERIFIED -> stringResource(R.string.reopen)
+                        else -> stringResource(R.string.advance)
                     })
                 }
             }
@@ -240,10 +242,10 @@ private fun DetailSection(label: String, value: String) {
 @Composable
 private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEventEntity>, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxSize().padding(20.dp)) {
-        Text("HISTORY", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.6.sp)
-        Text("Activity", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.history), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.6.sp)
+        Text(stringResource(R.string.activity), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
-        if (events.isEmpty()) Text("Your actions and decisions will appear here.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (events.isEmpty()) Text(stringResource(R.string.activity_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
         else LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             items(events, key = { it.id }) { event ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -269,18 +271,18 @@ private fun CreateProblemDialog(onDismiss: () -> Unit, onCreate: (String, String
     var constraints by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Capture a problem") },
+        title = { Text(stringResource(R.string.capture_problem)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(title, { title = it }, label = { Text("What needs solving?") }, singleLine = true)
+                OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.what_needs_solving)) }, singleLine = true)
                 OutlinedTextField(description, { description = it }, label = { Text("Context / what's happening") }, minLines = 2)
-                OutlinedTextField(outcome, { outcome = it }, label = { Text("What would a good result look like?") }, minLines = 2)
-                OutlinedTextField(constraints, { constraints = it }, label = { Text("Constraints (optional)") }, minLines = 1)
-                Text("Any kind of problem is welcome. You can classify it later.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(outcome, { outcome = it }, label = { Text(stringResource(R.string.good_result_prompt)) }, minLines = 2)
+                OutlinedTextField(constraints, { constraints = it }, label = { Text(stringResource(R.string.constraints_optional)) }, minLines = 1)
+                Text(stringResource(R.string.classify_later), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        confirmButton = { Button(onClick = { if (title.isNotBlank()) onCreate(title, description, outcome, constraints) }, enabled = title.isNotBlank()) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        confirmButton = { Button(onClick = { if (title.isNotBlank()) onCreate(title, description, outcome, constraints) }, enabled = title.isNotBlank()) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
@@ -289,10 +291,10 @@ private fun AddStepDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
     var title by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add a next step") },
-        text = { OutlinedTextField(title, { title = it }, label = { Text("Action") }, singleLine = true) },
-        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title) }, enabled = title.isNotBlank()) { Text("Add") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        title = { Text(stringResource(R.string.add_next_step)) },
+        text = { OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.action_label)) }, singleLine = true) },
+        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title) }, enabled = title.isNotBlank()) { Text(stringResource(R.string.add)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
