@@ -173,6 +173,9 @@ interface ActivityDao {
 
 @Dao
 interface WorkflowRunDao {
+    @Query("SELECT * FROM workflow_runs ORDER BY updatedAt DESC")
+    fun observeAll(): Flow<List<WorkflowRunEntity>>
+
     @Query("SELECT * FROM workflow_runs WHERE problemId = :problemId ORDER BY updatedAt DESC")
     fun observeForProblem(problemId: String): Flow<List<WorkflowRunEntity>>
 
