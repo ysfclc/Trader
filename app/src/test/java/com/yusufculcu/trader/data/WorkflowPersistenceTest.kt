@@ -181,7 +181,7 @@ class WorkflowPersistenceTest {
     }
 
     @Test
-    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() {
+    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() = runBlocking {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)
         file.parentFile?.mkdirs()
