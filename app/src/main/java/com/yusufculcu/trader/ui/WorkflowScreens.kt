@@ -136,9 +136,8 @@ fun WorkflowDetailScreen(
     val allWaitingApproved = waitingSteps.isNotEmpty() && waitingSteps.all {
         it.approvedPayloadHash == it.payloadHash && it.approvedAt != null
     }
-    val safeFailedSteps = steps.any {
-        WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED && it.retrySafe
-    }
+    val failedSteps = steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED }
+    val safeFailedSteps = failedSteps.isNotEmpty() && failedSteps.all { it.retrySafe }
     var showVerifyDialog by rememberSaveable(run.id) { mutableStateOf(false) }
     var showReviewDialog by rememberSaveable(run.id) { mutableStateOf(false) }
 
