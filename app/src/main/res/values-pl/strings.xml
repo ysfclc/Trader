@@ -44,4 +44,12 @@
     <string name="add">Dodaj</string>
     <string name="inbox">Skrzynka</string>
     <string name="outcome_confirmed_by_user">Użytkownik potwierdził rezultat</string>
+
+    <string name="event_problem_captured">Zapisano problem</string>
+    <string name="event_plan_step_added">Dodano krok planu</string>
+    <string name="event_step_completed">Krok ukończony</string>
+    <string name="event_step_reopened">Krok otwarty ponownie</string>
+    <string name="event_status_updated">Zaktualizowano status</string>
+    <string name="event_activity_recorded">Zapisano aktywność</string>
+
 </resources>
