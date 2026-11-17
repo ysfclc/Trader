@@ -4,7 +4,8 @@ This roadmap is ordered by commercial proof and reliability, not by feature coun
 
 ## Phase 0 — Product lock
 - [x] Establish Trader as an independent Android-first product.
-- [x] Lock buyer/supplier discovery, services and careers as the three opportunity lanes.
+- [x] Define trade, services and careers as initial specialized opportunity workflows, not the product boundary.
+- [x] Lock a universal ProblemCase → evidence → options → plan → approved execution → verified outcome lifecycle.
 - [x] Define evidence, consent, human approval and free-first requirements.
 - [ ] Keep repository ledger and acceptance criteria current.
 
@@ -13,14 +14,18 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 ## Phase 1 — Local field notebook
 - [ ] Create Android project, build configuration and repeatable signed debug/release APK workflow.
 - [ ] Implement local database, migrations, backup/export and import.
-- [ ] Add capture inbox for URLs, shared text, notes, screenshots and manually entered leads.
+- [ ] Add universal Problem Inbox for URLs, shared text, notes, screenshots, voice, documents and manually described problems/goals.
+- [ ] Preserve original input, desired outcome, constraints, urgency and unresolved questions in a ProblemCase.
 - [ ] Store source URL, capture time, raw evidence, extracted facts and verification status.
-- [ ] Implement organizations, people, buyer needs, supplier offers, services and job opportunities.
+- [ ] Implement organizations, people, buyer needs, supplier offers, services and job opportunities as specialized records linked to a universal ProblemCase where relevant.
+- [ ] Implement goals, plans, plan steps, capability requirements and verifiable completion criteria.
 - [ ] Add search, filters, deduplication and an audit trail.
 
 Exit gate: capture and manage real leads offline; no account, paid AI or cloud required.
 
-## Phase 2 — Discovery and qualification
+## Phase 2 — Context, discovery and qualification
+- [ ] Build a capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; every capability declares limits and postconditions.
+- [ ] Resolve a ProblemCase into a structured context packet, missing-information questions and evidence-backed candidate paths.
 - [ ] Build source adapters for public web search, public company pages, directories and user-authorized browser sessions.
 - [ ] Add Android browser automation and carefully scoped installed-app automation.
 - [ ] Make every adapter report limits, errors, timestamps and source provenance.
@@ -63,7 +68,8 @@ Exit gate: evidence of genuine buyer interest and a repeatable path to a paid in
 - [ ] Add further product categories only after the pilot yields repeatable learning.
 - [ ] Expand geography, sources and channel adapters.
 - [ ] Add collaboration, optional encrypted sync and multi-device support.
-- [ ] Add services and careers workflows using shared discovery, evidence and outreach primitives.
+- [ ] Add new problem-solving specializations only when repeated real cases justify their own domain rules and acceptance tests.
+- [ ] Deepen supported browser, app, file and repository workflows without creating hidden or unbounded automation.
 - [ ] Consider monetization only after a proven user workflow exists.
 
 ## Release rule
