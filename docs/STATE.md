@@ -6,13 +6,18 @@ Last updated: 2026-11-17 (product scope correction: general problem solving)
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 0 — product lock and targeted reuse audit**
-- Android source code: not yet implemented.
-- APK: not yet built.
+- Status: **Phase 1 — first Android problem workspace implementation**
+- Android source code: first implementation committed on `build/problem-core-android`.
+- APK: CI build pending; no artifact verified yet.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
 ## Completed in this checkpoint
+- [x] Created native Android app foundation (Kotlin 2.2.20, AGP 8.13.0, Compose, Room, WorkManager; compile SDK 36, min SDK 26).
+- [x] Implemented universal ProblemCase persistence, manual capture, Android share URL/text capture, problem detail, plan-step persistence, status transitions and append-only activity events.
+- [x] Added JVM tests for title normalization and status-transition rules.
+- [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
+- [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
 - [x] Added universal ProblemCase, Goal, Plan/PlanStep and Capability concepts to the locked product, architecture and data model.
 - [x] Reframed trade, services and careers as initial specialized workflows, not an exhaustive limit on the problems Trader can accept.
@@ -42,11 +47,11 @@ Last updated: 2026-11-17 (product scope correction: general problem solving)
 The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
 
 ## Not yet verified in Trader
-- [ ] Implement and device-test the universal ProblemCase → evidence → options → plan → action → verified outcome loop.
+- [ ] Finish and verify the first ProblemCase → context → plan-step → activity loop; current code is not yet CI- or device-verified.
 - [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
-- [ ] Final Android/Gradle/Kotlin version pin and clean reproducible build.
-- [ ] Local Room database, migrations and encrypted backup/restore.
-- [ ] Android share/manual capture and offline retrieval.
+- [ ] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build; local Gradle wrapper is not yet included.
+- [ ] Verify Room persistence and add migration tests plus encrypted backup/restore.
+- [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -86,3 +91,7 @@ Added `docs/ADDITIONAL_REUSE_AUDIT.md`. Corrected the initial audit scope: BOS, 
 
 ### 2026-11-17 — Product scope correction: not trading-only
 The user clarified that the app is intended to help solve the wider set of problems they face, not only trading. The canonical scope is now a personal problem-solving and opportunity-execution system: capture context, understand desired outcomes and constraints, gather evidence, discover options/resources, plan, use authorized tools/automations, verify and retain useful learning. Trade/services/careers remain initial specialized workflows. This is an architecture direction, not a claim that the app can solve every kind of problem or already implements these capabilities.
+
+
+### 2026-11-17 — First Android implementation checkpoint
+Created `build/problem-core-android` and draft PR #1. The first source slice includes a Compose inbox/detail/activity UI, Room-backed ProblemCase/plan-step/activity data, manual and Android share-intent capture, deterministic status transitions, JVM unit tests and an Actions workflow that builds a debug APK. CI is running; no successful build, install or device acceptance is claimed yet. The implementation deliberately does not claim AI, browser automation, installed-app automation, live web discovery or external messaging.
