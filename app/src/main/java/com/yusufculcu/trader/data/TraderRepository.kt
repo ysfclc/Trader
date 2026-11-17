@@ -116,8 +116,9 @@ class TraderRepository(private val database: TraderDatabase) {
                 val existingSteps = database.workflowStepDao().getForRun(existing.id)
                 val sameDefinition = existing.problemId == problemId &&
                     existing.title == cleanTitle &&
-                    existingSteps.map { Triple(it.title, it.capabilityId, it.inputJson) } ==
-                    cleanSteps.map { Triple(it.title, it.capabilityId, it.inputJson) }
+                    existingSteps.map {
+                        WorkflowStepDraft(it.title, it.capabilityId, it.inputJson, it.expectedPostcondition, it.retrySafe, it.requiresApproval)
+                    } == cleanSteps
                 check(sameDefinition) { "Idempotency key was already used for a different workflow definition" }
                 return@withTransaction existing.id
             }
@@ -247,7 +248,7 @@ class TraderRepository(private val database: TraderDatabase) {
             else -> run.finishedAt
         }
         val lastError = when (target) {
-            WorkflowRunStatus.FAILED, WorkflowRunStatus.NEEDS_REVIEW -> details.ifBlank { run.lastError.orEmpty() }.ifBlank { null }
+            WorkflowRunStatus.FAILED, WorkflowRunStatus.NEEDS_REVIEW -> details.takeIf { it.isNotBlank() } ?: run.lastError
             WorkflowRunStatus.READY, WorkflowRunStatus.RUNNING, WorkflowRunStatus.VERIFIED -> null
             else -> run.lastError
         }
@@ -269,6 +270,18 @@ class TraderRepository(private val database: TraderDatabase) {
                 ))
                 addWorkflowEvent(runId, step.id, "step_resumed_after_approval", step.status, WorkflowStepStatus.RUNNING.name, "Approved step resumed", "", now)
             }
+        } else if (target == WorkflowRunStatus.CANCELLED) {
+            steps.filter { !WorkflowRules.isTerminal(WorkflowStepStatus.from(it.status)) }.forEach { step ->
+                val previous = WorkflowStepStatus.from(step.status)
+                if (WorkflowRules.canTransitionStep(previous, WorkflowStepStatus.CANCELLED)) {
+                    database.workflowStepDao().update(step.copy(
+                        status = WorkflowStepStatus.CANCELLED.name,
+                        updatedAt = now,
+                        finishedAt = now
+                    ))
+                    addWorkflowEvent(runId, step.id, "step_cancelled", previous.name, WorkflowStepStatus.CANCELLED.name, "Step cancelled with workflow", details, now)
+                }
+            }
         }
         true
     }
@@ -288,6 +301,7 @@ class TraderRepository(private val database: TraderDatabase) {
         val allowedRunState = runStatus == WorkflowRunStatus.RUNNING ||
             (runStatus == WorkflowRunStatus.READY && target == WorkflowStepStatus.PENDING)
         if (!allowedRunState) return@withTransaction false
+        if (target == WorkflowStepStatus.WAITING_FOR_APPROVAL && !step.requiresApproval) return@withTransaction false
         if (target == WorkflowStepStatus.RUNNING && step.requiresApproval &&
             (step.approvedPayloadHash != step.payloadHash || step.approvedAt == null)
         ) return@withTransaction false
@@ -302,7 +316,9 @@ class TraderRepository(private val database: TraderDatabase) {
         val nextStep = step.copy(
             status = target.name,
             attemptCount = if (from == WorkflowStepStatus.PENDING && target == WorkflowStepStatus.RUNNING) step.attemptCount + 1 else step.attemptCount,
-            lastError = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) errorMessage.ifBlank { null } else null,
+            lastError = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) errorMessage.takeIf { it.isNotBlank() } else null,
+            approvedPayloadHash = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedPayloadHash,
+            approvedAt = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedAt,
             updatedAt = now,
             startedAt = if (target == WorkflowStepStatus.RUNNING && step.startedAt == null) now else step.startedAt,
             finishedAt = if (target == WorkflowStepStatus.COMPLETED || target == WorkflowStepStatus.SKIPPED || target == WorkflowStepStatus.CANCELLED) now else null
@@ -323,7 +339,7 @@ class TraderRepository(private val database: TraderDatabase) {
                 status = runTarget.name,
                 updatedAt = now,
                 finishedAt = if (runTarget == WorkflowRunStatus.FAILED) now else null,
-                lastError = if (runTarget == WorkflowRunStatus.FAILED || runTarget == WorkflowRunStatus.NEEDS_REVIEW) errorMessage.ifBlank { null } else null
+                lastError = if (runTarget == WorkflowRunStatus.FAILED || runTarget == WorkflowRunStatus.NEEDS_REVIEW) errorMessage.takeIf { it.isNotBlank() } else null
             ))
             addWorkflowEvent(run.id, null, "run_status_changed", runStatus.name, runTarget.name, "Workflow paused for a gate or failure", errorMessage, now)
         } else if (target == WorkflowStepStatus.COMPLETED || target == WorkflowStepStatus.SKIPPED) {
