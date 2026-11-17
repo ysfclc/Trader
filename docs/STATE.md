@@ -1,18 +1,29 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (product scope correction: general problem solving)
+Last updated: 2026-11-17 (APK signature and package identity verified)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 0 — product lock and targeted reuse audit**
-- Android source code: not yet implemented.
-- APK: not yet built.
+- Status: **Phase 1 — first Android problem workspace implementation**
+- Android source code: first implementation committed on `build/problem-core-android`.
+- APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
 ## Completed in this checkpoint
+- [x] Created native Android app foundation (Kotlin 2.2.20, AGP 8.13.0, Gradle 8.13 wrapper, Compose, Room, WorkManager; compile SDK 36, min SDK 26).
+- [x] Implemented universal ProblemCase persistence, manual capture, Android share URL/text capture, problem detail, plan-step persistence, status transitions and append-only activity events.
+- [x] Added JVM tests for title normalization and status-transition rules.
+- [x] Added system-locale English, Turkish and Polish UI strings and localized activity labels.
+- [x] Added pinned Gradle 8.13 wrapper and checksum, plus `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
+- [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
+- [x] Clean CI run passed: unit tests, lint, debug APK assembly, APK signature verification and package identity assertion; artifact uploaded successfully.
+- [x] Downloaded the latest APK artifact, verified the package archive and recorded its SHA-256 below.
+- [x] CI ran apksigner verification and asserted the exact debug package ID/version before upload.
+- [x] Localized the complete first-slice UI, category labels, statuses and activity event labels for English, Turkish and Polish.
+- [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
 - [x] Added universal ProblemCase, Goal, Plan/PlanStep and Capability concepts to the locked product, architecture and data model.
 - [x] Reframed trade, services and careers as initial specialized workflows, not an exhaustive limit on the problems Trader can accept.
@@ -42,11 +53,11 @@ Last updated: 2026-11-17 (product scope correction: general problem solving)
 The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
 
 ## Not yet verified in Trader
-- [ ] Implement and device-test the universal ProblemCase → evidence → options → plan → action → verified outcome loop.
+- [ ] Install and exercise the first ProblemCase → context → plan-step → activity loop on a physical Android device; CI build and unit tests now pass, but device behavior remains unverified.
 - [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
-- [ ] Final Android/Gradle/Kotlin version pin and clean reproducible build.
-- [ ] Local Room database, migrations and encrypted backup/restore.
-- [ ] Android share/manual capture and offline retrieval.
+- [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
+- [ ] Verify Room persistence and add migration tests plus encrypted backup/restore.
+- [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -67,11 +78,23 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Unknown technical/commercial values are not treated as passing requirements or zero-cost values.
 - Preserve every bug, regression and user requirement in the task ledger until verified resolved.
 
+## Verified build record
+- Source branch: `build/problem-core-android`
+- Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd`
+- Successful push CI run: `44102991766` (run 74)
+- Successful pull-request CI run: `44103004289` (run 75)
+- Artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01)
+- APK: `app-debug.apk`, 18,820,225 bytes
+- APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
+- Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
+- CI tasks passed: `testDebugUnitTest`, `assembleDebug`, `lintDebug`, `apksigner verify` and exact `aapt` package/version assertion.
+- Device installation, launch, share-intent behavior and process-death persistence are not yet verified.
+
 ## Next implementation checkpoint
-1. Pin a clean Android toolchain for Trader, based on compatible tested versions rather than copying any other app wholesale.
-2. Create the first standalone Android foundation and CI workflow with a new application ID and CI-only signing secrets.
-3. Implement one vertical slice: share/manual capture → evidence persistence → offline retrieval → process-death recovery.
-4. Build and install on Redmi Note 12 Pro 5G before adding large-scale discovery or app automation.
+1. Install and exercise this APK on the Redmi Note 12 Pro 5G; verify create/share/reopen/plan/status flows and process-death persistence.
+2. Fix issues found on-device before extending capture to files/screenshots and adding the capability registry.
+3. Implement durable workflow state, pause/resume/cancellation and evidence records.
+4. Add browser session and bounded app handoff as independently testable capabilities; only then layer optional AI/prompt-context adapters.
 
 ## Change log
 ### 2026-11-17 — Initial repository lock
@@ -86,3 +109,19 @@ Added `docs/ADDITIONAL_REUSE_AUDIT.md`. Corrected the initial audit scope: BOS, 
 
 ### 2026-11-17 — Product scope correction: not trading-only
 The user clarified that the app is intended to help solve the wider set of problems they face, not only trading. The canonical scope is now a personal problem-solving and opportunity-execution system: capture context, understand desired outcomes and constraints, gather evidence, discover options/resources, plan, use authorized tools/automations, verify and retain useful learning. Trade/services/careers remain initial specialized workflows. This is an architecture direction, not a claim that the app can solve every kind of problem or already implements these capabilities.
+
+
+### 2026-11-17 — First Android implementation checkpoint
+Created `build/problem-core-android` and draft PR #1. The first source slice includes a Compose inbox/detail/activity UI, Room-backed ProblemCase/plan-step/activity data, manual and Android share-intent capture, deterministic status transitions, JVM unit tests and an Actions workflow that builds a debug APK. CI is running; no successful build, install or device acceptance is claimed yet. The implementation deliberately does not claim AI, browser automation, installed-app automation, live web discovery or external messaging.
+
+
+### 2026-11-17 — Build pipeline hardening
+The first wrapper-based CI attempt exposed that the initially selected wrapper JAR was not executable. Replaced it with the wrapper JAR shipped by the Android Now in Android sample, corrected the distribution URL escaping, pinned the official Gradle 8.13 distribution SHA-256 and switched CI to `./gradlew`. The corrected wrapper is awaiting CI verification; do not treat the build as green until the workflow completes successfully.
+
+
+### 2026-11-17 — First Android CI build verified
+The first local-first Android vertical slice compiled, passed JVM unit tests and lint, and produced a downloadable debug APK through GitHub Actions. The artifact was downloaded and inspected; SHA-256, source commit and CI run IDs are recorded above. A lint failure in the initial attempt was corrected by placing the API 27 navigation-bar theme attribute in `values-v27`. The physical-device acceptance gate remains open.
+
+
+### 2026-11-17 — APK signature and package identity verified
+Added explicit CI gates using apksigner and aapt. Both push run 74 and pull-request run 75 passed, including unit tests, lint, APK build, signature verification and the exact debug application ID/version assertion. Downloaded the latest artifact and updated its SHA-256 record above. Physical-device acceptance remains open.

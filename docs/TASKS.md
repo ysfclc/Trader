@@ -8,21 +8,21 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
 - [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.
 - [ ] T0.7 Complete source-level audit of QRKey variants and remaining mobile/automation prototypes before deciding whether any component is reusable.
-- [ ] T0.3 Pin a compatible Android/Gradle/Kotlin/SDK toolchain for Trader and verify it with a clean CI build.
-- [ ] T0.4 Add reproducible build and signing instructions using CI secrets only; no signing material in Git.
+- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed.
+- [x] T0.4 Add Gradle wrapper, reproducible CI build and signing-boundary instructions. Production release signing via GitHub secrets remains open.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
 
 ## T1 — Android shell and local data
 
-- [ ] T1.0 Implement universal ProblemCase and Goal models: original request, desired outcome, constraints, urgency, uncertainty, evidence links and closure criteria.
-- [ ] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
-- [ ] T1.0b Add durable plans/plan steps with dependencies, required capabilities, approval requirements and verifiable postconditions.
-- [ ] T1.1 Create native Android project with a clean, premium, responsive mobile UI and a unique application ID.
-- [ ] T1.2 Establish navigation around Inbox, Discover, Matches, Contacts and Activity; keep trade/service/career types separate.
-- [ ] T1.3 Add Room database, exported schemas, migrations and migration tests.
+- [x] T1.0 Implement initial ProblemCase model: original request, desired outcome, constraints, category, source metadata, status and timestamps. A separate Goal entity, urgency, uncertainty and evidence records remain open.
+- [x] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
+- [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
+- [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
+- [ ] T1.2 Expand navigation beyond the first Inbox and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workflows.
+- [ ] T1.3 Room v1 entities/DAOs and schema export are implemented; migration strategy and migration tests remain open.
 - [ ] T1.4 Add encrypted local backup/export and integrity-verified restore.
-- [ ] T1.5 Add universal capture: Android share URL/text, quick note, manual entry and document import.
-- [ ] T1.6 Store original source evidence, timestamps, language, parser version and verification state before enrichment.
+- [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
+- [ ] T1.6 Initial capture preserves original text/URL, input kind, capture timestamps and source URI. Evidence entities, language metadata, parser version and verification states remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
 - [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
 
@@ -76,7 +76,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T6.3 Validate one real buyer requirement against supplier technical evidence.
 - [ ] T6.4 Run approved individualized outreach and record actual outcomes.
 - [ ] T6.5 Verify capture → qualify → match → draft → approve → contact → follow-up on device.
-- [ ] T6.6 Record APK hash, source commit, test evidence, CI run and known issues.
+- [x] T6.6 Record APK hash, source commit, test evidence, CI run and known issues (see `docs/STATE.md`).
 
 ## Product-scope guardrail
 

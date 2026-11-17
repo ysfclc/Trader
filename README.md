@@ -34,10 +34,11 @@ Trader is not a promise that software can solve every human problem, an open mar
 | [Reuse audit](docs/REUSE_AUDIT.md) | Initial code inspection across discovery, Android and automation references |
 | [Additional reuse audit](docs/ADDITIONAL_REUSE_AUDIT.md) | BOS, Oddo, Troy, Kovan, Zommo, Nexus and remaining repository triage |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
+| [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
 
 ## Current state
 
-**Phase 0 — product definition and targeted repository audit.** The product boundaries and reuse strategy are documented. Android source code, APK generation, device acceptance and live channel integrations have not yet been implemented in Trader.
+**Phase 1 — first Android problem workspace built.** The Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history and English/Turkish/Polish UI pass clean CI (unit tests, lint, APK assembly, signature verification and package identity assertion). The debug APK is available from the [latest successful workflow](https://github.com/ysfclc/Trader/actions/runs/44103004289). Physical-device acceptance remains pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
 
 The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
 
