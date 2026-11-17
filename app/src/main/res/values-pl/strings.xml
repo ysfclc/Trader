@@ -111,4 +111,5 @@
     <string name="workflow_step_review_title">Oznacz krok do sprawdzenia</string>
     <string name="workflow_step_review_hint">Opisz, co jest niepewne lub wymaga sprawdzenia.</string>
 
+    <string name="workflow_skip_step">Pomiń niedostępny krok</string>
 </resources>
