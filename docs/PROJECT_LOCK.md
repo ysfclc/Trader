@@ -7,36 +7,49 @@
 
 This document records the product intent that governs design, implementation and prioritization. A new idea does not change the lock automatically. Change the product only through an explicit user decision and a recorded decision entry.
 
-## 1. The problem
+## 1. The actual problem
 
-The operator has access to a substantial network in Türkiye, including manufacturers and suppliers, and is based in Poland with B2B commercial and manufacturing experience. The opportunity is to connect real demand with suitable supply across borders, earn through properly authorized commercial introductions, and build repeatable commercial relationships.
+The operator's problem is not simply "how to trade". It is how to turn a broad set of existing resources into reliable progress and income without having to manually coordinate everything.
 
-The information needed to do this is scattered:
-- buyers publish requirements in directories, procurement pages, trade networks, websites, documents and sometimes messages;
-- manufacturers publish products, capabilities and certifications in catalogues, websites and trade listings;
-- people and contact routes live in separate channels;
-- technical fit, commercial terms, logistics, trust and next actions need to be checked manually;
-- opportunities become lost across browser tabs, inboxes, spreadsheets, CRMs and chat applications.
+Those resources include manufacturing and CNC/mould knowledge; B2B sales and partner-management experience; a substantial Turkish manufacturer/supplier network and access to Poland/EU; automation, data, software-building and AI-integration skills; and existing products, repositories, research, contacts and partially solved workflows.
 
-Trader brings discovery, evidence, qualification, matching and follow-through into one phone-first workspace.
+But useful information, needs, opportunities, tools and conversations are fragmented across websites, browser sessions, installed apps, files, messages, repositories and separate projects. The operator repeatedly has to discover context, capture it, understand it, compare options, formulate a plan, move between tools, perform actions, follow up and verify whether anything actually worked. Work and evidence can be lost between those steps.
+
+The deeper product problem is:
+
+**A person has problems to solve and resources to use, but lacks one reliable, controllable system that can connect context → evidence → options → plan → tools/actions → verified outcome.**
+
+Income generation is an important outcome, but not the only valid reason to use Trader.
 
 ## 2. Product statement
 
-Trader is a personal commercial operating system for discovering and converting opportunities.
+Trader is intended to be a personal problem-solving and opportunity-execution system. The operator can bring it a problem, goal, opportunity or piece of information from the web, browser, installed apps, files, messages, voice or manual entry. Trader should help clarify what is known and unknown, find relevant evidence and resources, identify possible paths, break the work into steps, use appropriate tools and automations, request approval where needed, and record the result.
 
-Its primary loop is:
+The general loop is:
 
-**Find demand → find supply → capture evidence → normalize requirements → assess fit → qualify both sides → calculate commercial viability → prepare an introduction → obtain approval → contact through an authorized route → follow up → record the outcome.**
+**Capture the situation → understand the desired outcome and constraints → gather evidence and context → discover options, people, tools or resources → create a justified plan → execute bounded steps → verify the result → retain useful learning.**
 
-The application must also make it possible to start from either side:
-- a buyer requirement can trigger a search for manufacturers and suppliers;
-- a supplier or product can trigger a search for buyers and distributors.
+The system must distinguish:
+- a **problem** the operator wants to resolve;
+- a **goal** or desired outcome;
+- an **opportunity** that may create income, work or value;
+- a **task/action** that advances a plan;
+- a **fact, inference, assumption or unknown**;
+- a **proposed action** versus an action that was actually completed and verified.
 
-It must support domestic and international opportunities. Countries, languages, currencies, Incoterms, categories and source constraints are data/configuration, not hard-coded branches.
+Trader must not force every incoming item into a trade lead, job lead or generic task. It should identify the appropriate workflow, or say honestly when it lacks a capability.
 
-## 3. Opportunity lanes
+The first commercial loop remains important:
 
-Three distinct opportunity types share common organizations, people, evidence, communication and task infrastructure.
+**Find demand ↔ find supply → preserve evidence → normalize requirements and offers → assess technical/commercial fit → establish authority and viability → prepare an introduction → obtain approval → use an authorized channel → follow up → record the outcome.**
+
+This is one specialized workflow inside the broader problem-solving system, not the definition of the whole product.
+
+## 3. Initial workflow specializations
+
+Trade, services and careers are the first structured opportunity workflows. They share common source, organization, person, evidence, plan, task, communication and outcome infrastructure. They are not an exhaustive taxonomy of what Trader may help with.
+
+A new workflow specialization may be added when a repeated problem needs distinct domain rules, data and acceptance tests. Do not create a new hard-coded category for every example.
 
 ### A. Trade — primary lane
 
@@ -51,7 +64,7 @@ Three distinct opportunity types share common organizations, people, evidence, c
 - Authorized introduction, representation and commission/success-fee agreements.
 - Deal pipeline and follow-up.
 
-Trader is initially an introducer/sourcing tool for the operator. It does not assume the operator buys, stocks, imports, insures, certifies or resells goods. Any change to that commercial role requires a separate legal, financial and operational decision.
+Trader's first trade workflow is an introducer/sourcing tool for the operator. It does not assume the operator buys, stocks, imports, insures, certifies or resells goods. Any change to that commercial role requires a separate legal, financial and operational decision.
 
 ### B. Services — second lane
 
@@ -109,13 +122,18 @@ This is a testable hypothesis, not a locked exclusive market. The schema, applic
 - Not an unattended crawler that ignores site rules.
 - Not an auto-DM, spam or bulk-contact machine.
 - Not a public multi-vendor marketplace in the first release.
+- Not a claim that one app can autonomously solve every personal, legal, medical, financial or relationship problem.
+- Not a generic life-dashboard whose screens collect unrelated data without helping complete a real problem.
+- Not limited to trade simply because the working repository is named Trader.
 - Not an importer of record, customs broker, payment processor, escrow service, quality certifier or legal adviser.
 - Not a replacement for human product inspection, supplier due diligence or contract review.
 - Not a promise that a deal, job or specific amount of income will result.
 
 ## 8. Success definition
 
-The first meaningful milestone is not "the app builds". It is a fully traceable pilot in which Trader:
+The first meaningful milestone is not "the app builds". It is a working general problem loop: a real problem or goal can be captured from a supported source, its context and constraints can be preserved, evidence and unknowns can be distinguished, a useful plan can be produced, actions can be tracked, and completion can be verified.
+
+The first commercial proof remains a fully traceable pilot in which Trader:
 1. captures a real buyer request;
 2. captures one or more real Turkish supplier offers;
 3. retains source evidence and original language;
