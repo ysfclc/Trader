@@ -124,6 +124,7 @@ class WorkflowPersistenceTest {
 
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.approveWorkflowStep(step.id, "Confirmed the manual action is authorized"))
         assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
         assertTrue(repository.transitionWorkflowStep(
             step.id,
