@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17
+Last updated: 2026-11-17 (expanded repository audit)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -18,8 +18,16 @@ Last updated: 2026-11-17
 - [x] Added the phased roadmap, implementation task ledger and state ledger.
 - [x] Established industrial tooling and machining between Türkiye and Poland/EU as the first pilot, without hard-coding that category into the product architecture.
 - [x] Inspected source files, tests, project status and CI metadata in Outbound Sourcer, VaultOS, BusyBee, Memo-2 and selected EBO files.
+- [x] Expanded the audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; recorded exact source paths, design strengths, implementation gaps and dated CI observations in `docs/ADDITIONAL_REUSE_AUDIT.md`.
+- [x] Triaged the remaining repository families without claiming their source code was reviewed.
 - [x] Added `docs/REUSE_AUDIT.md` with exact source paths, reusable patterns, known limitations, build-history observations and the no-fork/no-dependency decision.
 - [x] Verified the current Trader tree contains the README and all linked baseline documents.
+
+## Expanded audit conclusion
+- BOS is a major architecture reference: deterministic business runtime, event/provenance model, capability execution and scoped AI. Its current implementation is not a safe Trader dependency: generalized ingestion is still marked not started, the workflow executor is partial, ADR-038 migration T-385 remains active in the inspected task ledger, and latest observed CI run (2026-09-23) failed.
+- Troy is the strongest domain reference for metadata-first qualification, message segmentation, multi-entity capture, source-company clustering and explainable matching. Relevant implementation inspected is under `legacy/oddo-troy/`; July status reports are historical and outreach remained disabled in that snapshot.
+- Oddo contributes marketplace/dispatch concepts, but WhatsApp relies on Unipile, Telegram listener is a scaffold and extraction depends on paid Anthropic API.
+- Kovan contributes deterministic technical QC principles, not Trader code. Zommo contributes configurable service-business taxonomy, not an automation runtime (its product spec says the executor is absent). Nexus contributes development task/provenance/permission-gate practices, not an end-user runtime.
 
 ## Reuse audit conclusion
 - Outbound Sourcer: adapt source registry/schema, streaming pipeline, incremental persistence, cancellation and truthful warnings. Do not reuse its business-directory lead score or generic-company schema.
@@ -31,6 +39,7 @@ Last updated: 2026-11-17
 The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
 
 ## Not yet verified in Trader
+- [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
 - [ ] Final Android/Gradle/Kotlin version pin and clean reproducible build.
 - [ ] Local Room database, migrations and encrypted backup/restore.
 - [ ] Android share/manual capture and offline retrieval.
@@ -63,3 +72,6 @@ Repository initialized and product definition committed. No application implemen
 
 ### 2026-11-17 — Targeted repository reuse audit
 Inspected relevant implementation files and test coverage across five existing codebases. Added `docs/REUSE_AUDIT.md`. Decision: Trader is built independently, adapting patterns only and retaining no required dependency on existing apps. Android source and APK still do not exist.
+
+### 2026-11-17 — Expanded audit: BOS and adjacent projects
+Added `docs/ADDITIONAL_REUSE_AUDIT.md`. Corrected the initial audit scope: BOS, Oddo and Troy are key references; Kovan, Zommo and Nexus were also inspected. Remaining repositories are explicitly marked as triaged but not source-audited. No code copied; Trader architecture remains independent.
