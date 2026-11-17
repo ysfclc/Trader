@@ -85,7 +85,11 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     }
 
     fun resumeWorkflow(runId: String) {
-        viewModelScope.launch { repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING) }
+        viewModelScope.launch {
+            val run = repository.getWorkflowRun(runId) ?: return@launch
+            val waitingForApproval = WorkflowRunStatus.from(run.status) == WorkflowRunStatus.WAITING_FOR_APPROVAL
+            repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING, approvalGranted = waitingForApproval)
+        }
     }
 
     fun cancelWorkflow(runId: String) {
@@ -103,7 +107,6 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
             val status = WorkflowStepStatus.from(step.status)
             if (status == WorkflowStepStatus.WAITING_FOR_APPROVAL) {
                 repository.approveWorkflowStep(stepId, "User approved the exact step payload in Trader")
-                repository.transitionWorkflowRun(run.id, WorkflowRunStatus.RUNNING, approvalGranted = true, details = "User approved waiting step")
             } else {
                 if (step.requiresApproval) repository.approveWorkflowStep(stepId, "User approved the exact step payload in Trader")
                 repository.transitionWorkflowStep(stepId, WorkflowStepStatus.RUNNING, details = "Started by user")
