@@ -1,0 +1,70 @@
+# Trader Roadmap
+
+This roadmap is ordered by commercial proof and reliability, not by feature count. Each phase must leave a usable, testable result.
+
+## Phase 0 — Product lock
+- [x] Establish Trader as an independent Android-first product.
+- [x] Lock buyer/supplier discovery, services and careers as the three opportunity lanes.
+- [x] Define evidence, consent, human approval and free-first requirements.
+- [ ] Keep repository ledger and acceptance criteria current.
+
+Exit gate: product vision, architecture, data model and operating rules agree.
+
+## Phase 1 — Local field notebook
+- [ ] Create Android project, build configuration and repeatable signed debug/release APK workflow.
+- [ ] Implement local database, migrations, backup/export and import.
+- [ ] Add capture inbox for URLs, shared text, notes, screenshots and manually entered leads.
+- [ ] Store source URL, capture time, raw evidence, extracted facts and verification status.
+- [ ] Implement organizations, people, buyer needs, supplier offers, services and job opportunities.
+- [ ] Add search, filters, deduplication and an audit trail.
+
+Exit gate: capture and manage real leads offline; no account, paid AI or cloud required.
+
+## Phase 2 — Discovery and qualification
+- [ ] Build source adapters for public web search, public company pages, directories and user-authorized browser sessions.
+- [ ] Add Android browser automation and carefully scoped installed-app automation.
+- [ ] Make every adapter report limits, errors, timestamps and source provenance.
+- [ ] Extract structured requirements and offers using deterministic parsing first.
+- [ ] Add optional local AI adapter for translation, extraction, classification and drafting.
+- [ ] Build qualification checklists and evidence-backed buyer/supplier profiles.
+
+Exit gate: a user can capture and qualify a buyer or supplier with traceable evidence.
+
+## Phase 3 — Matching and commercial workflow
+- [ ] Match buyer requirements to supplier capabilities with explainable scoring.
+- [ ] Surface missing facts, incompatibilities and questions instead of fabricating fit.
+- [ ] Add side-by-side comparison, shortlist and introduction dossier.
+- [ ] Track consent, representation, commission terms, contact history and deal stages.
+- [ ] Generate tailored outreach in Turkish, Polish and English.
+- [ ] Require explicit user approval before sending or making commitments.
+
+Exit gate: produce a credible, reviewable introduction package for a real opportunity.
+
+## Phase 4 — Communication adapters
+- [ ] Implement email and Android share/intents first.
+- [ ] Evaluate free/low-cost alternatives to Unipile per channel and region.
+- [ ] Support user-operated browser/app workflows where permitted and technically reliable.
+- [ ] Add sending only through authorized accounts, with preview, recipient confirmation and result logging.
+- [ ] Add replies and follow-up capture without pretending unsupported channels are integrated.
+
+Exit gate: at least one reliable, user-authorized communication path end-to-end.
+
+## Phase 5 — Live commercial pilot
+- [ ] Run a narrow Türkiye ↔ Poland/EU industrial tooling and machining pilot.
+- [ ] Build a manually verified set of buyer needs and supplier capabilities.
+- [ ] Contact a small, relevant set of prospects with individualized messages.
+- [ ] Record replies, objections, quote requests, introductions and deal outcomes.
+- [ ] Validate sourcing terms, delivery, quality, certification, customs/VAT and commission arrangements with qualified sources.
+- [ ] Measure qualified matches and conversations, not scraped record volume.
+
+Exit gate: evidence of genuine buyer interest and a repeatable path to a paid introduction or transaction.
+
+## Phase 6 — Expand
+- [ ] Add further product categories only after the pilot yields repeatable learning.
+- [ ] Expand geography, sources and channel adapters.
+- [ ] Add collaboration, optional encrypted sync and multi-device support.
+- [ ] Add services and careers workflows using shared discovery, evidence and outreach primitives.
+- [ ] Consider monetization only after a proven user workflow exists.
+
+## Release rule
+A phase is not complete because code compiles or a screen exists. It is complete only when its exit gate is demonstrated on a real device with test evidence and known limitations recorded.
