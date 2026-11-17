@@ -43,7 +43,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T3.0 Define a capability registry for every tool/automation operation, including inputs/outputs, availability, permissions, side effects, cost, limits and postconditions.
 - [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.
 - [x] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (CI runs 111 and 112 passed).
-- [ ] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts (implemented on `build/capability-registry`; CI pending).
+- [x] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts (PR #4 merged; CI runs 129 and 130 passed).
+- [ ] T3.0d Add user-facing capability browser and workflow UI with truthful availability, missing-permission, approval and postcondition states.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
