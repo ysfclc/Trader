@@ -17,7 +17,12 @@ enum class WorkflowRunStatus {
     FAILED,
     AWAITING_VERIFICATION,
     VERIFIED,
-    CANCELLED
+    CANCELLED;
+
+    companion object {
+        fun from(value: String): WorkflowRunStatus =
+            entries.firstOrNull { it.name == value } ?: NEEDS_REVIEW
+    }
 }
 
 enum class WorkflowStepStatus {
@@ -28,7 +33,12 @@ enum class WorkflowStepStatus {
     FAILED,
     NEEDS_REVIEW,
     SKIPPED,
-    CANCELLED
+    CANCELLED;
+
+    companion object {
+        fun from(value: String): WorkflowStepStatus =
+            entries.firstOrNull { it.name == value } ?: NEEDS_REVIEW
+    }
 }
 
 object WorkflowRules {
@@ -126,19 +136,11 @@ object WorkflowRules {
         }
     }
 
-    /**
-     * A run may enter verification only when it has at least one step and
-     * every step has reached a successful terminal state.
-     */
     fun canAwaitVerification(steps: List<WorkflowStepStatus>): Boolean =
         steps.isNotEmpty() && steps.all {
             it == WorkflowStepStatus.COMPLETED || it == WorkflowStepStatus.SKIPPED
         }
 
-    /**
-     * Completing all steps is not proof that the user's desired outcome happened.
-     * A separate evidence-backed confirmation is required.
-     */
     fun canVerifyOutcome(
         steps: List<WorkflowStepStatus>,
         outcomeEvidenceConfirmed: Boolean

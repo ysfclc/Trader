@@ -10,6 +10,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "problem_cases", indices = [Index(value = ["updatedAt"]), Index(value = ["status"])])
@@ -61,6 +64,75 @@ data class ActivityEventEntity(
     val occurredAt: Long
 )
 
+@Entity(
+    tableName = "workflow_runs",
+    foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
+    indices = [
+        Index(value = ["problemId"]),
+        Index(value = ["status"]),
+        Index(value = ["idempotencyKey"], unique = true)
+    ]
+)
+data class WorkflowRunEntity(
+    @PrimaryKey val id: String,
+    val problemId: String,
+    val title: String,
+    val status: String,
+    val idempotencyKey: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val startedAt: Long?,
+    val finishedAt: Long?,
+    val lastError: String?
+)
+
+@Entity(
+    tableName = "workflow_steps",
+    foreignKeys = [ForeignKey(entity = WorkflowRunEntity::class, parentColumns = ["id"], childColumns = ["workflowRunId"], onDelete = ForeignKey.CASCADE)],
+    indices = [
+        Index(value = ["workflowRunId"]),
+        Index(value = ["workflowRunId", "position"], unique = true)
+    ]
+)
+data class WorkflowStepEntity(
+    @PrimaryKey val id: String,
+    val workflowRunId: String,
+    val title: String,
+    val capabilityId: String,
+    val inputJson: String,
+    val expectedPostcondition: String,
+    val status: String,
+    val position: Int,
+    val retrySafe: Boolean,
+    val requiresApproval: Boolean,
+    val payloadHash: String,
+    val approvedPayloadHash: String?,
+    val approvedAt: Long?,
+    val attemptCount: Int,
+    val lastError: String?,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val startedAt: Long?,
+    val finishedAt: Long?
+)
+
+@Entity(
+    tableName = "workflow_events",
+    foreignKeys = [ForeignKey(entity = WorkflowRunEntity::class, parentColumns = ["id"], childColumns = ["workflowRunId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["workflowRunId"]), Index(value = ["occurredAt"])]
+)
+data class WorkflowEventEntity(
+    @PrimaryKey val id: String,
+    val workflowRunId: String,
+    val stepId: String?,
+    val eventType: String,
+    val fromStatus: String?,
+    val toStatus: String?,
+    val summary: String,
+    val details: String,
+    val occurredAt: Long
+)
+
 @Dao
 interface ProblemDao {
     @Query("SELECT * FROM problem_cases ORDER BY updatedAt DESC")
@@ -99,9 +171,147 @@ interface ActivityDao {
     suspend fun insert(event: ActivityEventEntity)
 }
 
-@Database(entities = [ProblemEntity::class, PlanStepEntity::class, ActivityEventEntity::class], version = 1, exportSchema = true)
+@Dao
+interface WorkflowRunDao {
+    @Query("SELECT * FROM workflow_runs WHERE problemId = :problemId ORDER BY updatedAt DESC")
+    fun observeForProblem(problemId: String): Flow<List<WorkflowRunEntity>>
+
+    @Query("SELECT * FROM workflow_runs WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): WorkflowRunEntity?
+
+    @Query("SELECT * FROM workflow_runs WHERE idempotencyKey = :key LIMIT 1")
+    suspend fun getByIdempotencyKey(key: String): WorkflowRunEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(run: WorkflowRunEntity)
+
+    @Update
+    suspend fun update(run: WorkflowRunEntity)
+}
+
+@Dao
+interface WorkflowStepDao {
+    @Query("SELECT * FROM workflow_steps WHERE workflowRunId = :runId ORDER BY position ASC")
+    fun observeForRun(runId: String): Flow<List<WorkflowStepEntity>>
+
+    @Query("SELECT * FROM workflow_steps WHERE workflowRunId = :runId ORDER BY position ASC")
+    suspend fun getForRun(runId: String): List<WorkflowStepEntity>
+
+    @Query("SELECT * FROM workflow_steps WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): WorkflowStepEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(step: WorkflowStepEntity)
+
+    @Update
+    suspend fun update(step: WorkflowStepEntity)
+}
+
+@Dao
+interface WorkflowEventDao {
+    @Query("SELECT * FROM workflow_events WHERE workflowRunId = :runId ORDER BY occurredAt ASC")
+    fun observeForRun(runId: String): Flow<List<WorkflowEventEntity>>
+
+    @Query("SELECT * FROM workflow_events WHERE workflowRunId = :runId ORDER BY occurredAt ASC")
+    suspend fun getForRun(runId: String): List<WorkflowEventEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(event: WorkflowEventEntity)
+}
+
+@Database(
+    entities = [
+        ProblemEntity::class,
+        PlanStepEntity::class,
+        ActivityEventEntity::class,
+        WorkflowRunEntity::class,
+        WorkflowStepEntity::class,
+        WorkflowEventEntity::class
+    ],
+    version = 2,
+    exportSchema = true
+)
 abstract class TraderDatabase : RoomDatabase() {
     abstract fun problemDao(): ProblemDao
     abstract fun planStepDao(): PlanStepDao
     abstract fun activityDao(): ActivityDao
+    abstract fun workflowRunDao(): WorkflowRunDao
+    abstract fun workflowStepDao(): WorkflowStepDao
+    abstract fun workflowEventDao(): WorkflowEventDao
+}
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `workflow_runs` (
+                `id` TEXT NOT NULL,
+                `problemId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `idempotencyKey` TEXT NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                `startedAt` INTEGER,
+                `finishedAt` INTEGER,
+                `lastError` TEXT,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`problemId`) REFERENCES `problem_cases`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_runs_problemId` ON `workflow_runs` (`problemId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_runs_status` ON `workflow_runs` (`status`)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_workflow_runs_idempotencyKey` ON `workflow_runs` (`idempotencyKey`)")
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `workflow_steps` (
+                `id` TEXT NOT NULL,
+                `workflowRunId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `capabilityId` TEXT NOT NULL,
+                `inputJson` TEXT NOT NULL,
+                `expectedPostcondition` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `position` INTEGER NOT NULL,
+                `retrySafe` INTEGER NOT NULL,
+                `requiresApproval` INTEGER NOT NULL,
+                `payloadHash` TEXT NOT NULL,
+                `approvedPayloadHash` TEXT,
+                `approvedAt` INTEGER,
+                `attemptCount` INTEGER NOT NULL,
+                `lastError` TEXT,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                `startedAt` INTEGER,
+                `finishedAt` INTEGER,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`workflowRunId`) REFERENCES `workflow_runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_steps_workflowRunId` ON `workflow_steps` (`workflowRunId`)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_workflow_steps_workflowRunId_position` ON `workflow_steps` (`workflowRunId`, `position`)")
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `workflow_events` (
+                `id` TEXT NOT NULL,
+                `workflowRunId` TEXT NOT NULL,
+                `stepId` TEXT,
+                `eventType` TEXT NOT NULL,
+                `fromStatus` TEXT,
+                `toStatus` TEXT,
+                `summary` TEXT NOT NULL,
+                `details` TEXT NOT NULL,
+                `occurredAt` INTEGER NOT NULL,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`workflowRunId`) REFERENCES `workflow_runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_events_workflowRunId` ON `workflow_events` (`workflowRunId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_events_occurredAt` ON `workflow_events` (`occurredAt`)")
+    }
 }
