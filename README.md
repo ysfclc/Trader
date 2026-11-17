@@ -33,13 +33,13 @@ Trader is not a promise that software can solve every human problem, an open mar
 | [Market and portfolio research](docs/RESEARCH/2026-11-17_MARKET_AND_PORTFOLIO.md) | First Poland–Türkiye pilot, repository map, channels and prospects |
 | [Reuse audit](docs/REUSE_AUDIT.md) | Initial code inspection across discovery, Android and automation references |
 | [Additional reuse audit](docs/ADDITIONAL_REUSE_AUDIT.md) | BOS, Oddo, Troy, Kovan, Zommo, Nexus and remaining repository triage |
-| [QRKey reuse audit](docs/QRKEY_REUSE_AUDIT.md) | QRKey repository-family source audit, reusable patterns and non-reuse decisions |
+| [QRKey reuse audit](docs/QRKEY_REUSE_AUDIT.md) | QRKey repository-family source audit, reusable patterns and non-reuse decisions |\n| [Workflow runtime](docs/WORKFLOW_RUNTIME.md) | Durable run/step/event model, approval binding, lifecycle and execution limits |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
 | [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
 
 ## Current state
 
-**Phase 1 — first Android problem workspace merged.** The Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history and English/Turkish/Polish UI are merged to main. CI passed unit tests, lint, APK assembly, signature verification and package identity checks. The debug APK is available from the [successful build workflow](https://github.com/ysfclc/Trader/actions/runs/44106902964). A pure-domain workflow run/step lifecycle contract now passes CI; durable workflow persistence and capability execution remain open. Physical-device acceptance remains pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
+**Phase 1 — first Android problem workspace merged.** The Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history and English/Turkish/Polish UI are merged to main. CI passed unit tests, lint, APK assembly, signature verification and package identity checks. The debug APK is available from the [successful build workflow](https://github.com/ysfclc/Trader/actions/runs/44106902964). A pure-domain workflow lifecycle contract passed CI. Durable Room workflow persistence, exact-payload approvals and migration tests are now implemented on a feature branch; its CI verification is pending. Capability execution remains open. Physical-device acceptance remains pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
 
 The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
 

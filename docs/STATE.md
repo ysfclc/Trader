@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (QRKey audit and workflow lifecycle foundation)
+Last updated: 2026-11-17 (durable workflow persistence implementation added)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 1 — first Android problem workspace implementation**
+- Status: **Phase 2 — durable workflow persistence foundation (CI verification pending)**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -36,7 +36,7 @@ Last updated: 2026-11-17 (QRKey audit and workflow lifecycle foundation)
 - [x] Triaged the remaining repository families without claiming their source code was reviewed.
 - [x] Added `docs/REUSE_AUDIT.md` with exact source paths, reusable patterns, known limitations, build-history observations and the no-fork/no-dependency decision.
 - [x] Verified the current Trader tree contains the README and all linked baseline documents.
-- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.
+- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.\n- [x] Merged PR #2 (`3d258d8845732015d2c6f63dfcd139d6629f196f`): deterministic workflow lifecycle rules and QRKey audit; CI run 93 passed.
 - [x] Added pure Kotlin workflow run/step lifecycle rules and JVM tests; CI run 44106532286 passed unit tests, lint, debug APK build, signature verification and package identity checks. Workflow persistence and execution remain open.
 
 ## Expanded audit conclusion
@@ -58,9 +58,9 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [ ] Install and exercise the first ProblemCase → context → plan-step → activity loop on a physical Android device; CI build and unit tests now pass, but device behavior remains unverified.
 - [x] Complete the QRKey/mobile-prototype source audit; no QRKey repository contains a suitable native Android browser/app automation runtime for reuse.
 - [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
-- [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.\n- [ ] Verify Room persistence and add migration tests plus encrypted backup/restore.
+- [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.\n- [ ] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI verification pending.\n- [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Browser/app automation.
+- [ ] Workflow UI, capability registry enforcement and durable WorkManager execution.\n- [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
 - [ ] Communication adapters and outreach.
@@ -139,9 +139,16 @@ PR #1 was marked ready and squash-merged to `main` at `0a6dd7ca3fe4ec072058523ca
 
 Completed a targeted source-level audit of all ten identified QRKey repositories. QRKey 2 contributes useful idempotency, transactional side-effect, append-only event and evidence patterns. QRKey's developer automation contributes deterministic workflow routing, bounded context loading, pre-flight state checks, approval gates, timeouts, locking and recovery lessons. None provides a reusable native Android browser/app automation runtime. No QRKey code or runtime dependency is being copied.
 
-Added a pure Kotlin workflow run/step state machine and JVM tests on `build/workflow-lifecycle-and-qrkey-audit`. The state contract distinguishes approval, safe retry, manual review and outcome verification. GitHub Actions run 93 passed the full Android CI pipeline. Workflow runs are not yet persisted, capabilities are not yet executed, and no workflow completion is claimed.
+Added a pure Kotlin workflow run/step state machine and JVM tests on `build/workflow-lifecycle-and-qrkey-audit`. The state contract distinguishes approval, safe retry, manual review and outcome verification. GitHub Actions run 93 passed the full Android CI pipeline. At that checkpoint workflow runs were not yet persisted; the next checkpoint adds Room persistence, with migration and repository tests pending CI. Capabilities are not yet executed, and no workflow completion is claimed.
 
 
 ### 2026-11-17 — Workflow lifecycle CI verified
 
 GitHub Actions run 93 (`44106902964`) passed the complete Android pipeline on `build/workflow-lifecycle-and-qrkey-audit`: JVM unit tests (including the new workflow rules), lint, debug APK assembly, APK signature verification and package identity assertion. Artifact `14339431799` was uploaded (GitHub digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`). This verifies compilation and CI tests, not physical-device behavior or durable workflow execution.
+
+
+### 2026-11-17 — Durable workflow persistence implementation
+
+Added Room v2 entities and DAOs for workflow runs, ordered steps and append-only events; a v1→v2 migration; idempotent workflow creation; exact-payload SHA-256 approval binding; approval invalidation when inputs change; lifecycle transitions; safe retry gates; explicit review states; automatic cancellation of non-terminal steps; and separate outcome verification. Added Robolectric tests for persistence, approval, retry, cancellation and migration/data preservation.
+
+This implementation is on `build/workflow-persistence`. CI has not yet verified this checkpoint. No workflow UI, WorkManager executor, browser/app automation or external action adapter is claimed.
