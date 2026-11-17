@@ -221,6 +221,7 @@ class TraderRepository(private val database: TraderDatabase) {
     ): Boolean = database.withTransaction {
         val run = database.workflowRunDao().getById(runId) ?: return@withTransaction false
         val from = WorkflowRunStatus.from(run.status)
+        if (from == target) return@withTransaction true
         val steps = database.workflowStepDao().getForRun(runId)
         val stepStatuses = steps.map { WorkflowStepStatus.from(it.status) }
 
@@ -297,6 +298,7 @@ class TraderRepository(private val database: TraderDatabase) {
         val run = database.workflowRunDao().getById(step.workflowRunId) ?: return@withTransaction false
         val runStatus = WorkflowRunStatus.from(run.status)
         val from = WorkflowStepStatus.from(step.status)
+        if (from == target) return@withTransaction true
 
         val allowedRunState = runStatus == WorkflowRunStatus.RUNNING ||
             (runStatus == WorkflowRunStatus.READY && target == WorkflowStepStatus.PENDING)
