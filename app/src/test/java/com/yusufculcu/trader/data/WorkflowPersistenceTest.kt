@@ -48,6 +48,9 @@ class WorkflowPersistenceTest {
         assertEquals(WorkflowRunStatus.DRAFT.name, run?.status)
         assertEquals(2, database.workflowStepDao().getForRun(firstId).size)
         assertEquals(1, database.workflowEventDao().getForRun(firstId).count { it.eventType == "workflow_created" })
+        val eventCount = database.workflowEventDao().getForRun(firstId).size
+        assertTrue(repository.transitionWorkflowRun(firstId, WorkflowRunStatus.DRAFT))
+        assertEquals(eventCount, database.workflowEventDao().getForRun(firstId).size)
     }
 
     @Test
@@ -202,6 +205,12 @@ class WorkflowPersistenceTest {
         old.execSQL(
             "INSERT INTO problem_cases VALUES ('problem-1','Existing problem','','','','General','OPEN','manual','','', '',1,1)"
         )
+        old.execSQL(
+            "INSERT INTO plan_steps VALUES ('step-1','problem-1','Existing step','','','','TODO',0,1,1)"
+        )
+        old.execSQL(
+            "INSERT INTO activity_events VALUES ('event-1','problem-1','created','Captured','',1)"
+        )
         old.version = 1
         old.close()
 
@@ -211,6 +220,15 @@ class WorkflowPersistenceTest {
             .build()
         try {
             assertEquals("Existing problem", migrated.problemDao().getById("problem-1")?.title)
+            val preservedRows = migrated.openHelper.readableDatabase.query(
+                "SELECT (SELECT COUNT(*) FROM plan_steps WHERE id='step-1') + (SELECT COUNT(*) FROM activity_events WHERE id='event-1')"
+            )
+            try {
+                assertTrue(preservedRows.moveToFirst())
+                assertEquals(2, preservedRows.getInt(0))
+            } finally {
+                preservedRows.close()
+            }
             val table = migrated.openHelper.readableDatabase.query(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='workflow_runs'"
             )
