@@ -70,7 +70,7 @@ Local rules work without AI. Optional models help extract, translate, classify a
 **Date:** 2026-11-17  
 **Status:** Accepted
 
-The first pilot tests industrial cutting tools and machining-related products between Türkiye and Poland/EU. Domain logic remains geography- and category-neutral.
+The first pilot tests industrial cutting tools and machining-related products between Türkiye and Poland/EU. Domain logic remains category- and geography-neutral.
 
 **Reason:** Public demand/supply signals and the user's manufacturing background make this a grounded first validation target.
 
@@ -81,3 +81,27 @@ The first pilot tests industrial cutting tools and machining-related products be
 Build capture → evidence → normalization → transparent match → review → draft → user-controlled handoff before expanding to large-scale crawling, inbox sync or autonomous app operation.
 
 **Reason:** A small end-to-end commercial outcome is more valuable than many partial integrations.
+
+## D-011 — Reimplement patterns; do not fork existing products
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Trader owns its own Android app, domain, storage, source adapters, browser/app automation and workflow code. Existing repositories are reference implementations only. No required module, database, service or runtime from Memo, EBO, VaultOS, BusyBee or Outbound Sourcer is imported.
+
+**Reason:** Those projects solve different domains and carry different maturity gaps. A fresh, testable boundary prevents inherited bugs and architecture coupling. Exact reuse boundaries are recorded in `docs/REUSE_AUDIT.md`.
+
+## D-012 — Evidence-first source ingestion
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Every capture stores the original source/evidence before normalization, AI enrichment or matching. Derived claims retain source IDs and verification state. Unknown, contradicted, expired and human-verified facts remain distinct.
+
+**Reason:** A trade decision depends on technical and commercial facts; normalized data without traceable evidence is not sufficient.
+
+## D-013 — CI signing is separate from source
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Trader will use a new application ID and CI-only signing secrets. Never copy a keystore, signing identity or private build material from VaultOS, BusyBee, Memo or another project into Trader.
+
+**Reason:** Application identity and release-update continuity must be isolated. Signing material must not be committed to source control.
