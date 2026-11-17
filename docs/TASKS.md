@@ -39,7 +39,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 ## T3 — Discovery and browser/app automation
 
 - [ ] T3.0 Define a capability registry for every tool/automation operation, including inputs/outputs, availability, permissions, side effects, cost, limits and postconditions.
-- [ ] T3.0a Persist and exercise the deterministic workflow run/step lifecycle state machine (initial pure-domain rules and unit tests added; CI verification pending).
+- [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.\n- [ ] T3.0b Persist and exercise workflow runs/steps, including pause/resume, cancellation, idempotency and process-death recovery.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
