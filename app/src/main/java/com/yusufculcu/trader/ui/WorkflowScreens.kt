@@ -66,7 +66,7 @@ fun WorkflowContent(
             Text(stringResource(R.string.workflow_empty), fontWeight = FontWeight.SemiBold)
             Text(stringResource(R.string.workflow_empty_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
                 items(runs, key = { it.id }) { run ->
                     WorkflowRunCard(
                         run = run,
