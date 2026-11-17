@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (workflow persistence merged; capability registry in progress)
+Last updated: 2026-11-17 (capability registry merged; workflow UI next)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow persistence merged; capability registry in progress**
+- Status: **Phase 2 — durable workflow and capability policy foundation merged**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -39,7 +39,8 @@ Last updated: 2026-11-17 (workflow persistence merged; capability registry in pr
 - [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.
 - [x] Merged PR #2 (`3d258d8845732015d2c6f63dfcd139d6629f196f`): deterministic workflow lifecycle rules and QRKey audit; CI run 93 passed.
 - [x] Merged PR #3 (`708a3d4e64bed1cca81075de3622a55bb9a9d745`): Room v2 workflow persistence, append-only events, exact-payload approval binding, retry/cancellation rules and migration tests; CI runs 111 and 112 passed.
-- [x] Added pure Kotlin workflow run/step lifecycle rules and JVM tests; CI run 44106532286 passed unit tests, lint, debug APK build, signature verification and package identity checks. Workflow persistence and execution remain open.
+- [x] Merged PR #4 (`959eb52f677ccdeae2548b76c096e61a799ff135`): capability registry, registry-derived approval/retry policy and fail-closed workflow start checks; CI runs 129 and 130 passed all 30 tests.
+- [x] Added and verified a typed capability registry; only implemented local/manual capabilities are executable. Browser, installed-app, AI and communication capabilities remain explicitly unavailable.
 
 ## Expanded audit conclusion
 - BOS is a major architecture reference: deterministic business runtime, event/provenance model, capability execution and scoped AI. Its current implementation is not a safe Trader dependency: generalized ingestion is still marked not started, the workflow executor is partial, ADR-038 migration T-385 remains active in the inspected task ledger, and latest observed CI run (2026-09-23) failed.
@@ -60,11 +61,11 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [ ] Install and exercise the first ProblemCase → context → plan-step → activity loop on a physical Android device; CI build and unit tests now pass, but device behavior remains unverified.
 - [x] Complete the QRKey/mobile-prototype source audit; no QRKey repository contains a suitable native Android browser/app automation runtime for reuse.
 - [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
-- [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.
+- [ ] Verify pause/resume and process-death recovery for persisted workflows; idempotent creation, cancellation and lifecycle gates have repository tests.
 - [x] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI runs 111 and 112 passed.
 - [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Workflow UI and durable WorkManager execution.
+- [ ] Workflow UI, capability browser and durable WorkManager execution.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -92,9 +93,12 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Successful push CI run: `44102991766` (run 74)
 - Successful pull-request CI run: `44103004289` (run 75)
 - Successful workflow lifecycle branch CI run: `44106902964` (run 93)
+- Successful capability registry push CI run: `44111705169` (run 129)
+- Successful capability registry pull-request CI run: `44111721765` (run 130)
 - Push run 74 artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01).
 - Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.
 - Workflow lifecycle run 93 artifact ID: `14339431799` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`.
+- Capability registry run 129 artifact ID: `14341082290` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `d1b1b93393c8a9273c70d5d7955c5b800e22e5f56ac37e64fe0745a598f3cd92`.
 - APK: `app-debug.apk`, 18,820,225 bytes
 - APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
 - Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
@@ -166,3 +170,10 @@ This implementation is on `build/workflow-persistence`. CI has not yet verified 
 PR #3 merged Room v2 workflow runs, ordered steps and append-only events, v1→v2 migration, idempotent workflow creation, exact-payload SHA-256 approval binding, retry/review gates and cancellation. CI runs 111 and 112 passed the full pipeline, including Robolectric persistence and migration tests. Artifact 14340281041 is recorded above.
 
 The next branch, `build/capability-registry`, adds a policy catalogue for implemented, unavailable and unregistered capabilities. It derives mandatory approval/retry settings and blocks starting capabilities that are not implemented. CI verification is pending.
+
+
+### 2026-11-17 — Capability registry merged
+
+PR #4 merged at `959eb52f677ccdeae2548b76c096e61a799ff135`. The registry records availability, effects, permissions, retry policy, mandatory approval and visible-surface requirements. Workflow creation derives safety metadata from registry policy, unknown capabilities fail closed, and runs with no implemented work cannot start. CI runs 129 and 130 passed all 30 unit/Robolectric tests, lint, APK assembly, signature verification and package identity checks. Artifact 14341082290 is recorded above.
+
+Current boundary: Trader can capture problems and persist/track approved workflow plans. It does not yet execute browser, installed-app, AI, network-discovery or communication capabilities. Workflow UI and durable WorkManager execution are the next major implementation phase.
