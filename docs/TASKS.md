@@ -8,14 +8,14 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
 - [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.
 - [ ] T0.7 Complete source-level audit of QRKey variants and remaining mobile/automation prototypes before deciding whether any component is reusable.
-- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4 and SDK 36. Clean CI verification remains pending.
+- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4 and SDK 36; clean CI build, unit tests and lint passed.
 - [x] T0.4 Add Gradle wrapper, reproducible CI build and signing-boundary instructions. Production release signing via GitHub secrets remains open.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
 
 ## T1 — Android shell and local data
 
 - [x] T1.0 Implement initial ProblemCase model: original request, desired outcome, constraints, category, source metadata, status and timestamps. A separate Goal entity, urgency, uncertainty and evidence records remain open.
-- [ ] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
+- [x] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
 - [ ] T1.2 Expand navigation beyond the first Inbox and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workflows.
@@ -76,7 +76,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T6.3 Validate one real buyer requirement against supplier technical evidence.
 - [ ] T6.4 Run approved individualized outreach and record actual outcomes.
 - [ ] T6.5 Verify capture → qualify → match → draft → approve → contact → follow-up on device.
-- [ ] T6.6 Record APK hash, source commit, test evidence, CI run and known issues.
+- [x] T6.6 Record APK hash, source commit, test evidence, CI run and known issues (see `docs/STATE.md`).
 
 ## Product-scope guardrail
 
