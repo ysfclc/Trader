@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (APK signature and package identity verified)
+Last updated: 2026-11-17 (Android foundation merged to main)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -79,8 +79,9 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Preserve every bug, regression and user requirement in the task ledger until verified resolved.
 
 ## Verified build record
-- Source branch: `build/problem-core-android`
-- Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd`
+- Implementation PR: [#1](https://github.com/ysfclc/Trader/pull/1), merged to `main`
+- Merge commit: `0a6dd7ca3fe4ec072058523cae07af22f940424a`
+- Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd` (same application source included in the merge)
 - Successful push CI run: `44102991766` (run 74)
 - Successful pull-request CI run: `44103004289` (run 75)
 - Artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01)
@@ -125,3 +126,7 @@ The first local-first Android vertical slice compiled, passed JVM unit tests and
 
 ### 2026-11-17 — APK signature and package identity verified
 Added explicit CI gates using apksigner and aapt. Both push run 74 and pull-request run 75 passed, including unit tests, lint, APK build, signature verification and the exact debug application ID/version assertion. Downloaded the latest artifact and updated its SHA-256 record above. Physical-device acceptance remains open.
+
+
+### 2026-11-17 — First Android foundation merged
+PR #1 was marked ready and squash-merged to `main` at `0a6dd7ca3fe4ec072058523cae07af22f940424a`. The feature branch's push and pull-request workflows passed, including unit tests, lint, APK assembly, signature verification and package identity checks. A post-merge main-branch CI run is in progress. Device acceptance remains the next gate.
