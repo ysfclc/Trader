@@ -162,6 +162,29 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun unimplementedExternalCapabilityIsPlannableButCannotStart() = runBlocking {
+        val problemId = repository.createProblem("Prepare an external submission")
+        val runId = repository.createWorkflow(
+            problemId,
+            "External submission",
+            listOf(WorkflowStepDraft(
+                title = "Submit form",
+                capabilityId = "browser.submit",
+                retrySafe = true,
+                requiresApproval = false
+            )),
+            "workflow-request-unimplemented"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(step.requiresApproval)
+        assertFalse(step.retrySafe)
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+    }
+
+    @Test
     fun cancellingRunCancelsEveryNonTerminalStep() = runBlocking {
         val problemId = repository.createProblem("Stop a multi-step process")
         val runId = repository.createWorkflow(
