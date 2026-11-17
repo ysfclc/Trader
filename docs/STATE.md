@@ -35,7 +35,9 @@ Last updated: 2026-11-17 (QRKey audit and workflow lifecycle foundation)
 - [x] Expanded the audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; recorded exact source paths, design strengths, implementation gaps and dated CI observations in `docs/ADDITIONAL_REUSE_AUDIT.md`.
 - [x] Triaged the remaining repository families without claiming their source code was reviewed.
 - [x] Added `docs/REUSE_AUDIT.md` with exact source paths, reusable patterns, known limitations, build-history observations and the no-fork/no-dependency decision.
-- [x] Verified the current Trader tree contains the README and all linked baseline documents.\n- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.\n- [ ] Added the first pure-domain workflow run/step lifecycle state machine and unit tests on `build/workflow-lifecycle-and-qrkey-audit`; CI verification pending.
+- [x] Verified the current Trader tree contains the README and all linked baseline documents.
+- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.
+- [ ] Added the first pure-domain workflow run/step lifecycle state machine and unit tests on `build/workflow-lifecycle-and-qrkey-audit`; CI verification pending.
 
 ## Expanded audit conclusion
 - BOS is a major architecture reference: deterministic business runtime, event/provenance model, capability execution and scoped AI. Its current implementation is not a safe Trader dependency: generalized ingestion is still marked not started, the workflow executor is partial, ADR-038 migration T-385 remains active in the inspected task ledger, and latest observed CI run (2026-09-23) failed.
@@ -84,7 +86,8 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd` (same application source included in the merge)
 - Successful push CI run: `44102991766` (run 74)
 - Successful pull-request CI run: `44103004289` (run 75)
-- Push run 74 artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01).\n- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.
+- Push run 74 artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01).
+- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.
 - APK: `app-debug.apk`, 18,820,225 bytes
 - APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
 - Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
