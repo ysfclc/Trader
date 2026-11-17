@@ -1,6 +1,6 @@
 # Trader Workflow Runtime
 
-**Status:** Room v2 workflow persistence and lifecycle tests passed CI and were merged in PR #3. Capability registry enforcement is being added in a follow-up branch.  
+**Status:** Room v2 workflow persistence (PR #3) and capability registry enforcement (PR #4) are merged; CI tests passed.  
 **Scope:** Durable workflow planning and lifecycle tracking. This is not yet a capability executor.
 
 ## Data model
@@ -55,7 +55,7 @@ Robolectric tests cover:
 
 ## Next implementation gates
 
-1. Finish CI verification of the capability registry and enforce its policy in all step creation/start paths.
-2. Add workflow UI to create a run from a ProblemCase plan and inspect its complete event history.
+1. Add workflow UI to create a run from a ProblemCase plan, inspect events and approve exact payloads.
+2. Add a user-facing capability browser with availability, permission and policy explanations.
 3. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
 4. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.
