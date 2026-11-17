@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (Android foundation implementation)
+Last updated: 2026-11-17 (first Android CI build verified)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -8,7 +8,7 @@ Last updated: 2026-11-17 (Android foundation implementation)
 - Project: Trader
 - Status: **Phase 1 — first Android problem workspace implementation**
 - Android source code: first implementation committed on `build/problem-core-android`.
-- APK: CI build pending; no artifact verified yet.
+- APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
@@ -19,6 +19,9 @@ Last updated: 2026-11-17 (Android foundation implementation)
 - [x] Added system-locale English, Turkish and Polish UI strings and localized activity labels.
 - [x] Added pinned Gradle 8.13 wrapper and checksum, plus `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
 - [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
+- [x] Clean CI run passed: tests, lint and debug APK assembly; artifact package uploaded successfully.
+- [x] Downloaded the APK artifact and verified it is a valid Android package archive containing DEX and resources; recorded SHA-256 below.
+- [x] Localized the complete first-slice UI, category labels, statuses and activity event labels for English, Turkish and Polish.
 - [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
 - [x] Added universal ProblemCase, Goal, Plan/PlanStep and Capability concepts to the locked product, architecture and data model.
@@ -49,9 +52,9 @@ Last updated: 2026-11-17 (Android foundation implementation)
 The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
 
 ## Not yet verified in Trader
-- [ ] Finish and verify the first ProblemCase → context → plan-step → activity loop; current code is not yet CI- or device-verified.
+- [ ] Install and exercise the first ProblemCase → context → plan-step → activity loop on a physical Android device; CI build and unit tests now pass, but device behavior remains unverified.
 - [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
-- [ ] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
+- [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
 - [ ] Verify Room persistence and add migration tests plus encrypted backup/restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
 - [ ] Browser/app automation.
@@ -74,11 +77,25 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Unknown technical/commercial values are not treated as passing requirements or zero-cost values.
 - Preserve every bug, regression and user requirement in the task ledger until verified resolved.
 
+## Verified build record
+- Source branch: `build/problem-core-android`
+- Source commit used for the APK: `7a1acf0abd4f0bbac525b7f3566fa1c49af16840`
+- Successful push CI run: `44101836481` (run 65)
+- Successful pull-request CI run: `44101851705` (run 66)
+- Artifact ID: `14336942344` (`trader-debug-apk`, expires 2026-12-01)
+- APK: `app-debug.apk`, 18,820,225 bytes
+- APK SHA-256: `da19aa0aec33aced27801504f1480c48336a4b962978d41df24e0ec2c94c1db6`
+- Package ID: `com.yusufculcu.trader.debug`; version `0.1.0` (debug build)
+- CI tasks passed: `testDebugUnitTest`, `assembleDebug`, `lintDebug`
+- Signature verification is being added as an explicit CI gate in the next workflow revision; the downloaded artifact came from AGP's debug build.
+- Device installation, launch, share-intent behavior and process-death persistence are not yet verified.
+
 ## Next implementation checkpoint
-1. Pin a clean Android toolchain for Trader, based on compatible tested versions rather than copying any other app wholesale.
-2. Create the first standalone Android foundation and CI workflow with a new application ID and CI-only signing secrets.
-3. Implement one vertical slice: share/manual capture → evidence persistence → offline retrieval → process-death recovery.
-4. Build and install on Redmi Note 12 Pro 5G before adding large-scale discovery or app automation.
+1. Add explicit APK signature/package-identity verification to CI.
+2. Install and exercise this APK on the Redmi Note 12 Pro 5G; verify create/share/reopen/plan/status flows and process-death persistence.
+3. Fix issues found on-device before extending capture to files/screenshots and adding the capability registry.
+4. Implement durable workflow state, pause/resume/cancellation and evidence records.
+5. Add browser session and bounded app handoff as independently testable capabilities; only then layer optional AI/prompt-context adapters.
 
 ## Change log
 ### 2026-11-17 — Initial repository lock
@@ -101,3 +118,7 @@ Created `build/problem-core-android` and draft PR #1. The first source slice inc
 
 ### 2026-11-17 — Build pipeline hardening
 The first wrapper-based CI attempt exposed that the initially selected wrapper JAR was not executable. Replaced it with the wrapper JAR shipped by the Android Now in Android sample, corrected the distribution URL escaping, pinned the official Gradle 8.13 distribution SHA-256 and switched CI to `./gradlew`. The corrected wrapper is awaiting CI verification; do not treat the build as green until the workflow completes successfully.
+
+
+### 2026-11-17 — First Android CI build verified
+The first local-first Android vertical slice compiled, passed JVM unit tests and lint, and produced a downloadable debug APK through GitHub Actions. The artifact was downloaded and inspected; SHA-256, source commit and CI run IDs are recorded above. A lint failure in the initial attempt was corrected by placing the API 27 navigation-bar theme attribute in `values-v27`. The physical-device acceptance gate remains open.
