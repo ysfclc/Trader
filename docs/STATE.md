@@ -13,9 +13,11 @@ Last updated: 2026-11-17 (product scope correction: general problem solving)
 - Live discovery or communication integrations: not yet implemented.
 
 ## Completed in this checkpoint
-- [x] Created native Android app foundation (Kotlin 2.2.20, AGP 8.13.0, Compose, Room, WorkManager; compile SDK 36, min SDK 26).
+- [x] Created native Android app foundation (Kotlin 2.2.20, AGP 8.13.0, Gradle 8.13 wrapper, Compose, Room, WorkManager; compile SDK 36, min SDK 26).
 - [x] Implemented universal ProblemCase persistence, manual capture, Android share URL/text capture, problem detail, plan-step persistence, status transitions and append-only activity events.
 - [x] Added JVM tests for title normalization and status-transition rules.
+- [x] Added system-locale English, Turkish and Polish UI strings and localized activity labels.
+- [x] Added pinned Gradle wrapper and `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
 - [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
 - [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
@@ -49,7 +51,7 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 ## Not yet verified in Trader
 - [ ] Finish and verify the first ProblemCase → context → plan-step → activity loop; current code is not yet CI- or device-verified.
 - [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
-- [ ] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build; local Gradle wrapper is not yet included.
+- [ ] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
 - [ ] Verify Room persistence and add migration tests plus encrypted backup/restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
 - [ ] Browser/app automation.
