@@ -44,7 +44,7 @@ class TraderRepository(private val database: TraderDatabase) {
         database.withTransaction {
             val position = database.planStepDao().nextPosition(problemId)
             database.planStepDao().insert(PlanStepEntity(UUID.randomUUID().toString(), problemId, clean, "", "", "", "TODO", position, now, now))
-            database.problemDao().getById(problemId)?.let { database.problemDao().insert(it.copy(updatedAt = now)) }
+            database.problemDao().touch(problemId, now)
             addEvent(problemId, "plan_step_added", "Plan step added", clean, now)
         }
     }
@@ -54,7 +54,7 @@ class TraderRepository(private val database: TraderDatabase) {
         val now = System.currentTimeMillis()
         database.withTransaction {
             database.planStepDao().updateStatus(step.id, next, now)
-            database.problemDao().getById(step.problemId)?.let { database.problemDao().insert(it.copy(updatedAt = now)) }
+            database.problemDao().touch(step.problemId, now)
             addEvent(step.problemId, "plan_step_changed", if (next == "DONE") "Step completed" else "Step reopened", step.title, now)
         }
     }
