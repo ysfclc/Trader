@@ -34,6 +34,7 @@ Trader is not a promise that software can solve every human problem, an open mar
 | [Reuse audit](docs/REUSE_AUDIT.md) | Initial code inspection across discovery, Android and automation references |
 | [Additional reuse audit](docs/ADDITIONAL_REUSE_AUDIT.md) | BOS, Oddo, Troy, Kovan, Zommo, Nexus and remaining repository triage |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
+| [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
 
 ## Current state
 
