@@ -52,4 +52,7 @@
     <string name="event_status_updated">Durum güncellendi</string>
     <string name="event_activity_recorded">İşlem kaydedildi</string>
 
+    <string name="category_general">GENEL</string>
+    <string name="category_captured">KAYDEDİLDİ</string>
+    <string name="category_other">DİĞER</string>
 </resources>
