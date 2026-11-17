@@ -7,8 +7,6 @@ import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.WorkflowStepDraft
-import com.yusufculcu.trader.data.WorkflowStepEntity
-import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.domain.WorkflowRunStatus
 import com.yusufculcu.trader.domain.WorkflowStepStatus
 import java.util.UUID
