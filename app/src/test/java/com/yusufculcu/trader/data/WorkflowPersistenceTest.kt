@@ -91,7 +91,7 @@ class WorkflowPersistenceTest {
             "Prepare message",
             listOf(WorkflowStepDraft(
                 title = "Send message",
-                capabilityId = "communication.send",
+                capabilityId = "manual.task",
                 inputJson = """{"recipient":"buyer@example.test","body":"Hello"}""",
                 requiresApproval = true
             )),
@@ -117,7 +117,7 @@ class WorkflowPersistenceTest {
         val runId = repository.createWorkflow(
             problemId,
             "Submit form",
-            listOf(WorkflowStepDraft("Submit form", capabilityId = "browser.submit", retrySafe = false)),
+            listOf(WorkflowStepDraft("Submit form", capabilityId = "manual.task", retrySafe = false, requiresApproval = true)),
             "workflow-request-4"
         )!!
         val step = database.workflowStepDao().getForRun(runId).single()
@@ -144,7 +144,7 @@ class WorkflowPersistenceTest {
         val runId = repository.createWorkflow(
             problemId,
             "Read-only lookup",
-            listOf(WorkflowStepDraft("Fetch public page", capabilityId = "web.fetch", retrySafe = true)),
+            listOf(WorkflowStepDraft("Fetch public page", capabilityId = "manual.task", retrySafe = true)),
             "workflow-request-5"
         )!!
         val step = database.workflowStepDao().getForRun(runId).single()
