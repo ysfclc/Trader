@@ -234,6 +234,10 @@ class TraderRepository(private val database: TraderDatabase) {
         val stepStatuses = steps.map { WorkflowStepStatus.from(it.status) }
 
         if (target == WorkflowRunStatus.VERIFIED && details.isBlank()) return@withTransaction false
+        if (from == WorkflowRunStatus.FAILED && target == WorkflowRunStatus.READY) {
+            val failedSteps = steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED }
+            if (failedSteps.isEmpty() || failedSteps.any { !it.retrySafe }) return@withTransaction false
+        }
         if (target == WorkflowRunStatus.RUNNING) {
             val hasExecutableWork = steps.any { step ->
                 val stepStatus = WorkflowStepStatus.from(step.status)
