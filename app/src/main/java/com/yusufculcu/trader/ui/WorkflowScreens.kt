@@ -271,6 +271,9 @@ private fun WorkflowStepCard(step: WorkflowStepEntity, runStatus: WorkflowRunSta
             }
             if (!capability.canExecute && status == WorkflowStepStatus.PENDING) {
                 Text(stringResource(R.string.workflow_capability_unavailable), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                if (runStatus == WorkflowRunStatus.RUNNING) {
+                    TextButton(onClick = { viewModel.skipWorkflowStep(step.id) }) { Text(stringResource(R.string.workflow_skip_step)) }
+                }
             }
             when {
                 runStatus == WorkflowRunStatus.RUNNING && status == WorkflowStepStatus.PENDING && capability.canExecute -> {
