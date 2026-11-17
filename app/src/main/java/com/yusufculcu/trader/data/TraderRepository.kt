@@ -25,8 +25,13 @@ class TraderRepository(private val database: TraderDatabase) {
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
     fun observeCount(): Flow<Int> = database.problemDao().observeCount()
+    fun observeAllWorkflowRuns(): Flow<List<WorkflowRunEntity>> = database.workflowRunDao().observeAll()
     fun observeWorkflowRuns(problemId: String): Flow<List<WorkflowRunEntity>> =
         database.workflowRunDao().observeForProblem(problemId)
+    suspend fun getWorkflowRun(runId: String): WorkflowRunEntity? = database.workflowRunDao().getById(runId)
+    suspend fun getWorkflowStep(stepId: String): WorkflowStepEntity? = database.workflowStepDao().getById(stepId)
+    suspend fun getWorkflowSteps(runId: String): List<WorkflowStepEntity> = database.workflowStepDao().getForRun(runId)
+    suspend fun getWorkflowEvents(runId: String): List<WorkflowEventEntity> = database.workflowEventDao().getForRun(runId)
     fun observeWorkflowSteps(runId: String): Flow<List<WorkflowStepEntity>> =
         database.workflowStepDao().observeForRun(runId)
     fun observeWorkflowEvents(runId: String): Flow<List<WorkflowEventEntity>> =
