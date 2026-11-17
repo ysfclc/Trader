@@ -44,4 +44,12 @@
     <string name="add">Ekle</string>
     <string name="inbox">Gelen kutusu</string>
     <string name="outcome_confirmed_by_user">Sonuç kullanıcı tarafından onaylandı</string>
+
+    <string name="event_problem_captured">Problem kaydedildi</string>
+    <string name="event_plan_step_added">Plan adımı eklendi</string>
+    <string name="event_step_completed">Adım tamamlandı</string>
+    <string name="event_step_reopened">Adım yeniden açıldı</string>
+    <string name="event_status_updated">Durum güncellendi</string>
+    <string name="event_activity_recorded">İşlem kaydedildi</string>
+
 </resources>
