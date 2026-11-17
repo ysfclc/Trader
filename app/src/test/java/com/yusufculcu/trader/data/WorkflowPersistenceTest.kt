@@ -91,7 +91,7 @@ class WorkflowPersistenceTest {
             "Prepare message",
             listOf(WorkflowStepDraft(
                 title = "Send message",
-                capabilityId = "communication.send",
+                capabilityId = "manual.task",
                 inputJson = """{"recipient":"buyer@example.test","body":"Hello"}""",
                 requiresApproval = true
             )),
@@ -117,13 +117,14 @@ class WorkflowPersistenceTest {
         val runId = repository.createWorkflow(
             problemId,
             "Submit form",
-            listOf(WorkflowStepDraft("Submit form", capabilityId = "browser.submit", retrySafe = false)),
+            listOf(WorkflowStepDraft("Submit form", capabilityId = "manual.task", retrySafe = false, requiresApproval = true)),
             "workflow-request-4"
         )!!
         val step = database.workflowStepDao().getForRun(runId).single()
 
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.approveWorkflowStep(step.id, "Confirmed the manual action is authorized"))
         assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
         assertTrue(repository.transitionWorkflowStep(
             step.id,
@@ -144,7 +145,7 @@ class WorkflowPersistenceTest {
         val runId = repository.createWorkflow(
             problemId,
             "Read-only lookup",
-            listOf(WorkflowStepDraft("Fetch public page", capabilityId = "web.fetch", retrySafe = true)),
+            listOf(WorkflowStepDraft("Fetch public page", capabilityId = "manual.task", retrySafe = true)),
             "workflow-request-5"
         )!!
         val step = database.workflowStepDao().getForRun(runId).single()
@@ -158,6 +159,29 @@ class WorkflowPersistenceTest {
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY, retryAuthorized = true))
         assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.PENDING))
         assertEquals(WorkflowStepStatus.PENDING.name, database.workflowStepDao().getById(step.id)?.status)
+    }
+
+    @Test
+    fun unimplementedExternalCapabilityIsPlannableButCannotStart() = runBlocking {
+        val problemId = repository.createProblem("Prepare an external submission")
+        val runId = repository.createWorkflow(
+            problemId,
+            "External submission",
+            listOf(WorkflowStepDraft(
+                title = "Submit form",
+                capabilityId = "browser.submit",
+                retrySafe = true,
+                requiresApproval = false
+            )),
+            "workflow-request-unimplemented"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(step.requiresApproval)
+        assertFalse(step.retrySafe)
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
     }
 
     @Test

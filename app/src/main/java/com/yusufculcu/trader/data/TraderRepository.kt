@@ -1,6 +1,7 @@
 package com.yusufculcu.trader.data
 
 import androidx.room.withTransaction
+import com.yusufculcu.trader.domain.CapabilityRegistry
 import com.yusufculcu.trader.domain.ProblemRules
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.domain.WorkflowRunStatus
@@ -102,7 +103,9 @@ class TraderRepository(private val database: TraderDatabase) {
                 title = cleanStepTitle,
                 capabilityId = draft.capabilityId.trim().ifBlank { "manual.task" }.take(120),
                 inputJson = draft.inputJson.take(20_000),
-                expectedPostcondition = draft.expectedPostcondition.trim().take(2_000)
+                expectedPostcondition = draft.expectedPostcondition.trim().take(2_000),
+                retrySafe = CapabilityRegistry.normalizedRetrySafe(draft.capabilityId, draft.retrySafe),
+                requiresApproval = CapabilityRegistry.requiresApproval(draft.capabilityId, draft.requiresApproval)
             )
         }
         val key = idempotencyKey.trim().take(180)
@@ -226,6 +229,18 @@ class TraderRepository(private val database: TraderDatabase) {
         val stepStatuses = steps.map { WorkflowStepStatus.from(it.status) }
 
         if (target == WorkflowRunStatus.VERIFIED && details.isBlank()) return@withTransaction false
+        if (target == WorkflowRunStatus.RUNNING) {
+            val hasExecutableWork = steps.any { step ->
+                val stepStatus = WorkflowStepStatus.from(step.status)
+                val capabilityAvailable = CapabilityRegistry.assess(step.capabilityId).canExecute
+                capabilityAvailable && stepStatus in setOf(
+                    WorkflowStepStatus.PENDING,
+                    WorkflowStepStatus.RUNNING,
+                    WorkflowStepStatus.WAITING_FOR_APPROVAL
+                )
+            }
+            if (!hasExecutableWork) return@withTransaction false
+        }
         if (from == WorkflowRunStatus.WAITING_FOR_APPROVAL && target == WorkflowRunStatus.RUNNING) {
             val waiting = steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.WAITING_FOR_APPROVAL }
             if (waiting.isEmpty() || waiting.any {
@@ -304,9 +319,17 @@ class TraderRepository(private val database: TraderDatabase) {
             (runStatus == WorkflowRunStatus.READY && target == WorkflowStepStatus.PENDING)
         if (!allowedRunState) return@withTransaction false
         if (target == WorkflowStepStatus.WAITING_FOR_APPROVAL && !step.requiresApproval) return@withTransaction false
-        if (target == WorkflowStepStatus.RUNNING && step.requiresApproval &&
-            (step.approvedPayloadHash != step.payloadHash || step.approvedAt == null)
-        ) return@withTransaction false
+        if (target == WorkflowStepStatus.RUNNING) {
+            val capability = CapabilityRegistry.assess(step.capabilityId)
+            if (!capability.canExecute) return@withTransaction false
+            if (capability.requiresApproval && !step.requiresApproval) return@withTransaction false
+            if (capability.retryPolicy == com.yusufculcu.trader.domain.RetryPolicy.NEVER && step.retrySafe) {
+                return@withTransaction false
+            }
+            if (step.requiresApproval && (step.approvedPayloadHash != step.payloadHash || step.approvedAt == null)) {
+                return@withTransaction false
+            }
+        }
         if (!WorkflowRules.canTransitionStep(
                 from, target,
                 retrySafe = step.retrySafe,

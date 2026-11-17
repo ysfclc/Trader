@@ -1,6 +1,6 @@
 # Trader Workflow Runtime
 
-**Status:** Implementation added; CI verification pending.  
+**Status:** Room v2 workflow persistence and lifecycle tests passed CI and were merged in PR #3. Capability registry enforcement is being added in a follow-up branch.  
 **Scope:** Durable workflow planning and lifecycle tracking. This is not yet a capability executor.
 
 ## Data model
@@ -50,13 +50,12 @@ Robolectric tests cover:
 
 - No browser, installed-app, AI, communication or network capability is executed by this layer.
 - No WorkManager queue or process-death resumption has been wired yet.
-- Retry safety and capability IDs are currently workflow-definition metadata. A capability registry must validate them before an executor is allowed to run a step.
+- Retry and approval policies are now normalized against the Kotlin capability registry. Unimplemented and unknown capabilities may be planned but cannot transition to RUNNING.
 - UI surfaces for workflow creation, approval review, pause/resume and evidence verification are still pending.
 
 ## Next implementation gates
 
-1. Run unit tests, lint, APK assembly and Room migration/persistence tests in CI.
-2. Build the capability registry and validate step definitions against declared permission, side-effect, retry and approval policies.
-3. Add workflow UI to create a run from a ProblemCase plan and inspect its complete event history.
-4. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
-5. Only then add visible browser and bounded Android app adapters.
+1. Finish CI verification of the capability registry and enforce its policy in all step creation/start paths.
+2. Add workflow UI to create a run from a ProblemCase plan and inspect its complete event history.
+3. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
+4. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.

@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (durable workflow persistence implementation added)
+Last updated: 2026-11-17 (workflow persistence merged; capability registry in progress)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow persistence foundation (CI verification pending)**
+- Status: **Phase 2 — durable workflow persistence merged; capability registry in progress**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -38,6 +38,7 @@ Last updated: 2026-11-17 (durable workflow persistence implementation added)
 - [x] Verified the current Trader tree contains the README and all linked baseline documents.
 - [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.
 - [x] Merged PR #2 (`3d258d8845732015d2c6f63dfcd139d6629f196f`): deterministic workflow lifecycle rules and QRKey audit; CI run 93 passed.
+- [x] Merged PR #3 (`708a3d4e64bed1cca81075de3622a55bb9a9d745`): Room v2 workflow persistence, append-only events, exact-payload approval binding, retry/cancellation rules and migration tests; CI runs 111 and 112 passed.
 - [x] Added pure Kotlin workflow run/step lifecycle rules and JVM tests; CI run 44106532286 passed unit tests, lint, debug APK build, signature verification and package identity checks. Workflow persistence and execution remain open.
 
 ## Expanded audit conclusion
@@ -60,10 +61,10 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [x] Complete the QRKey/mobile-prototype source audit; no QRKey repository contains a suitable native Android browser/app automation runtime for reuse.
 - [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
 - [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.
-- [ ] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI verification pending.
+- [x] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI runs 111 and 112 passed.
 - [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Workflow UI, capability registry enforcement and durable WorkManager execution.
+- [ ] Workflow UI and durable WorkManager execution.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -158,3 +159,10 @@ GitHub Actions run 93 (`44106902964`) passed the complete Android pipeline on `b
 Added Room v2 entities and DAOs for workflow runs, ordered steps and append-only events; a v1→v2 migration; idempotent workflow creation; exact-payload SHA-256 approval binding; approval invalidation when inputs change; lifecycle transitions; safe retry gates; explicit review states; automatic cancellation of non-terminal steps; and separate outcome verification. Added Robolectric tests for persistence, approval, retry, cancellation and migration/data preservation.
 
 This implementation is on `build/workflow-persistence`. CI has not yet verified this checkpoint. No workflow UI, WorkManager executor, browser/app automation or external action adapter is claimed.
+
+
+### 2026-11-17 — Workflow persistence merged and capability registry started
+
+PR #3 merged Room v2 workflow runs, ordered steps and append-only events, v1→v2 migration, idempotent workflow creation, exact-payload SHA-256 approval binding, retry/review gates and cancellation. CI runs 111 and 112 passed the full pipeline, including Robolectric persistence and migration tests. Artifact 14340281041 is recorded above.
+
+The next branch, `build/capability-registry`, adds a policy catalogue for implemented, unavailable and unregistered capabilities. It derives mandatory approval/retry settings and blocks starting capabilities that are not implemented. CI verification is pending.
