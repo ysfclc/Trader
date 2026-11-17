@@ -213,7 +213,8 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                     ProblemStatus.RESOLVED -> ProblemStatus.VERIFIED
                     ProblemStatus.VERIFIED -> ProblemStatus.IN_PROGRESS
                 }
-                TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) stringResource(R.string.outcome_confirmed_by_user) else "") }) {
+                val verifiedNote = stringResource(R.string.outcome_confirmed_by_user)
+                TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) verifiedNote else "") }) {
                     Text(when (status) {
                         ProblemStatus.RESOLVED -> stringResource(R.string.confirm_outcome)
                         ProblemStatus.VERIFIED -> stringResource(R.string.reopen)
