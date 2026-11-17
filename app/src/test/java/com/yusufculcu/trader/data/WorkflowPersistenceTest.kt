@@ -229,6 +229,30 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun unsupportedStepCanBeExplicitlySkippedWithoutClaimingItRan() = runBlocking {
+        val problemId = repository.createProblem("Complete supported parts of a plan")
+        val runId = repository.createWorkflow(
+            problemId,
+            "Mixed capability plan",
+            listOf(
+                WorkflowStepDraft("Manual research"),
+                WorkflowStepDraft("Open browser automation", capabilityId = "browser.visible.open")
+            ),
+            "workflow-request-skip-unavailable"
+        )!!
+        val steps = database.workflowStepDao().getForRun(runId)
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(steps[0].id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(steps[0].id, WorkflowStepStatus.COMPLETED))
+        assertEquals(WorkflowRunStatus.RUNNING.name, database.workflowRunDao().getById(runId)?.status)
+        assertTrue(repository.transitionWorkflowStep(steps[1].id, WorkflowStepStatus.SKIPPED, details = "Browser adapter is not implemented"))
+        assertEquals(WorkflowRunStatus.AWAITING_VERIFICATION.name, database.workflowRunDao().getById(runId)?.status)
+        assertEquals(WorkflowStepStatus.SKIPPED.name, database.workflowStepDao().getById(steps[1].id)?.status)
+    }
+
+    @Test
     fun cancellingRunCancelsEveryNonTerminalStep() = runBlocking {
         val problemId = repository.createProblem("Stop a multi-step process")
         val runId = repository.createWorkflow(
