@@ -36,7 +36,8 @@ Last updated: 2026-11-17 (durable workflow persistence implementation added)
 - [x] Triaged the remaining repository families without claiming their source code was reviewed.
 - [x] Added `docs/REUSE_AUDIT.md` with exact source paths, reusable patterns, known limitations, build-history observations and the no-fork/no-dependency decision.
 - [x] Verified the current Trader tree contains the README and all linked baseline documents.
-- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.\n- [x] Merged PR #2 (`3d258d8845732015d2c6f63dfcd139d6629f196f`): deterministic workflow lifecycle rules and QRKey audit; CI run 93 passed.
+- [x] Completed the source-level QRKey repository-family audit; reusable principles and explicit non-reuse boundaries are recorded in `docs/QRKEY_REUSE_AUDIT.md`.
+- [x] Merged PR #2 (`3d258d8845732015d2c6f63dfcd139d6629f196f`): deterministic workflow lifecycle rules and QRKey audit; CI run 93 passed.
 - [x] Added pure Kotlin workflow run/step lifecycle rules and JVM tests; CI run 44106532286 passed unit tests, lint, debug APK build, signature verification and package identity checks. Workflow persistence and execution remain open.
 
 ## Expanded audit conclusion
@@ -58,9 +59,12 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [ ] Install and exercise the first ProblemCase → context → plan-step → activity loop on a physical Android device; CI build and unit tests now pass, but device behavior remains unverified.
 - [x] Complete the QRKey/mobile-prototype source audit; no QRKey repository contains a suitable native Android browser/app automation runtime for reuse.
 - [x] Confirm the pinned Android/Gradle/Kotlin toolchain with a successful clean CI build using the committed wrapper.
-- [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.\n- [ ] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI verification pending.\n- [ ] Add encrypted local backup/export and integrity-verified restore.
+- [ ] Persist workflow runs/steps and test pause/resume, cancellation, process-death recovery and idempotent execution.
+- [ ] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI verification pending.
+- [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Workflow UI, capability registry enforcement and durable WorkManager execution.\n- [ ] Browser/app automation.
+- [ ] Workflow UI, capability registry enforcement and durable WorkManager execution.
+- [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
 - [ ] Communication adapters and outreach.
@@ -85,9 +89,11 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - Merge commit: `0a6dd7ca3fe4ec072058523cae07af22f940424a`
 - Source commit used for the APK: `08165377c0ba58f71bf757acf5864c06d75de8cd` (same application source included in the merge)
 - Successful push CI run: `44102991766` (run 74)
-- Successful pull-request CI run: `44103004289` (run 75)\n- Successful workflow lifecycle branch CI run: `44106902964` (run 93)
+- Successful pull-request CI run: `44103004289` (run 75)
+- Successful workflow lifecycle branch CI run: `44106902964` (run 93)
 - Push run 74 artifact ID: `14336663733` (`trader-debug-apk`, expires 2026-12-01).
-- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.\n- Workflow lifecycle run 93 artifact ID: `14339431799` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`.
+- Pull-request run 75 artifact ID: `14337286960` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `c81fade1c3152f5c81478185b48795f8f030112bca2bb2ea7cb4bcdc3536b50a`.
+- Workflow lifecycle run 93 artifact ID: `14339431799` (`trader-debug-apk`, expires 2026-12-01); GitHub artifact digest `b01508aad9612c60ee7004dce1b2683dab93583f0d067fa8cb581539742915ee`.
 - APK: `app-debug.apk`, 18,820,225 bytes
 - APK SHA-256: `eebe0dd45470dd83d692402f43cb25c6e25c03287a10aca08653db19063ce3b9`
 - Package ID: `com.yusufculcu.trader.debug`; version `0.1.0-debug`
