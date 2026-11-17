@@ -186,6 +186,14 @@ Inspected through source search:
 
 **Trader disposition:** retain the signal-first principle and explicit gate verification. Implement Trader's own small state machine and tests; never port EBO sequences, provider assumptions or connector code as trusted behavior.
 
+## CI evidence links observed during this audit
+
+- VaultOS latest observed main-branch run (2026-11-13): [run 43355487690](https://github.com/ysfclc/VaultOS/actions/runs/43355487690) — failed; both the build/test/lint job and API 35 instrumentation job failed. Previous observed runs 43261340442 and 43226760701 also failed.
+- BusyBee latest observed Android run (2026-11-06): [run 42161178585](https://github.com/ysfclc/BusyBee/actions/runs/42161178585) — successful test and APK build.
+- Memo-2 latest observed full Android build run in the inspected history: [run 40408008076](https://github.com/ysfclc/memo-2/actions/runs/40408008076), 2026-10-26 — successful. The newer 2026-11-16 entries in the run list were Dependabot dependency-update workflows, not a new full Android build.
+
+These are observations at the time of audit, not guarantees about later repository state. Always re-check the source workflow before relying on a historical run.
+
 ## Current reuse matrix
 
 | Capability | Best reference | Trader decision |
