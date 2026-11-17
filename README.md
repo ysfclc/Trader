@@ -37,7 +37,7 @@ Trader is not a promise that software can solve every human problem, an open mar
 
 ## Current state
 
-**Phase 0 — product definition and targeted repository audit.** The product boundaries and reuse strategy are documented. Android source code, APK generation, device acceptance and live channel integrations have not yet been implemented in Trader.
+**Phase 1 — first Android problem workspace in progress.** The implementation branch now contains a Kotlin/Compose app, local Room persistence, universal problem capture, share-to-capture, plan steps, status history, unit tests and Android CI. CI and real-device acceptance are still pending. Browser/app automation, AI adapters, live discovery and commercial workflows are not yet implemented.
 
 The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
 
