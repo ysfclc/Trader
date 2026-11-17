@@ -148,7 +148,9 @@ AI output is untrusted:
 - reject fabricated identifiers, URLs, prices, certificates or contact details;
 - require human review for material technical equivalence and commercial claims.
 
-Prompt templates, model policies and budgets should be inspectable and editable. Record provider, model, prompt/template version, context IDs, consent and cost where available. Do not trigger a paid provider or remote model silently.
+Prompt templates, model policies and budgets should be inspectable and editable. Trader must build context packets from the current ProblemCase, selected evidence, relevant history and explicitly permitted files; it must not dump all user data into a prompt by default. The operator can inspect and edit the prepared instructions and context before a consequential or remote model call. Record provider, model, prompt/template version, context IDs, consent and cost where available. Do not trigger a paid provider or remote model silently.
+
+The workflow engine may sequence deterministic tools, local or remote model calls, visible browser steps, supported app handoffs, user tasks and approval gates. Every step has a typed input/output contract, timeout/cancellation behavior, durable state and an expected postcondition. Prompt generation is one step in a workflow, not a substitute for workflow execution.
 
 ## 8. Communication and Unipile alternatives
 
