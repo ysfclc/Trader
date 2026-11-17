@@ -19,12 +19,14 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
 - [ ] T1.2 Expand navigation beyond the first Inbox and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workflows.
-- [ ] T1.3 Room v1 entities/DAOs and schema export are implemented; schema snapshot policy remains open.\n- [ ] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (implementation and Robolectric test added; CI pending).
+- [ ] T1.3 Room v1 entities/DAOs and schema export are implemented; schema snapshot policy remains open.
+- [ ] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (implementation and Robolectric test added; CI pending).
 - [ ] T1.4 Add encrypted local backup/export and integrity-verified restore.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
 - [ ] T1.6 Initial capture preserves original text/URL, input kind, capture timestamps and source URI. Evidence entities, language metadata, parser version and verification states remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
-- [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.\n- [ ] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (implementation and tests added; CI pending).
+- [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
+- [ ] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (implementation and tests added; CI pending).
 
 ## T2 — Commercial records
 
@@ -39,7 +41,9 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 ## T3 — Discovery and browser/app automation
 
 - [ ] T3.0 Define a capability registry for every tool/automation operation, including inputs/outputs, availability, permissions, side effects, cost, limits and postconditions.
-- [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.\n- [ ] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (implementation and tests added; CI pending).\n- [ ] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts.
+- [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.
+- [ ] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (implementation and tests added; CI pending).
+- [ ] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
