@@ -52,4 +52,7 @@
     <string name="event_status_updated">Status updated</string>
     <string name="event_activity_recorded">Activity recorded</string>
 
+    <string name="category_general">GENERAL</string>
+    <string name="category_captured">CAPTURED</string>
+    <string name="category_other">OTHER</string>
 </resources>
