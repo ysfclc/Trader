@@ -105,3 +105,20 @@ Every capture stores the original source/evidence before normalization, AI enric
 Trader will use a new application ID and CI-only signing secrets. Never copy a keystore, signing identity or private build material from VaultOS, BusyBee, Memo or another project into Trader.
 
 **Reason:** Application identity and release-update continuity must be isolated. Signing material must not be committed to source control.
+
+
+## D-014 — Trader is a general problem-solving system with specialized opportunity workflows
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Trader's primary purpose is to help the operator move problems and goals from fragmented context to evidence-backed options, a workable plan, authorized execution and verified outcomes. Trade, services and careers are initial specialized workflows, not the exhaustive product scope. A universal ProblemCase and capability/plan model must exist independently of those commercial lanes.
+
+**Reason:** The user's stated need is broader than trading or lead generation. The recurring difficulty is converting scattered information, skills, contacts, tools and opportunities into reliable progress and income. A trading-only architecture would repeat the mistake of narrowing the product around one monetization path.
+
+## D-015 — No promise of universal autonomous problem resolution
+**Date:** 2026-11-17  
+**Status:** Accepted
+
+Trader must accept problems from outside its current specialized workflows, but it must clearly state whether it can solve, partially assist, or only organize/research a case. It cannot promise to resolve every problem or replace qualified professional judgment, external authority, money, consent or real-world action. Every automated capability must declare its permissions, limits, side effects and verifiable postconditions.
+
+**Reason:** Broad usefulness requires extensible intake and orchestration, not pretending the app has universal access or authority.
