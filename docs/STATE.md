@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (product scope correction: general problem solving)
+Last updated: 2026-11-17 (Android foundation implementation)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -17,7 +17,7 @@ Last updated: 2026-11-17 (product scope correction: general problem solving)
 - [x] Implemented universal ProblemCase persistence, manual capture, Android share URL/text capture, problem detail, plan-step persistence, status transitions and append-only activity events.
 - [x] Added JVM tests for title normalization and status-transition rules.
 - [x] Added system-locale English, Turkish and Polish UI strings and localized activity labels.
-- [x] Added pinned Gradle wrapper and `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
+- [x] Added pinned Gradle 8.13 wrapper and checksum, plus `docs/ANDROID_BUILD.md` with local build and debug/release signing boundaries.
 - [x] Added GitHub Actions Android CI to run unit tests, lint and assemble a debug APK artifact.
 - [x] Opened draft PR #1 for implementation review.
 - [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
@@ -97,3 +97,7 @@ The user clarified that the app is intended to help solve the wider set of probl
 
 ### 2026-11-17 — First Android implementation checkpoint
 Created `build/problem-core-android` and draft PR #1. The first source slice includes a Compose inbox/detail/activity UI, Room-backed ProblemCase/plan-step/activity data, manual and Android share-intent capture, deterministic status transitions, JVM unit tests and an Actions workflow that builds a debug APK. CI is running; no successful build, install or device acceptance is claimed yet. The implementation deliberately does not claim AI, browser automation, installed-app automation, live web discovery or external messaging.
+
+
+### 2026-11-17 — Build pipeline hardening
+The first wrapper-based CI attempt exposed that the initially selected wrapper JAR was not executable. Replaced it with the wrapper JAR shipped by the Android Now in Android sample, corrected the distribution URL escaping, pinned the official Gradle 8.13 distribution SHA-256 and switched CI to `./gradlew`. The corrected wrapper is awaiting CI verification; do not treat the build as green until the workflow completes successfully.
