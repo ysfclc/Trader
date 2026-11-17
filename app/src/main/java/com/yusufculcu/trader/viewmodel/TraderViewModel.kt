@@ -125,10 +125,11 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
 
     fun retryWorkflow(runId: String) {
         viewModelScope.launch {
+            val failedSteps = repository.getWorkflowSteps(runId)
+                .filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED }
+            if (failedSteps.isEmpty() || failedSteps.any { !it.retrySafe }) return@launch
             if (repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY, retryAuthorized = true, details = "User authorized safe retry")) {
-                repository.getWorkflowSteps(runId)
-                    .filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED && it.retrySafe }
-                    .forEach { repository.transitionWorkflowStep(it.id, WorkflowStepStatus.PENDING, details = "Safe retry authorized") }
+                failedSteps.forEach { repository.transitionWorkflowStep(it.id, WorkflowStepStatus.PENDING, details = "Safe retry authorized") }
             }
         }
     }
