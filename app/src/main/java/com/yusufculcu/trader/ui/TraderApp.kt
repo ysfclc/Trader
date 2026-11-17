@@ -213,7 +213,7 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                     ProblemStatus.RESOLVED -> ProblemStatus.VERIFIED
                     ProblemStatus.VERIFIED -> ProblemStatus.IN_PROGRESS
                 }
-                TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) "Outcome confirmed by user" else "") }) {
+                TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) stringResource(R.string.outcome_confirmed_by_user) else "") }) {
                     Text(when (status) {
                         ProblemStatus.RESOLVED -> stringResource(R.string.confirm_outcome)
                         ProblemStatus.VERIFIED -> stringResource(R.string.reopen)
@@ -252,8 +252,15 @@ private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEven
                     Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary)
                         Column(Modifier.weight(1f)) {
-                            Text(event.summary, fontWeight = FontWeight.SemiBold)
-                            if (event.details.isNotBlank()) Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(when (event.eventType) {
+                                "created" -> R.string.event_problem_captured
+                                "plan_step_added" -> R.string.event_plan_step_added
+                                "plan_step_done" -> R.string.event_step_completed
+                                "plan_step_reopened" -> R.string.event_step_reopened
+                                "status_changed" -> R.string.event_status_updated
+                                else -> R.string.event_activity_recorded
+                            }), fontWeight = FontWeight.SemiBold)
+                            if (event.details.isNotBlank() && event.eventType != "created") Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                         }
                     }
