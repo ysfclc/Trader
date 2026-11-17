@@ -1,6 +1,6 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (expanded repository audit)
+Last updated: 2026-11-17 (product scope correction: general problem solving)
 
 ## Repository
 - Repository: `ysfclc/Trader`
@@ -13,6 +13,9 @@ Last updated: 2026-11-17 (expanded repository audit)
 - Live discovery or communication integrations: not yet implemented.
 
 ## Completed in this checkpoint
+- [x] Corrected the product centre of gravity: Trader is a general problem-solving and opportunity-execution system, not a trading-only app.
+- [x] Added universal ProblemCase, Goal, Plan/PlanStep and Capability concepts to the locked product, architecture and data model.
+- [x] Reframed trade, services and careers as initial specialized workflows, not an exhaustive limit on the problems Trader can accept.
 - [x] Initialized the previously empty repository with a first commit.
 - [x] Added README and locked product/architecture/data/operating documents.
 - [x] Added the phased roadmap, implementation task ledger and state ledger.
@@ -39,6 +42,7 @@ Last updated: 2026-11-17 (expanded repository audit)
 The audit was targeted to the most relevant projects and files. It was not a line-by-line review of all 43 repositories. No source tests or APK builds were run by this audit.
 
 ## Not yet verified in Trader
+- [ ] Implement and device-test the universal ProblemCase → evidence → options → plan → action → verified outcome loop.
 - [ ] Complete the remaining QRKey/mobile-prototype source audit before selecting any further code for reuse.
 - [ ] Final Android/Gradle/Kotlin version pin and clean reproducible build.
 - [ ] Local Room database, migrations and encrypted backup/restore.
@@ -50,6 +54,9 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [ ] Any real buyer/supplier match, reply, deal or revenue.
 
 ## Locked constraints
+- Trader accepts general user problems and goals; trade, services and careers are initial specialized workflows only.
+- Every case can be captured and managed even when no dedicated workflow or automated capability exists.
+- Trader must distinguish assistance from actual resolution and never claim success without verification.
 - Memo is not a dependency; Trader owns its runtime, workflow, storage and recovery behavior.
 - EBO, n8n, Unipile, Apollo, hosted CRM and paid AI are not core dependencies.
 - Core capture, storage, qualification, matching and drafting must work without paid API credits.
@@ -75,3 +82,7 @@ Inspected relevant implementation files and test coverage across five existing c
 
 ### 2026-11-17 — Expanded audit: BOS and adjacent projects
 Added `docs/ADDITIONAL_REUSE_AUDIT.md`. Corrected the initial audit scope: BOS, Oddo and Troy are key references; Kovan, Zommo and Nexus were also inspected. Remaining repositories are explicitly marked as triaged but not source-audited. No code copied; Trader architecture remains independent.
+
+
+### 2026-11-17 — Product scope correction: not trading-only
+The user clarified that the app is intended to help solve the wider set of problems they face, not only trading. The canonical scope is now a personal problem-solving and opportunity-execution system: capture context, understand desired outcomes and constraints, gather evidence, discover options/resources, plan, use authorized tools/automations, verify and retain useful learning. Trade/services/careers remain initial specialized workflows. This is an architecture direction, not a claim that the app can solve every kind of problem or already implements these capabilities.
