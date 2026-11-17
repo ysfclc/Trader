@@ -185,6 +185,23 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun failedRunWithAnyNonRetryableStepCannotBeAuthorizedForBlindRetry() = runBlocking {
+        val problemId = repository.createProblem("Handle a failed external action")
+        val runId = repository.createWorkflow(
+            problemId,
+            "External action",
+            listOf(WorkflowStepDraft("External action", capabilityId = "browser.submit")),
+            "workflow-request-nonretryable-failure"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertEquals(WorkflowRunStatus.READY.name, database.workflowRunDao().getById(runId)?.status)
+        assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.FAILED))
+    }
+
+    @Test
     fun cancellingRunCancelsEveryNonTerminalStep() = runBlocking {
         val problemId = repository.createProblem("Stop a multi-step process")
         val runId = repository.createWorkflow(
