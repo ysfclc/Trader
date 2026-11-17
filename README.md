@@ -36,6 +36,7 @@ Trader is not a promise that software can solve every human problem, an open mar
 | [QRKey reuse audit](docs/QRKEY_REUSE_AUDIT.md) | QRKey repository-family source audit, reusable patterns and non-reuse decisions |
 | [Workflow runtime](docs/WORKFLOW_RUNTIME.md) | Durable run/step/event model, approval binding, lifecycle and execution limits |
 | [Capability registry](docs/CAPABILITY_REGISTRY.md) | Explicit capability availability, permissions, side-effect and retry policies |
+| [Workflow UI](docs/WORKFLOW_UI.md) | User-facing workflow tracking, approval, retry, review and verification behavior |
 | [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
 | [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
 

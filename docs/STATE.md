@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (capability registry merged; workflow UI next)
+Last updated: 2026-11-17 (workflow UI implementation added; CI pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow and capability policy foundation merged**
+- Status: **Phase 3 — workflow UI implementation in progress (CI pending)**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -177,3 +177,10 @@ The next branch, `build/capability-registry`, adds a policy catalogue for implem
 PR #4 merged at `959eb52f677ccdeae2548b76c096e61a799ff135`. The registry records availability, effects, permissions, retry policy, mandatory approval and visible-surface requirements. Workflow creation derives safety metadata from registry policy, unknown capabilities fail closed, and runs with no implemented work cannot start. CI runs 129 and 130 passed all 30 unit/Robolectric tests, lint, APK assembly, signature verification and package identity checks. Artifact 14341082290 is recorded above.
 
 Current boundary: Trader can capture problems and persist/track approved workflow plans. It does not yet execute browser, installed-app, AI, network-discovery or communication capabilities. Workflow UI and durable WorkManager execution are the next major implementation phase.
+
+
+### 2026-11-17 — Workflow UI implementation
+
+Added a Workflows tab, workflow creation from a ProblemCase plan, workflow detail/history screens, step start/completion, exact-payload approval, approval-gated resume, safe retry, manual review, cancellation, explicit skip of unavailable steps and outcome verification notes. English, Polish and Turkish strings were added. The UI explicitly states that manual tasks are user-performed and browser/app/AI/communication executors are not available.
+
+Implementation is on `build/workflow-ui`; CI verification and physical-device acceptance are pending.
