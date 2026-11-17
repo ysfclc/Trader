@@ -159,6 +159,28 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun cancellingRunCancelsEveryNonTerminalStep() = runBlocking {
+        val problemId = repository.createProblem("Stop a multi-step process")
+        val runId = repository.createWorkflow(
+            problemId,
+            "Cancelable workflow",
+            listOf(WorkflowStepDraft("First step"), WorkflowStepDraft("Second step")),
+            "workflow-request-6"
+        )!!
+        val steps = database.workflowStepDao().getForRun(runId)
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(steps.first().id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.CANCELLED))
+
+        assertEquals(WorkflowRunStatus.CANCELLED.name, database.workflowRunDao().getById(runId)?.status)
+        assertTrue(database.workflowStepDao().getForRun(runId).all {
+            WorkflowStepStatus.from(it.status) == WorkflowStepStatus.CANCELLED
+        })
+    }
+
+    @Test
     fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)
