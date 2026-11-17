@@ -104,7 +104,7 @@ class WorkflowPersistenceTest {
         assertNull(database.workflowStepDao().getById(step.id)?.approvedPayloadHash)
 
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
-        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
         assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
         assertTrue(repository.approveWorkflowStep(step.id, "Reviewed updated recipient and content"))
         assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
