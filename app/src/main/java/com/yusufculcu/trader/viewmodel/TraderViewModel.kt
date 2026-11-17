@@ -103,7 +103,6 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     fun startWorkflowStep(stepId: String) {
         viewModelScope.launch {
             val step = repository.getWorkflowStep(stepId) ?: return@launch
-            val run = repository.getWorkflowRun(step.workflowRunId) ?: return@launch
             val status = WorkflowStepStatus.from(step.status)
             if (status == WorkflowStepStatus.WAITING_FOR_APPROVAL) {
                 repository.approveWorkflowStep(stepId, "User approved the exact step payload in Trader")
