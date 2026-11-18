@@ -25,8 +25,13 @@ class TraderRepository(private val database: TraderDatabase) {
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
     fun observeCount(): Flow<Int> = database.problemDao().observeCount()
+    fun observeAllWorkflowRuns(): Flow<List<WorkflowRunEntity>> = database.workflowRunDao().observeAll()
     fun observeWorkflowRuns(problemId: String): Flow<List<WorkflowRunEntity>> =
         database.workflowRunDao().observeForProblem(problemId)
+    suspend fun getWorkflowRun(runId: String): WorkflowRunEntity? = database.workflowRunDao().getById(runId)
+    suspend fun getWorkflowStep(stepId: String): WorkflowStepEntity? = database.workflowStepDao().getById(stepId)
+    suspend fun getWorkflowSteps(runId: String): List<WorkflowStepEntity> = database.workflowStepDao().getForRun(runId)
+    suspend fun getWorkflowEvents(runId: String): List<WorkflowEventEntity> = database.workflowEventDao().getForRun(runId)
     fun observeWorkflowSteps(runId: String): Flow<List<WorkflowStepEntity>> =
         database.workflowStepDao().observeForRun(runId)
     fun observeWorkflowEvents(runId: String): Flow<List<WorkflowEventEntity>> =
@@ -229,6 +234,10 @@ class TraderRepository(private val database: TraderDatabase) {
         val stepStatuses = steps.map { WorkflowStepStatus.from(it.status) }
 
         if (target == WorkflowRunStatus.VERIFIED && details.isBlank()) return@withTransaction false
+        if (from == WorkflowRunStatus.FAILED && target == WorkflowRunStatus.READY) {
+            val failedSteps = steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.FAILED }
+            if (failedSteps.isEmpty() || failedSteps.any { !it.retrySafe }) return@withTransaction false
+        }
         if (target == WorkflowRunStatus.RUNNING) {
             val hasExecutableWork = steps.any { step ->
                 val stepStatus = WorkflowStepStatus.from(step.status)
@@ -342,8 +351,8 @@ class TraderRepository(private val database: TraderDatabase) {
             status = target.name,
             attemptCount = if (from == WorkflowStepStatus.PENDING && target == WorkflowStepStatus.RUNNING) step.attemptCount + 1 else step.attemptCount,
             lastError = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) errorMessage.takeIf { it.isNotBlank() } else null,
-            approvedPayloadHash = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedPayloadHash,
-            approvedAt = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedAt,
+            approvedPayloadHash = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW || target == WorkflowStepStatus.WAITING_FOR_APPROVAL) null else step.approvedPayloadHash,
+            approvedAt = if (target == WorkflowStepStatus.FAILED || target == WorkflowStepStatus.NEEDS_REVIEW || target == WorkflowStepStatus.WAITING_FOR_APPROVAL) null else step.approvedAt,
             updatedAt = now,
             startedAt = if (target == WorkflowStepStatus.RUNNING && step.startedAt == null) now else step.startedAt,
             finishedAt = if (target == WorkflowStepStatus.COMPLETED || target == WorkflowStepStatus.SKIPPED || target == WorkflowStepStatus.CANCELLED) now else null

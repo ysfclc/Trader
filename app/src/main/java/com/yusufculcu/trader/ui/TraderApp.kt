@@ -32,17 +32,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private enum class AppTab { INBOX, ACTIVITY }
+private enum class AppTab { INBOX, WORKFLOWS, ACTIVITY }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TraderApp(viewModel: TraderViewModel) {
     val problems by viewModel.problems.collectAsState()
     val events by viewModel.activity.collectAsState()
+    val workflowRuns by viewModel.workflowRuns.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedWorkflowId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     val selected = problems.firstOrNull { it.id == selectedId }
+    val selectedWorkflow = workflowRuns.firstOrNull { it.id == selectedWorkflowId }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -50,24 +53,37 @@ fun TraderApp(viewModel: TraderViewModel) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(if (selected != null) stringResource(R.string.problem_label) else stringResource(R.string.app_name), fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                        if (selected == null) Text(stringResource(R.string.workspace_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            when {
+                                selectedWorkflow != null -> stringResource(R.string.workflow_label)
+                                selected != null -> stringResource(R.string.problem_label)
+                                else -> stringResource(R.string.app_name)
+                            },
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                        if (selected == null && selectedWorkflow == null) Text(stringResource(R.string.workspace_subtitle), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
-                    if (selected != null) IconButton(onClick = { selectedId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = "Back") }
+                    if (selectedWorkflow != null) {
+                        IconButton(onClick = { selectedId = selectedWorkflow.problemId; selectedWorkflowId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = "Back") }
+                    } else if (selected != null) {
+                        IconButton(onClick = { selectedId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = "Back") }
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
         bottomBar = {
-            if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+            if (selected == null && selectedWorkflow == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.WORKFLOWS, { tab = AppTab.WORKFLOWS }, icon = { Icon(Icons.Rounded.CheckCircle, null) }, label = { Text(stringResource(R.string.workflows)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
             }
         },
         floatingActionButton = {
-            if (selected == null && tab == AppTab.INBOX) FloatingActionButton(
+            if (selected == null && selectedWorkflow == null && tab == AppTab.INBOX) FloatingActionButton(
                 onClick = { showCreate = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -75,8 +91,20 @@ fun TraderApp(viewModel: TraderViewModel) {
         }
     ) { padding ->
         when {
-            selected != null -> ProblemDetail(selected, viewModel, Modifier.padding(padding))
+            selectedWorkflow != null -> WorkflowDetailScreen(
+                selectedWorkflow,
+                problems.firstOrNull { it.id == selectedWorkflow.problemId }?.title.orEmpty(),
+                viewModel,
+                Modifier.padding(padding)
+            )
+            selected != null -> ProblemDetail(
+                selected,
+                viewModel,
+                onOpenWorkflow = { selectedWorkflowId = it },
+                modifier = Modifier.padding(padding)
+            )
             tab == AppTab.INBOX -> InboxContent(problems, onOpen = { selectedId = it.id }, modifier = Modifier.padding(padding))
+            tab == AppTab.WORKFLOWS -> WorkflowContent(workflowRuns, problems, onOpen = { selectedWorkflowId = it.id }, modifier = Modifier.padding(padding))
             else -> ActivityContent(events, Modifier.padding(padding))
         }
     }
@@ -169,7 +197,7 @@ private fun StatusPill(status: ProblemStatus) {
 }
 
 @Composable
-private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, modifier: Modifier = Modifier) {
+private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, onOpenWorkflow: (String) -> Unit, modifier: Modifier = Modifier) {
     val steps by viewModel.stepsFor(problem.id).collectAsState(initial = emptyList())
     var showStep by remember { mutableStateOf(false) }
     LazyColumn(
@@ -201,6 +229,9 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                     }
                 }
             }
+        }
+        item {
+            WorkflowSection(problem, steps, viewModel, onOpenWorkflow)
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {

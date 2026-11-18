@@ -162,6 +162,30 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun waitingForApprovalRequiresFreshPayloadApprovalBeforeResume() = runBlocking {
+        val problemId = repository.createProblem("Approve a consequential step")
+        val runId = repository.createWorkflow(
+            problemId,
+            "Approval gate",
+            listOf(WorkflowStepDraft("Confirm external action", requiresApproval = true)),
+            "workflow-request-approval-resume"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.approveWorkflowStep(step.id, "Initial approval"))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.WAITING_FOR_APPROVAL))
+        assertNull(database.workflowStepDao().getById(step.id)?.approvedPayloadHash)
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING, approvalGranted = true))
+
+        assertTrue(repository.approveWorkflowStep(step.id, "Fresh approval for the waiting action"))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING, approvalGranted = true))
+        assertEquals(WorkflowStepStatus.RUNNING.name, database.workflowStepDao().getById(step.id)?.status)
+    }
+
+    @Test
     fun unimplementedExternalCapabilityIsPlannableButCannotStart() = runBlocking {
         val problemId = repository.createProblem("Prepare an external submission")
         val runId = repository.createWorkflow(
@@ -182,6 +206,50 @@ class WorkflowPersistenceTest {
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
         assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
         assertFalse(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+    }
+
+    @Test
+    fun failedRunWithAnyNonRetryableStepCannotBeAuthorizedForBlindRetry() = runBlocking {
+        val problemId = repository.createProblem("Handle a failed external action")
+        val runId = repository.createWorkflow(
+            problemId,
+            "External action",
+            listOf(WorkflowStepDraft("External action", capabilityId = "manual.task", retrySafe = false)),
+            "workflow-request-nonretryable-failure"
+        )!!
+        val step = database.workflowStepDao().getForRun(runId).single()
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(step.id, WorkflowStepStatus.FAILED, errorMessage = "Manual step failed"))
+        assertEquals(WorkflowRunStatus.FAILED.name, database.workflowRunDao().getById(runId)?.status)
+        assertFalse(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY, retryAuthorized = true))
+        assertEquals(WorkflowRunStatus.FAILED.name, database.workflowRunDao().getById(runId)?.status)
+    }
+
+    @Test
+    fun unsupportedStepCanBeExplicitlySkippedWithoutClaimingItRan() = runBlocking {
+        val problemId = repository.createProblem("Complete supported parts of a plan")
+        val runId = repository.createWorkflow(
+            problemId,
+            "Mixed capability plan",
+            listOf(
+                WorkflowStepDraft("Manual research"),
+                WorkflowStepDraft("Open browser automation", capabilityId = "browser.visible.open")
+            ),
+            "workflow-request-skip-unavailable"
+        )!!
+        val steps = database.workflowStepDao().getForRun(runId)
+
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(steps[0].id, WorkflowStepStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowStep(steps[0].id, WorkflowStepStatus.COMPLETED))
+        assertEquals(WorkflowRunStatus.RUNNING.name, database.workflowRunDao().getById(runId)?.status)
+        assertTrue(repository.transitionWorkflowStep(steps[1].id, WorkflowStepStatus.SKIPPED, details = "Browser adapter is not implemented"))
+        assertEquals(WorkflowRunStatus.AWAITING_VERIFICATION.name, database.workflowRunDao().getById(runId)?.status)
+        assertEquals(WorkflowStepStatus.SKIPPED.name, database.workflowStepDao().getById(steps[1].id)?.status)
     }
 
     @Test
