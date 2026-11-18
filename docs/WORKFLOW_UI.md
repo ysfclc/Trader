@@ -1,6 +1,6 @@
 # Workflow UI
 
-**Status:** Implemented on `build/workflow-ui`; CI verification pending.
+**Status:** Implemented and CI-verified on `build/workflow-ui` at `ecfb6a4f9c7e4e00ddbb29825b2a6c46319e1bde`; physical-device acceptance remains open.
 
 ## Entry points
 
