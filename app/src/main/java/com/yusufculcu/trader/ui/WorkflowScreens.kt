@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yusufculcu.trader.R
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.PlanStepEntity
@@ -91,7 +92,7 @@ fun WorkflowSection(
         WorkflowRunStatus.from(it.status) !in setOf(WorkflowRunStatus.VERIFIED, WorkflowRunStatus.CANCELLED)
     }
     Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        Text(stringResource(R.string.workflows), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.4f)
+        Text(stringResource(R.string.workflows), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.4.sp)
         if (planSteps.isNotEmpty() && !hasActiveRun) {
             Button(
                 onClick = {
