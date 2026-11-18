@@ -1,14 +1,14 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (workflow UI implementation added; CI pending)
+Last updated: 2026-11-18 (workflow UI CI passed; physical-device acceptance pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 3 — workflow UI implementation in progress (CI pending)**
+- Status: **Phase 3 — workflow UI implemented and CI-verified; physical-device acceptance pending**
 - Android source code: first implementation committed on `build/problem-core-android`.
-- APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
+- APK: debug artifact built, downloaded and inspected; CI verified package identity and signature; device install/launch not yet verified.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
