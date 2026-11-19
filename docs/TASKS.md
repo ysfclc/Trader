@@ -26,9 +26,10 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
-- [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
+- [ ] T1.8 Complete durable job/task execution, cancellation and process-death recovery. Conservative persisted-workflow recovery is implemented in T1.8b; WorkManager execution and end-to-end worker recovery remain open.
 - [x] T1.9 Implement local case editing, active/archived search, reversible archive/restore, source-linked evidence, expected-result plan steps and context-packet share handoff (CI runs 225, 232, post-merge 233 and main 256 passed; device acceptance and dedicated search/share UI tests remain open).
 - [x] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (CI runs 111 and 112 passed).
+- [x] T1.8b Reconcile persisted RUNNING workflows on app startup: interrupted RUNNING steps become NEEDS_REVIEW (never blindly retried); runs interrupted between steps become PAUSED. File-backed close/reopen test verifies recovery and idempotency.
 
 ## T2 — Commercial records
 

@@ -46,10 +46,16 @@ Robolectric tests cover:
 - cancellation of non-terminal steps;
 - version 1 to version 2 migration with existing row preservation.
 
+## Process interruption recovery
+
+On ViewModel startup, Trader reconciles persisted runs still marked RUNNING. If one or more steps were RUNNING, those steps and the run move to NEEDS_REVIEW, the previous step approval is cleared, and append-only events explain that the operator must determine whether the action completed. If no step was RUNNING, the run moves to PAUSED so the operator can inspect and resume it.
+
+The reconciliation runs in one Room transaction and is idempotent: a second startup does not append duplicate recovery events. It is a conservative recovery boundary, not a WorkManager executor; no capability is automatically resumed or executed.
+
 ## Explicit limitations
 
 - No browser, installed-app, AI, communication or network capability is executed by this layer.
-- No WorkManager queue or process-death resumption has been wired yet.
+- No WorkManager execution queue or automatic process-death resumption has been wired yet. Startup reconciliation only pauses or flags interrupted work for human review.
 - Retry and approval policies are now normalized against the Kotlin capability registry. Unimplemented and unknown capabilities may be planned but cannot transition to RUNNING.
 - A first UI surface now creates a workflow from saved plan steps, displays persisted runs/steps/events, exposes exact-step approval, supports manual start/complete and explicit skip of unavailable steps, pause/resume/cancel, and requires a non-empty user evidence note before outcome verification. This is a manually driven workflow surface, not an autonomous executor.
 
