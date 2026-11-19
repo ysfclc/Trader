@@ -71,14 +71,14 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - `docs/TASKS.md`, `docs/WORKFLOW_RUNTIME.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `CHANGELOG.md`, `docs/STATE.md`
 
 **Verified**
-- Build: pending final PR CI; do not merge until tests, lint, APK build and signature/package checks pass.
-- Tests: new file-backed process-reopen test added; expected suite count 38, pending CI execution.
-- Physical device: not tested; requires Redmi Note 12 Pro 5G.
+- Build: PASS, `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` (PR #11 CI run 271).
+- Tests: 38 passed, 0 failed, 0 errors, 0 skipped (JUnit artifact `14513125241`).
+- APK: debug assembly, signature verification and package/version assertion passed in run 271; physical-device install remains untested.
 
 **Not done / next**
-1. Run full Android CI on the final PR head and fix any failures before merge.
-2. Install on Redmi Note 12 Pro 5G and exercise capture, workflow lifecycle and encrypted backup/restore.
-3. Implement WorkManager execution only after this recovery boundary is accepted.
+1. Install on Redmi Note 12 Pro 5G and exercise capture, workflow lifecycle, interrupted-run review and encrypted backup/restore.
+2. Implement the durable WorkManager executor on top of persisted lifecycle and conservative recovery, with unique work IDs, cancellation, idempotency and postcondition checks.
+3. Add one user-selected file/document capture vertical slice with raw-source preservation, evidence provenance, limits and tests.
 
 **Open questions**
 - None blocking. Ambiguous in-flight steps must remain human-reviewed; never auto-retry.
