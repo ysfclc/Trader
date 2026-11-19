@@ -196,8 +196,10 @@ private fun WorkflowStepCard(step: WorkflowStepEntity, runStatus: String, viewMo
             }
             if (runStatus == WorkflowRunStatus.RUNNING.name) {
                 when {
-                    step.requiresApproval && step.approvedPayloadHash != step.payloadHash ->
+                    step.requiresApproval && capability.canExecute && step.approvedPayloadHash != step.payloadHash ->
                         Button(onClick = { viewModel.approveWorkflowStep(step.id) }) { Text(stringResource(R.string.workflow_approve_exact_step)) }
+                    stepStatus == WorkflowStepStatus.PENDING && !capability.canExecute ->
+                        TextButton(onClick = { viewModel.transitionWorkflowStep(step.id, WorkflowStepStatus.SKIPPED, details = "Skipped by user because capability is unavailable") }) { Text(stringResource(R.string.workflow_skip_unavailable)) }
                     stepStatus == WorkflowStepStatus.PENDING && capability.canExecute ->
                         Button(onClick = { viewModel.transitionWorkflowStep(step.id, WorkflowStepStatus.RUNNING) }) { Text(stringResource(R.string.workflow_mark_started)) }
                     stepStatus == WorkflowStepStatus.RUNNING ->
