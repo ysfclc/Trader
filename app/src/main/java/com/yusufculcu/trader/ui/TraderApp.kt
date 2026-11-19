@@ -482,6 +482,12 @@ private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEven
                                 "plan_step_done" -> R.string.event_step_completed
                                 "plan_step_reopened" -> R.string.event_step_reopened
                                 "status_changed" -> R.string.event_status_updated
+                                "details_updated" -> R.string.event_details_updated
+                                "archived" -> R.string.event_archived
+                                "restored" -> R.string.event_restored
+                                "evidence_added" -> R.string.event_evidence_added
+                                "evidence_verified" -> R.string.event_evidence_verified
+                                "evidence_unreviewed" -> R.string.event_evidence_unreviewed
                                 else -> R.string.event_activity_recorded
                             }), fontWeight = FontWeight.SemiBold)
                             if (event.details.isNotBlank() && event.eventType != "created") Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
