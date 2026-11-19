@@ -1,6 +1,16 @@
 package com.yusufculcu.trader.ui
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.yusufculcu.trader.TraderApplication
+import com.yusufculcu.trader.data.TraderBackupManager
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +30,7 @@ import androidx.compose.material.icons.rounded.Unarchive
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,6 +66,49 @@ fun TraderApp(viewModel: TraderViewModel) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showArchived by rememberSaveable { mutableStateOf(false) }
+    var showBackupDialog by rememberSaveable { mutableStateOf(false) }
+    var pendingBackupPassphrase by remember { mutableStateOf("") }
+    var backupResult by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val exportBackupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val passphrase = pendingBackupPassphrase
+                backupResult = runCatching {
+                    val app = context.applicationContext as TraderApplication
+                    val output = context.contentResolver.openOutputStream(uri)
+                        ?: error("The selected destination could not be opened.")
+                    output.use { TraderBackupManager(app.database).exportEncrypted(it, passphrase.toCharArray()) }
+                    context.getString(R.string.backup_export_success)
+                }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
+                pendingBackupPassphrase = ""
+            }
+        } else {
+            pendingBackupPassphrase = ""
+        }
+    }
+    val importBackupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val passphrase = pendingBackupPassphrase
+                backupResult = runCatching {
+                    val app = context.applicationContext as TraderApplication
+                    val input = context.contentResolver.openInputStream(uri)
+                        ?: error("The selected backup file could not be opened.")
+                    input.use { TraderBackupManager(app.database).restoreEncrypted(it, passphrase.toCharArray()) }
+                    context.getString(R.string.backup_restore_success)
+                }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
+                pendingBackupPassphrase = ""
+            }
+        } else {
+            pendingBackupPassphrase = ""
+        }
+    }
     val selected = (problems + archivedProblems).firstOrNull { it.id == selectedId }
 
     Scaffold(
@@ -69,6 +123,11 @@ fun TraderApp(viewModel: TraderViewModel) {
                 },
                 navigationIcon = {
                     if (selected != null) IconButton(onClick = { selectedId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back)) }
+                },
+                actions = {
+                    if (selected == null) IconButton(onClick = { showBackupDialog = true }) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.backup_restore))
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -111,6 +170,102 @@ fun TraderApp(viewModel: TraderViewModel) {
             viewModel.createProblem(title, description, outcome, constraints)
             showCreate = false
         }
+    )
+    if (showBackupDialog) BackupDialog(
+        onDismiss = { showBackupDialog = false },
+        onExport = { passphrase ->
+            pendingBackupPassphrase = passphrase
+            showBackupDialog = false
+            val fileName = "Trader-backup-${SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())}.traderbackup"
+            exportBackupLauncher.launch(fileName)
+        },
+        onRestore = { passphrase ->
+            pendingBackupPassphrase = passphrase
+            showBackupDialog = false
+            importBackupLauncher.launch(arrayOf("*/*"))
+        }
+    )
+    backupResult?.let { message ->
+        AlertDialog(
+            onDismissRequest = { backupResult = null },
+            title = { Text(stringResource(R.string.backup_result_title)) },
+            text = { Text(message) },
+            confirmButton = { TextButton(onClick = { backupResult = null }) { Text(stringResource(R.string.close)) } }
+        )
+    }
+}
+ 
+@Composable
+private fun BackupDialog(
+    onDismiss: () -> Unit,
+    onExport: (String) -> Unit,
+    onRestore: (String) -> Unit
+) {
+    var passphrase by remember { mutableStateOf("") }
+    var confirmation by remember { mutableStateOf("") }
+    var restoreAcknowledged by remember { mutableStateOf(false) }
+    var validationError by remember { mutableStateOf<String?>(null) }
+    val tooShort = stringResource(R.string.backup_passphrase_too_short)
+    val mismatch = stringResource(R.string.backup_passphrase_mismatch)
+    val acknowledge = stringResource(R.string.backup_ack_required)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_restore)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.backup_intro), style = MaterialTheme.typography.bodySmall)
+                OutlinedTextField(
+                    value = passphrase,
+                    onValueChange = { passphrase = it; validationError = null },
+                    label = { Text(stringResource(R.string.backup_passphrase)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+                OutlinedTextField(
+                    value = confirmation,
+                    onValueChange = { confirmation = it; validationError = null },
+                    label = { Text(stringResource(R.string.backup_confirm_passphrase)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+                Text(stringResource(R.string.backup_passphrase_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                HorizontalDivider()
+                Text(stringResource(R.string.backup_restore_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = restoreAcknowledged, onCheckedChange = { restoreAcknowledged = it })
+                    Text(stringResource(R.string.backup_restore_ack), style = MaterialTheme.typography.labelSmall)
+                }
+                validationError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                Button(
+                    onClick = {
+                        when {
+                            passphrase.length < 12 -> validationError = tooShort
+                            passphrase != confirmation -> validationError = mismatch
+                            else -> onExport(passphrase)
+                        }
+                    },
+                    enabled = passphrase.isNotEmpty() && confirmation.isNotEmpty()
+                ) { Text(stringResource(R.string.backup_export)) }
+                OutlinedButton(
+                    onClick = {
+                        when {
+                            passphrase.length < 12 -> validationError = tooShort
+                            !restoreAcknowledged -> validationError = acknowledge
+                            else -> onRestore(passphrase)
+                        }
+                    },
+                    enabled = passphrase.isNotEmpty() && restoreAcknowledged
+                ) { Text(stringResource(R.string.backup_import)) }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
