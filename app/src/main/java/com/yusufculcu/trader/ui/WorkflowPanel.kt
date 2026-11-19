@@ -103,7 +103,10 @@ fun WorkflowPanel(problem: ProblemEntity, viewModel: TraderViewModel) {
                 StatusLabel(run.status)
                 when (WorkflowRunStatus.from(run.status)) {
                     WorkflowRunStatus.DRAFT -> Button(onClick = { viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.READY) }) { Text(stringResource(R.string.workflow_mark_ready)) }
-                    WorkflowRunStatus.READY -> Button(onClick = { viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.RUNNING) }) { Text(stringResource(R.string.workflow_start)) }
+                    WorkflowRunStatus.READY -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = { viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.RUNNING) }) { Text(stringResource(R.string.workflow_start)) }
+                        TextButton(onClick = { viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.CANCELLED, details = "Cancelled by user") }) { Text(stringResource(R.string.workflow_cancel)) }
+                    }
                     WorkflowRunStatus.RUNNING -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.PAUSED) }) {
                             androidx.compose.material3.Icon(Icons.Rounded.Pause, null)
@@ -143,7 +146,14 @@ fun WorkflowPanel(problem: ProblemEntity, viewModel: TraderViewModel) {
                         ) { Text(stringResource(R.string.workflow_confirm_outcome)) }
                     }
                     WorkflowRunStatus.WAITING_FOR_APPROVAL -> Text(stringResource(R.string.workflow_waiting_approval), color = MaterialTheme.colorScheme.tertiary)
-                    WorkflowRunStatus.NEEDS_REVIEW, WorkflowRunStatus.FAILED -> Text(run.lastError ?: stringResource(R.string.workflow_needs_review), color = MaterialTheme.colorScheme.error)
+                    WorkflowRunStatus.NEEDS_REVIEW -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(run.lastError ?: stringResource(R.string.workflow_needs_review), color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.workflow_recovery_run_hint), style = MaterialTheme.typography.bodySmall)
+                        Button(onClick = {
+                            viewModel.transitionWorkflowRun(run.id, WorkflowRunStatus.READY, reviewResolved = true, details = "User reviewed interrupted workflow state")
+                        }) { Text(stringResource(R.string.workflow_recovery_reviewed)) }
+                    }
+                    WorkflowRunStatus.FAILED -> Text(run.lastError ?: stringResource(R.string.workflow_needs_review), color = MaterialTheme.colorScheme.error)
                     WorkflowRunStatus.VERIFIED -> Text(stringResource(R.string.workflow_verified), color = MaterialTheme.colorScheme.secondary)
                     WorkflowRunStatus.CANCELLED -> Text(stringResource(R.string.workflow_cancelled), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -194,6 +204,16 @@ private fun WorkflowStepCard(step: WorkflowStepEntity, runStatus: String, viewMo
             }
             if (step.expectedPostcondition.isNotBlank()) {
                 Text(step.expectedPostcondition, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
+            if (runStatus == WorkflowRunStatus.READY.name && stepStatus == WorkflowStepStatus.NEEDS_REVIEW) {
+                Text(stringResource(R.string.workflow_recovery_step_hint), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Button(onClick = {
+                    viewModel.transitionWorkflowStep(
+                        step.id, WorkflowStepStatus.PENDING,
+                        details = "User confirmed the interrupted action did not complete; step reset to pending",
+                        reviewResolved = true
+                    )
+                }) { Text(stringResource(R.string.workflow_recovery_reset_step)) }
             }
             if (runStatus == WorkflowRunStatus.RUNNING.name) {
                 when {
