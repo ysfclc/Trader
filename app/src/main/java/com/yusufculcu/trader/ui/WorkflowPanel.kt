@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.Button
@@ -258,7 +259,7 @@ private fun StatusLabel(value: String) {
             "PENDING" -> R.string.workflow_status_pending
             "COMPLETED" -> R.string.workflow_status_completed
             "SKIPPED" -> R.string.workflow_status_skipped
-            else -> value.replace('_', ' ')
+            else -> R.string.workflow_status_unknown
         }
     )
     Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer) {
