@@ -18,12 +18,12 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
 | Browser / installed-app automation | ⚪ not started | No execution adapter |
 | AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
-| Opportunity tracking | 🟡 branch implementation | Optional one-to-one profile, stages, fit notes, next action, date and safe user handoff implemented on feature branch; CI pending. No normalized organizations/people, buyer/supplier graph, consent tracking, discovery or send adapter |
+| Opportunity tracking | 🟡 branch implementation | Optional one-to-one profile, stages, fit notes, next action, date and safe user handoff implemented on feature branch; CI run 306 verified (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open. No normalized organizations/people, buyer/supplier graph, consent tracking, discovery or send adapter |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
-- Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR and CI are pending. No APK from this branch is yet declared usable.
+- Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; requires physical-device and user-driven acceptance.
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
 
@@ -47,7 +47,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.
 
 ## 6. Next three increments
-1. Finish PR #16 review, CI and APK assembly; then make the manually curated career/service/trade opportunity loop available as the first practical workflow. Confirm install/upgrade safety and that capture → source/evidence → qualification → next action → contact handoff → follow-up works.
+1. Merge the CI-verified PR #16, then deliver the debug APK as a pilot build for the manually curated career/service/trade opportunity loop. Physical install/upgrade and real-use acceptance remain separate. Confirm install/upgrade safety and that capture → source/evidence → qualification → next action → contact handoff → follow-up works.
 2. Complete Redmi Note 12 Pro 5G acceptance of the Opportunity Pipeline, existing workspace and encrypted backup/restore. Record actual device results separately from CI.
 3. Add durable local follow-up notifications and/or WorkManager execution only with exact permission, recovery and postcondition semantics; add selected-file/document capture as a separate source-preserving slice. No automatic send or ambiguous retry.
 
@@ -138,8 +138,9 @@ Implemented on feature/evidence-backed-opportunity-loop; PR #16 / CI pending
 - Updated DATA_MODEL, ARCHITECTURE, TASKS, COVERAGE (R-016), RISKS (R-16), DECISIONS (D-019), README and CHANGELOG.
 
 Not yet verified
-- PR #16 CI has not been run at this state. Treat the code/test additions as unverified until CI completes.
-- No APK from this branch has been installed on a physical phone. No user-device or real prospect outcome is claimed.
+- PR #16 CI run 306 completed successfully: 59 tests, 0 failures, 0 errors, 0 skipped. Lint, assembleDebug, APK signature verification and exact package/version assertions passed.
+- Debug APK artifact 14569058836 was assembled and CI signature/package-verified (19,172,629 bytes; package com.yusufculcu.trader.debug; version 0.1.0-debug; SHA-256 3b3d42cee05ef8ba886d006361f8262e28e33399c1b8bbe48cc7066c56d0037f). It has not been installed on a physical phone. No user-device or real prospect outcome is claimed.
+- PR #16 CI run 306 used JUnit artifact 14569574990: 59 tests, 0 failures, 0 errors, 0 skipped. Debug APK artifact ID: 14569058836.
 - Follow-up dates are displayed only; they do not schedule background reminders. Discovery, AI qualification, normalized Organization/Person graph, consent, message sending and automatic follow-up remain open.
 
 First intended practical use
