@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 4_
+_Last updated: 2026-11-19 by Continuity Engineer — session 6_
 
 ## 1. Product snapshot
 Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU is the first pilot, not the product boundary. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
@@ -92,9 +92,9 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - Physical-device acceptance and release signing remain open. Debug signing is not production signing.
 
 
-## Session 5 handoff — cancellation safety (PR #14 pending verification)
+## Session 5 handoff — cancellation safety (PR #14 merged)
 
-**Implemented on branch** `workflow-cancel-uncertainty`:
+**Implemented and merged** in PR [#14](https://github.com/ysfclc/Trader/pull/14), main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`:
 - Workflow cancellation while a step is RUNNING now moves the run and active step to NEEDS_REVIEW instead of falsely declaring the action cancelled.
 - Clears the active step's approval and records that the side effect may already have happened.
 - Cancels remaining non-active steps; cancellation between steps remains CANCELLED.
@@ -103,12 +103,12 @@ Trader is an Android-first, local-first workspace for capturing general problems
 
 
 **Verification status**
-- Source and test edits are present on the PR branch and inspected after the final documentation commits.
-- PR #14 is mergeable, but GitHub Actions reports no workflow runs for its current head; no local Android build/test environment is available in this session. This change is therefore **not CI-verified and not merged**.
-- Do not merge until the Android CI suite is run and passes. Do not claim the new regression tests have passed.
+- PR #14 Android CI [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863) completed successfully. All workflow steps passed, including `Verify and build`, unit-test report upload, debug APK signature/package verification and artifact upload.
+- Artifacts: JUnit report `14561772222`; debug APK `14561732215` (CI debug-signed, not a production release).
+- PR #14 merged to `main` as `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
+- This is CI verification, not physical-device acceptance; no device test is claimed.
 
 
 **Next**
-- Run Android CI on PR #14 and resolve any failure before merge.
 - Physical-device acceptance remains an independent open gate.
 - WorkManager execution/recovery remains the next major implementation increment after safety gates.
