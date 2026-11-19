@@ -130,4 +130,21 @@
     <string name="event_evidence_added">Dodano dowód</string>
     <string name="event_evidence_verified">Oznaczono dowód jako zweryfikowany</string>
     <string name="event_evidence_unreviewed">Cofnięto weryfikację dowodu</string>
+    <string name="backup_restore">Kopia zapasowa i przywracanie</string>
+    <string name="backup_intro">Utwórz kopię wszystkich spraw, dowodów, planów i historii przepływów pracy chronioną hasłem albo przywróć wcześniejszą kopię Trader.</string>
+    <string name="backup_passphrase">Hasło kopii zapasowej</string>
+    <string name="backup_confirm_passphrase">Potwierdź hasło</string>
+    <string name="backup_passphrase_hint">Użyj co najmniej 12 znaków. Trader nie zapisuje ani nie wysyła tego hasła. Bez niego nie będzie można otworzyć kopii.</string>
+    <string name="backup_export">Utwórz zaszyfrowaną kopię</string>
+    <string name="backup_import">Przywróć z kopii</string>
+    <string name="backup_restore_warning">Przywracanie zastąpi wszystkie obecne dane Trader zawartością wybranej kopii.</string>
+    <string name="backup_restore_ack">Rozumiem, że moje obecne dane zostaną zastąpione.</string>
+    <string name="backup_passphrase_too_short">Użyj co najmniej 12 znaków.</string>
+    <string name="backup_passphrase_mismatch">Hasła nie są zgodne.</string>
+    <string name="backup_ack_required">Potwierdź, że rozumiesz, iż dane zostaną zastąpione.</string>
+    <string name="backup_export_success">Utworzono zaszyfrowaną kopię zapasową.</string>
+    <string name="backup_restore_success">Przywrócono kopię. Dane obszaru roboczego zostały zastąpione.</string>
+    <string name="backup_failed">Operacja kopii zapasowej nie powiodła się:</string>
+    <string name="backup_result_title">Stan kopii zapasowej</string>
+    <string name="close">Close</string>
 </resources>
