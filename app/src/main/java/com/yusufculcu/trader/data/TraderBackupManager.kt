@@ -1,6 +1,7 @@
 package com.yusufculcu.trader.data
 
 import androidx.room.withTransaction
+import com.yusufculcu.trader.domain.OpportunityRules
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -35,6 +36,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
                     planSteps = database.planStepDao().getAll(),
                     activityEvents = database.activityDao().getAll(),
                     evidence = database.evidenceDao().getAll(),
+                    opportunities = database.opportunityDao().getAll(),
                     workflowRuns = database.workflowRunDao().getAll(),
                     workflowSteps = database.workflowStepDao().getAll(),
                     workflowEvents = database.workflowEventDao().getAll()
@@ -102,9 +104,11 @@ class TraderBackupManager(private val database: TraderDatabase) {
                     database.planStepDao().deleteAll()
                     database.activityDao().deleteAll()
                     database.evidenceDao().deleteAll()
+                    database.opportunityDao().deleteAll()
                     database.problemDao().deleteAll()
 
                     database.problemDao().insertAll(snapshot.problems)
+                    database.opportunityDao().insertAll(snapshot.opportunities)
                     database.planStepDao().insertAll(snapshot.planSteps)
                     database.activityDao().insertAll(snapshot.activityEvents)
                     database.evidenceDao().insertAll(snapshot.evidence)
@@ -162,23 +166,32 @@ class TraderBackupManager(private val database: TraderDatabase) {
             .put("planSteps", jsonArray(snapshot.planSteps, ::encodePlanStep))
             .put("activityEvents", jsonArray(snapshot.activityEvents, ::encodeActivity))
             .put("evidence", jsonArray(snapshot.evidence, ::encodeEvidence))
+            .put("opportunities", jsonArray(snapshot.opportunities, ::encodeOpportunity))
             .put("workflowRuns", jsonArray(snapshot.workflowRuns, ::encodeWorkflowRun))
             .put("workflowSteps", jsonArray(snapshot.workflowSteps, ::encodeWorkflowStep))
             .put("workflowEvents", jsonArray(snapshot.workflowEvents, ::encodeWorkflowEvent))
         return root.toString()
     }
 
-    private fun decodeSnapshot(text: String): BackupSnapshot {
+    internal fun decodeSnapshot(text: String): BackupSnapshot {
         val root = JSONObject(text)
         require(root.getInt("formatVersion") == SNAPSHOT_VERSION) { "This backup format is not supported." }
-        require(root.getInt("databaseSchemaVersion") == DATABASE_SCHEMA_VERSION) {
-            "This backup was created for a different Trader database schema."
+        val backupSchemaVersion = root.getInt("databaseSchemaVersion")
+        require(backupSchemaVersion in MIN_SUPPORTED_DATABASE_SCHEMA_VERSION..DATABASE_SCHEMA_VERSION) {
+            "This backup was created for an unsupported Trader database schema."
+        }
+        val opportunities = if (backupSchemaVersion >= 4) {
+            require(root.has("opportunities")) { "Backup is missing its opportunity records." }
+            decodeArray(root, "opportunities", ::decodeOpportunity)
+        } else {
+            emptyList()
         }
         return BackupSnapshot(
             problems = decodeArray(root, "problems", ::decodeProblem),
             planSteps = decodeArray(root, "planSteps", ::decodePlanStep),
             activityEvents = decodeArray(root, "activityEvents", ::decodeActivity),
             evidence = decodeArray(root, "evidence", ::decodeEvidence),
+            opportunities = opportunities,
             workflowRuns = decodeArray(root, "workflowRuns", ::decodeWorkflowRun),
             workflowSteps = decodeArray(root, "workflowSteps", ::decodeWorkflowStep),
             workflowEvents = decodeArray(root, "workflowEvents", ::decodeWorkflowEvent)
@@ -187,7 +200,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
-            snapshot.activityEvents.size + snapshot.evidence.size + snapshot.workflowRuns.size +
+            snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
             snapshot.workflowSteps.size + snapshot.workflowEvents.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
@@ -198,6 +211,8 @@ class TraderBackupManager(private val database: TraderDatabase) {
         unique(snapshot.planSteps.map { it.id }, "plan-step")
         unique(snapshot.activityEvents.map { it.id }, "activity-event")
         unique(snapshot.evidence.map { it.id }, "evidence")
+        unique(snapshot.opportunities.map { it.id }, "opportunity")
+        unique(snapshot.opportunities.map { it.problemId }, "opportunity problem")
         unique(snapshot.workflowRuns.map { it.id }, "workflow-run")
         unique(snapshot.workflowSteps.map { it.id }, "workflow-step")
         unique(snapshot.workflowEvents.map { it.id }, "workflow-event")
@@ -209,6 +224,10 @@ class TraderBackupManager(private val database: TraderDatabase) {
         require(snapshot.planSteps.all { it.problemId in problems }) { "A plan step points to a missing case." }
         require(snapshot.activityEvents.all { it.problemId in problems }) { "An activity event points to a missing case." }
         require(snapshot.evidence.all { it.problemId in problems }) { "An evidence record points to a missing case." }
+        require(snapshot.opportunities.all { it.problemId in problems }) { "An opportunity points to a missing case." }
+        require(snapshot.opportunities.all {
+            OpportunityRules.isValidLane(it.lane) && OpportunityRules.isValidStage(it.stage) && it.opportunityName.isNotBlank()
+        }) { "An opportunity contains an unsupported lane, stage or missing name." }
         require(snapshot.workflowRuns.all { it.problemId in problems }) { "A workflow points to a missing case." }
         require(snapshot.workflowSteps.all { it.workflowRunId in runs }) { "A workflow step points to a missing run." }
         require(snapshot.workflowEvents.all { event ->
@@ -288,6 +307,22 @@ class TraderBackupManager(private val database: TraderDatabase) {
         capturedAt = o.getLong("capturedAt")
     )
 
+    private fun encodeOpportunity(row: OpportunityEntity) = json(
+        "id" to row.id, "problemId" to row.problemId, "lane" to row.lane,
+        "organizationName" to row.organizationName, "opportunityName" to row.opportunityName,
+        "contactName" to row.contactName, "contactRoute" to row.contactRoute, "fitNotes" to row.fitNotes,
+        "stage" to row.stage, "nextAction" to row.nextAction, "followUpAt" to row.followUpAt,
+        "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+
+    private fun decodeOpportunity(o: JSONObject) = OpportunityEntity(
+        id = o.getString("id"), problemId = o.getString("problemId"), lane = o.getString("lane"),
+        organizationName = o.getString("organizationName"), opportunityName = o.getString("opportunityName"),
+        contactName = o.getString("contactName"), contactRoute = o.getString("contactRoute"),
+        fitNotes = o.getString("fitNotes"), stage = o.getString("stage"), nextAction = o.getString("nextAction"),
+        followUpAt = o.longOrNull("followUpAt"), createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+
     private fun encodeWorkflowRun(row: WorkflowRunEntity) = json(
         "id" to row.id, "problemId" to row.problemId, "title" to row.title, "status" to row.status,
         "idempotencyKey" to row.idempotencyKey, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt,
@@ -345,11 +380,12 @@ class TraderBackupManager(private val database: TraderDatabase) {
     private fun JSONObject.stringOrNull(key: String): String? = if (isNull(key)) null else getString(key)
     private fun JSONObject.longOrNull(key: String): Long? = if (isNull(key)) null else getLong(key)
 
-    private data class BackupSnapshot(
+    internal data class BackupSnapshot(
         val problems: List<ProblemEntity>,
         val planSteps: List<PlanStepEntity>,
         val activityEvents: List<ActivityEventEntity>,
         val evidence: List<EvidenceEntity>,
+        val opportunities: List<OpportunityEntity>,
         val workflowRuns: List<WorkflowRunEntity>,
         val workflowSteps: List<WorkflowStepEntity>,
         val workflowEvents: List<WorkflowEventEntity>
@@ -357,7 +393,8 @@ class TraderBackupManager(private val database: TraderDatabase) {
 
     companion object {
         private const val SNAPSHOT_VERSION = 1
-        private const val DATABASE_SCHEMA_VERSION = 3
+        private const val DATABASE_SCHEMA_VERSION = 4
+        private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
         private const val SALT_BYTES = 16
