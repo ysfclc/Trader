@@ -76,8 +76,8 @@ class TraderBackupManager(private val database: TraderDatabase) {
             require(headerBuffer.get() == FORMAT_VERSION) { "This Trader backup version is not supported by this app." }
             val iterations = headerBuffer.int
             require(iterations in MIN_KDF_ITERATIONS..MAX_KDF_ITERATIONS) { "Backup security parameters are not supported." }
-            val salt = ByteArray(SALT_BYTES).also(headerBuffer::get)
-            val iv = ByteArray(IV_BYTES).also(headerBuffer::get)
+            val salt = ByteArray(SALT_BYTES).also { headerBuffer.get(it) }
+            val iv = ByteArray(IV_BYTES).also { headerBuffer.get(it) }
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, deriveKey(passphrase, salt, iterations), GCMParameterSpec(GCM_TAG_BITS, iv))
             cipher.updateAAD(header)
@@ -219,10 +219,10 @@ class TraderBackupManager(private val database: TraderDatabase) {
         require(values.size == values.toSet().size) { "Backup contains duplicate $label positions." }
     }
 
-    private fun jsonArray(values: List<*>, encode: (Any) -> JSONObject): JSONArray =
-        JSONArray().apply { values.forEach { put(encode(it ?: return@forEach)) } }
+    private fun <T> jsonArray(values: List<T>, encode: (T) -> JSONObject): JSONArray =
+        JSONArray().apply { values.forEach { put(encode(it)) } }
 
-    private fun decodeArray(root: JSONObject, key: String, decode: (JSONObject) -> Any): List<Any> {
+    private fun <T> decodeArray(root: JSONObject, key: String, decode: (JSONObject) -> T): List<T> {
         val array = root.getJSONArray(key)
         require(array.length() <= MAX_ROWS) { "Backup contains too many $key records." }
         return List(array.length()) { index -> decode(array.getJSONObject(index)) }
