@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-19 (workflow control surface implemented; CI/device acceptance pending)
+Last updated: 2026-11-19 (PR #6 merged; CI passed; device acceptance pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow and capability policy foundation merged; first workflow control surface implemented**
+- Status: **Phase 2 — durable workflow foundation and first user-facing workflow control surface merged and CI-verified**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -65,7 +65,7 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [x] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI runs 111 and 112 passed.
 - [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Durable WorkManager execution and process-death recovery. Workflow UI and capability browser are implemented on the current branch but await CI/device acceptance.
+- [ ] Durable WorkManager execution and process-death recovery. Workflow UI and capability browser are merged and CI-verified; physical-device acceptance remains pending.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -176,7 +176,7 @@ The next branch, `build/capability-registry`, adds a policy catalogue for implem
 
 PR #4 merged at `959eb52f677ccdeae2548b76c096e61a799ff135`. The registry records availability, effects, permissions, retry policy, mandatory approval and visible-surface requirements. Workflow creation derives safety metadata from registry policy, unknown capabilities fail closed, and runs with no implemented work cannot start. CI runs 129 and 130 passed all 30 unit/Robolectric tests, lint, APK assembly, signature verification and package identity checks. Artifact 14341082290 is recorded above.
 
-Current boundary: Trader can capture problems and persist/track approved workflow plans. It does not yet execute browser, installed-app, AI, network-discovery or communication capabilities. Workflow UI and durable WorkManager execution are the next major implementation phase.
+Current boundary: Trader can capture problems, persist workflow plans and let the user manually drive supported steps. It does not yet execute browser, installed-app, AI, network-discovery or communication capabilities. Durable WorkManager execution and process-death recovery are the next major implementation phase.
 
 
 ### 2026-11-19 — First workflow control surface implementation
@@ -191,4 +191,12 @@ Implemented on `build/workflow-control-surface`:
 - Added English, Turkish and Polish strings for workflow controls and states.
 - Updated the task ledger and workflow runtime documentation.
 
-This surface is a manually driven workflow tracker, not an autonomous executor. It does not add WorkManager execution, process-death recovery, browser/app automation, AI, network discovery or external communication. CI and physical-device acceptance are pending. Verify the latest branch commit before merging.
+This surface is a manually driven workflow tracker, not an autonomous executor. It does not add WorkManager execution, process-death recovery, browser/app automation, AI, network discovery or external communication. PR #6 merged as `1f39c0a8060692ea80c31650b9c8cd861f500b2f`. Pull-request CI run `44436731548` and branch CI run `44436723330` passed, including tests, lint, APK assembly, signature and package identity verification. APK artifact `14489377527` (18,340,107 bytes) was downloaded and inspected; SHA-256: `4b063962d3fbc29a152a37ce4026c8c1ab51e526fb35234762ed756c8e74b446`. Physical-device acceptance remains pending.
+
+
+### CI evidence — merged workflow control surface
+- PR: [#6](https://github.com/ysfclc/Trader/pull/6), merged to `main` as `1f39c0a8060692ea80c31650b9c8cd861f500b2f`
+- Successful CI: [pull-request run 203](https://github.com/ysfclc/Trader/actions/runs/44436731548) and [branch run 202](https://github.com/ysfclc/Trader/actions/runs/44436723330)
+- Debug APK artifact: `14489377527`, 18,340,107 bytes, package `com.yusufculcu.trader.debug`, version `0.1.0-debug`
+- APK SHA-256: `4b063962d3fbc29a152a37ce4026c8c1ab51e526fb35234762ed756c8e74b446`
+- CI verified APK signature and package identity. Device install, launch and workflow acceptance are not yet verified.
