@@ -28,11 +28,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIncomingIntent(intent: Intent?) {
-        val shared = when (intent?.action) {
-            Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
-            Intent.ACTION_VIEW -> intent.dataString
-            else -> null
-        }?.trim()?.takeIf { it.isNotEmpty() }
-        if (shared != null) viewModel.captureSharedContent(shared)
+        extractIncomingContent(intent)?.let(viewModel::captureSharedContent)
     }
+}
+
+/**
+ * Extracts only content explicitly shared with Trader. Android's EXTRA_TEXT is a
+ * CharSequence by contract, not necessarily a String (for example, styled text).
+ */
+internal fun extractIncomingContent(intent: Intent?): String? {
+    val raw = when (intent?.action) {
+        Intent.ACTION_SEND -> intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        Intent.ACTION_VIEW -> intent.dataString
+        else -> null
+    }
+    return raw?.trim()?.takeIf(String::isNotEmpty)
 }
