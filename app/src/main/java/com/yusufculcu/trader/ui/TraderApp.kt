@@ -1,5 +1,7 @@
 package com.yusufculcu.trader.ui
 
+import android.content.Intent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -113,6 +115,80 @@ fun TraderApp(viewModel: TraderViewModel) {
 }
 
 @Composable
+private fun InboxContent(
+    problems: List<ProblemEntity>,
+    showArchived: Boolean,
+    onShowArchived: (Boolean) -> Unit,
+    onOpen: (ProblemEntity) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var search by rememberSaveable { mutableStateOf("") }
+    val visible = remember(problems, search) {
+        val query = search.trim()
+        if (query.isBlank()) problems
+        else problems.filter { problem ->
+            listOf(
+                problem.title,
+                problem.description,
+                problem.desiredOutcome,
+                problem.constraintsText,
+                problem.originalContent,
+                problem.sourceUri.orEmpty()
+            ).any { it.contains(query, ignoreCase = true) }
+        }
+    }
+    Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+        Spacer(Modifier.height(18.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+            Column {
+                Text(stringResource(R.string.your_workspace), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
+                Text(stringResource(if (showArchived) R.string.archived_cases else R.string.problem_inbox), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            }
+            Text(stringResource(R.string.problems_captured, problems.size), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = !showArchived, onClick = { onShowArchived(false) }, label = { Text(stringResource(R.string.active_cases)) })
+            FilterChip(selected = showArchived, onClick = { onShowArchived(true) }, label = { Text(stringResource(R.string.archived_cases)) })
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = search,
+            onValueChange = { search = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+            placeholder = { Text(stringResource(R.string.search_cases)) }
+        )
+        if (!showArchived && search.isBlank()) {
+            Spacer(Modifier.height(18.dp))
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Box(Modifier.background(Brush.linearGradient(listOf(Color(0xFF1C3430), Color(0xFF172226)))).padding(18.dp)) {
+                    Column {
+                        Text(stringResource(R.string.start_with_real_thing), color = Color(0xFF9DE7C9), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.what_needs_to_move), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        Spacer(Modifier.height(5.dp))
+                        Text(stringResource(R.string.capture_intro), color = Color(0xFFB9C9C4), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(stringResource(if (showArchived) R.string.archived_cases else R.string.recent), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.6.sp)
+        Spacer(Modifier.height(10.dp))
+        when {
+            visible.isEmpty() && search.isNotBlank() -> Text(stringResource(R.string.no_search_results), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 28.dp))
+            visible.isEmpty() && showArchived -> Text(stringResource(R.string.no_archived_cases), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 28.dp))
+            visible.isEmpty() -> EmptyState()
+            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
+                items(visible, key = { it.id }) { problem -> ProblemCard(problem, showArchived) { onOpen(problem) } }
+            }
+        }
+    }
+}
+
+@Composable
 private fun EmptyState() {
     Column(Modifier.fillMaxWidth().padding(top = 34.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(64.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape), contentAlignment = Alignment.Center) {
@@ -125,12 +201,15 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun ProblemCard(problem: ProblemEntity, onClick: () -> Unit) {
+private fun ProblemCard(problem: ProblemEntity, isArchived: Boolean, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(when (problem.category) { "General" -> R.string.category_general; "Captured" -> R.string.category_captured; else -> R.string.category_other }), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.2.sp)
-                StatusPill(ProblemStatus.from(problem.status))
+                if (!isArchived) StatusPill(ProblemStatus.from(problem.status))
+                else Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant) {
+                    Text(stringResource(R.string.archived_label), Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall)
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(problem.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
