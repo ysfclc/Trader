@@ -1,6 +1,6 @@
 # Trader Workflow Runtime
 
-**Status:** Room v2 workflow persistence (PR #3) and capability registry enforcement (PR #4) are merged; CI tests passed.  
+**Status:** Room v2 workflow persistence (PR #3) and capability registry enforcement (PR #4) are merged; the first user-facing workflow/capability surface is implemented on `build/workflow-control-surface` and awaiting CI verification.  
 **Scope:** Durable workflow planning and lifecycle tracking. This is not yet a capability executor.
 
 ## Data model
