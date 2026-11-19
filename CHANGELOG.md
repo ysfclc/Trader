@@ -1,3 +1,12 @@
+## 2026-11-19 — Evidence-backed opportunity pipeline (PR #16 in progress)
+
+- Added optional one-to-one opportunity profile linked to a universal ProblemCase: trade/service/career/other lane, organization and contact labels, fit notes, lifecycle stage, next action and local follow-up date.
+- Added a Pipeline tab with active/closed views, search, due/overdue display and navigation back to the source case; opportunity create/update/stage changes are recorded in Activity.
+- Added explicit, scheme-restricted contact handoff to HTTP(S) browser, mailto composer or tel dialer. The app does not send messages or place calls.
+- Added Room v3→v4 migration and included opportunity profiles in encrypted backup. Schema-v3 backup snapshots remain restorable without opportunity records.
+- Added persistence, validation, legacy-backup, migration and safe-contact-route tests, plus EN/PL/TR strings.
+- No automatic prospect discovery, AI fit qualification, normalized Organization/Person entities, consent tracking, message sending, calls or background reminders are implemented. CI and APK verification are pending; no physical-device acceptance is claimed.
+
 # Changelog
 
 ## 2026-11-19 — Incoming Android share intent hardening
