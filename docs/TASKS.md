@@ -30,7 +30,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.9 Implement local case editing, active/archived search, reversible archive/restore, source-linked evidence, expected-result plan steps and context-packet share handoff (CI runs 225, 232, post-merge 233 and main 256 passed; device acceptance and dedicated search/share UI tests remain open).
 - [x] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (CI runs 111 and 112 passed).
 - [x] T1.8b Reconcile persisted RUNNING workflows on app startup: interrupted RUNNING steps become NEEDS_REVIEW (never blindly retried); runs interrupted between steps become PAUSED. File-backed close/reopen test verifies recovery, stale-approval revocation, idempotency and guarded human resolution (PR #11 CI run 271 passed; 38 tests total).
-- [ ] T1.8c Cancellation safety: if a workflow is cancelled with an active RUNNING step, preserve that step as NEEDS_REVIEW (clear its approval), cancel only the remaining steps, and keep the run under review; cancellation between steps remains CANCELLED. Added regression tests; CI verification pending.
+- [x] T1.8c Cancellation safety: if a workflow is cancelled with an active RUNNING step, preserve that step as NEEDS_REVIEW (clear its approval), cancel only the remaining steps, and keep the run under review; cancellation between steps remains CANCELLED. Regression tests passed in PR #14 CI run 292; physical-device acceptance remains open.
 
 ## T2 — Commercial records
 
