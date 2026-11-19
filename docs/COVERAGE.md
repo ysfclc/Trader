@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Last reconciled: 2026-11-19 against PR #12 final tested branch head `9edf8f9b62844caebddd95e9e813733b16fdda46`, based on main `f8e1a0b380af22a2f925a80f877a07caaed74906`._
+_Last reconciled: 2026-11-19 against main commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`; PR #12 tested head `131d6985a140f335d017c35d37dbfa001743b05b`._
 
 ## Source of truth
 
@@ -25,7 +25,9 @@ A row is not marked complete merely because a screen or class exists. The status
 
 ## Current CI evidence
 
-- PR #12 typed capability contracts: [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973), success on final tested head `9edf8f9b62844caebddd95e9e813733b16fdda46`. JUnit artifact `14516142308`: **44 tests, 0 failures, 0 errors, 0 skipped**. Full Gradle test/lint/build and APK signature/package/version checks passed.
+- PR #12 typed capability contracts: [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973), success on application-source head `9edf8f9b62844caebddd95e9e813733b16fdda46`. JUnit artifact `14516142308`: **44 tests, 0 failures, 0 errors, 0 skipped**.
+- PR #12 final documentation/state head `131d6985a140f335d017c35d37dbfa001743b05b`: [run 285](https://github.com/ysfclc/Trader/actions/runs/44499826271), success; JUnit artifact `14517540622`: **44 tests, 0 failures, 0 errors, 0 skipped**. This was merged as PR [#12](https://github.com/ysfclc/Trader/pull/12), main commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`.
+- Post-merge main: [run 286](https://github.com/ysfclc/Trader/actions/runs/44500309783), success on `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`; JUnit artifact `14516991778`: **44 tests, 0 failures, 0 errors, 0 skipped**. Lint, debug APK assembly, signature verification and package/version assertions also passed.
 - PR #11 workflow recovery: [run 271](https://github.com/ysfclc/Trader/actions/runs/44489948440), success on the tested feature head. JUnit artifact `14513125241`: 38 tests, 0 failures, 0 errors, 0 skipped. Full command: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`; APK signature and exact package/version assertions passed.
 
 - Source: `main` commit `d6ee9a3926df27c78af1c4328ed01989dafe349f` (PR [#8](https://github.com/ysfclc/Trader/pull/8)).
