@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 — Incoming Android share intent hardening
+
+- Read `Intent.EXTRA_TEXT` as its documented `CharSequence` type instead of assuming it is a `String`, preserving styled shared text.
+- Extracted incoming intent parsing into a small testable boundary and added Robolectric tests for ACTION_SEND, ACTION_VIEW, whitespace-only content, missing payloads and unrelated actions.
+- This verifies intent parsing only; Android chooser behavior and Activity-to-database capture remain physical-device/integration acceptance items.
+
+
 ## 2026-11-19 — Workflow cancellation safety
 
 - Cancelling a workflow with an active RUNNING step now preserves the active step and run as NEEDS_REVIEW, clears approval, and cancels only remaining steps; cancellation between steps still completes as CANCELLED.
