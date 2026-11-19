@@ -787,6 +787,9 @@ private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEven
                                 "evidence_added" -> R.string.event_evidence_added
                                 "evidence_verified" -> R.string.event_evidence_verified
                                 "evidence_unreviewed" -> R.string.event_evidence_unreviewed
+                                "opportunity_created" -> R.string.event_opportunity_created
+                                "opportunity_stage_changed" -> R.string.event_opportunity_stage_changed
+                                "opportunity_updated" -> R.string.event_opportunity_updated
                                 else -> R.string.event_activity_recorded
                             }), fontWeight = FontWeight.SemiBold)
                             if (event.details.isNotBlank() && event.eventType != "created") Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
