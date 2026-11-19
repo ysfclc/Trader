@@ -265,10 +265,11 @@ class WorkflowPersistenceTest {
 
         val activeRunId = firstRepository.createWorkflow(
             problemId, "Action interrupted mid-step",
-            listOf(WorkflowStepDraft("Perform bounded action", capabilityId = "manual.task")),
+            listOf(WorkflowStepDraft("Perform bounded action", capabilityId = "manual.task", requiresApproval = true)),
             "recovery-active-${UUID.randomUUID()}"
         )!!
         val activeStep = firstOpen.workflowStepDao().getForRun(activeRunId).single()
+        assertTrue(firstRepository.approveWorkflowStep(activeStep.id, "Approved before simulated interruption"))
         assertTrue(firstRepository.transitionWorkflowRun(activeRunId, WorkflowRunStatus.READY))
         assertTrue(firstRepository.transitionWorkflowRun(activeRunId, WorkflowRunStatus.RUNNING))
         assertTrue(firstRepository.transitionWorkflowStep(activeStep.id, WorkflowStepStatus.RUNNING))
