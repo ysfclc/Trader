@@ -1,14 +1,14 @@
 # Trader Project State
 
-Last updated: 2026-11-19 (usable workspace v1 implemented; CI run 225 passed; device acceptance pending)
+Last updated: 2026-11-19 (PR #7 merged; PR and main CI passed; device acceptance pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow foundation and usable local workspace v1 implemented and CI-verified**
+- Status: **Phase 2 — durable workflow foundation and usable local workspace v1 merged into main and CI-verified**
 - Android source code: first implementation committed on `build/problem-core-android`.
-- APK: latest workspace v1 debug artifact built, downloaded and archive-checked; CI signature/package verification passed; device install/launch not yet verified.
+- APK: workspace v1 debug artifact from PR CI run 232 downloaded and archive-checked; PR and post-merge main CI signature/package checks passed; device install/launch not yet verified.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
@@ -223,3 +223,17 @@ Verification:
 - Debug APK is not a production/release-signed build. Physical device UI/flow acceptance remains pending.
 
 Not implemented yet: encrypted backup/restore, file/screenshot/voice capture, WorkManager execution and process-death recovery, visible browser automation, bounded installed-app automation, AI provider/local model integration, live public-web discovery, buyer/supplier matching, specialized CRM entities and external messaging.
+
+
+### Final merge and release evidence — usable workspace v1
+- PR [#7](https://github.com/ysfclc/Trader/pull/7) merged to `main` as `afec456b6861cf7ae639152185cdb64a9743fb87`.
+- Successful branch CI: [run 225](https://github.com/ysfclc/Trader/actions/runs/44457637361).
+- Successful PR CI: [run 232](https://github.com/ysfclc/Trader/actions/runs/44458321576).
+- Successful post-merge main CI: [run 233](https://github.com/ysfclc/Trader/actions/runs/44458618691).
+- PR test report artifact `14499081325`: 33 tests, 0 failures, 0 errors, 0 skipped.
+- PR debug APK artifact `14499071333`; downloaded APK size 19,004,225 bytes.
+- Package: `com.yusufculcu.trader.debug`; version: `0.1.0-debug`.
+- Downloaded APK SHA-256: `93bf72929cbaab945f9bc77f3a3eba1ad9129f7fb2c192d3ddbb97c7b1e35988`.
+- APK ZIP integrity checked locally; CI verified apksigner signature and exact package/version.
+- This is a debug-signed sideload build, not a production/release-signed app. If Android reports a signature conflict over an earlier CI debug build, stop rather than uninstalling and risking local data.
+- Physical-device acceptance remains pending.
