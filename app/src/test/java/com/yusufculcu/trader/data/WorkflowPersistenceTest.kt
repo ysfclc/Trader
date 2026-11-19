@@ -304,6 +304,16 @@ class WorkflowPersistenceTest {
             assertEquals(0, recoveredRepository.recoverInterruptedWorkflows())
             assertEquals(eventCount, reopened.workflowEventDao().getForRun(activeRunId).size +
                 reopened.workflowEventDao().getForRun(idleRunId).size)
+            assertTrue(recoveredRepository.transitionWorkflowRun(
+                activeRunId, WorkflowRunStatus.READY, reviewResolved = true,
+                details = "User reviewed the interrupted action"
+            ))
+            assertTrue(recoveredRepository.transitionWorkflowStep(
+                recoveredStep.id, WorkflowStepStatus.PENDING, reviewResolved = true,
+                details = "User confirmed the action did not complete"
+            ))
+            assertEquals(WorkflowRunStatus.READY.name, reopened.workflowRunDao().getById(activeRunId)?.status)
+            assertEquals(WorkflowStepStatus.PENDING.name, reopened.workflowStepDao().getById(recoveredStep.id)?.status)
         } finally {
             reopened.close()
             context.deleteDatabase(dbName)
