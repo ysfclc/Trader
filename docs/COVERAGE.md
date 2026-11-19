@@ -25,6 +25,7 @@ A row is not marked complete merely because a screen or class exists. The status
 
 ## Current CI evidence
 
+- PR #12 typed capability contracts: [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973), success on final tested head `9edf8f9b62844caebddd95e9e813733b16fdda46`. JUnit artifact `14516142308`: **44 tests, 0 failures, 0 errors, 0 skipped**. Full Gradle test/lint/build and APK signature/package/version checks passed.
 - PR #11 workflow recovery: [run 271](https://github.com/ysfclc/Trader/actions/runs/44489948440), success on the tested feature head. JUnit artifact `14513125241`: 38 tests, 0 failures, 0 errors, 0 skipped. Full command: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`; APK signature and exact package/version assertions passed.
 
 - Source: `main` commit `d6ee9a3926df27c78af1c4328ed01989dafe349f` (PR [#8](https://github.com/ysfclc/Trader/pull/8)).
