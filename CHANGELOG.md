@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-19 — Typed capability execution contracts
+
+- Completed typed input/output contracts for all 16 registered capabilities, including required/optional and sensitive fields, cross-field constraints, availability, permissions/consent and explicit side effects.
+- Added cost disclosures, operational limit modes and required postconditions with verification methods; the registry prevents adapter-backed operations from being marked AVAILABLE while limits remain undeclared.
+- Added generic input/output field validation for required values, primitive/container types and unexpected keys; documented that adapters still own semantic policy enforcement and concrete quotas.
+- Classified remote model inference as a data-disclosure effect requiring explicit approval and consent. External send/submit operations still require exact approval, prohibit retries and require provider confirmation.
+- Added coverage for complete contracts, validation failures, unknown capabilities and data-disclosure controls. PR and post-merge CI evidence will be added after verification.
+
+
 ## 2026-11-19 — Conservative interrupted-workflow recovery
 
 - Added transactional startup reconciliation for workflows left RUNNING after process interruption.
