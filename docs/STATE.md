@@ -59,21 +59,24 @@ Trader is an Android-first, local-first workspace for capturing general problems
 **Done this session**
 - Implemented transactional startup reconciliation for workflows left RUNNING after process interruption.
 - In-flight steps become NEEDS_REVIEW and lose stale approval; runs interrupted between steps become PAUSED.
-- Added file-backed close/reopen and idempotency coverage; recorded D-017 and updated workflow docs, task ledger, coverage and risk register.
+- Added English/Turkish/Polish controls for human review and a guarded reset that requires confirmation the interrupted action did not complete.
+- Added file-backed close/reopen, idempotency and guarded-resolution test coverage; recorded D-017 and updated task, runtime, coverage and risk docs.
 
 **State changed**
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt`
 - `app/src/main/java/com/yusufculcu/trader/viewmodel/TraderViewModel.kt`
+- `app/src/main/java/com/yusufculcu/trader/ui/WorkflowPanel.kt`
 - `app/src/test/java/com/yusufculcu/trader/data/WorkflowPersistenceTest.kt`
+- `app/src/main/res/values/strings.xml`, `values-tr/strings.xml`, `values-pl/strings.xml`
 - `docs/TASKS.md`, `docs/WORKFLOW_RUNTIME.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `CHANGELOG.md`, `docs/STATE.md`
 
 **Verified**
-- Build: pending CI for this branch; do not treat the increment as shipped until it passes.
-- Tests: new file-backed process-reopen test added; total expected suite is 38, pending execution.
+- Build: pending final PR CI; do not merge until tests, lint, APK build and signature/package checks pass.
+- Tests: new file-backed process-reopen test added; expected suite count 38, pending CI execution.
 - Physical device: not tested; requires Redmi Note 12 Pro 5G.
 
 **Not done / next**
-1. Run full Android CI and fix any failures before merge.
+1. Run full Android CI on the final PR head and fix any failures before merge.
 2. Install on Redmi Note 12 Pro 5G and exercise capture, workflow lifecycle and encrypted backup/restore.
 3. Implement WorkManager execution only after this recovery boundary is accepted.
 
@@ -82,6 +85,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 
 **Risks / landmines**
 - A step marked RUNNING may already have performed its action; recovery moves it to NEEDS_REVIEW and clears its approval.
+- The UI only resets an interrupted step after explicit user confirmation that the action did not complete; uncertain outcomes must not be retried.
 - Runs interrupted between steps become PAUSED, not automatically resumed.
 - Restore replaces the entire Room workspace; export first. Lost backup passphrase is unrecoverable.
 - Backup snapshot expects Room schema v3; future schema changes need backup compatibility tests.
