@@ -43,7 +43,7 @@ Robolectric tests cover:
 - exact-payload approval and approval invalidation after input edits;
 - review-required ambiguous outcomes and retry restrictions;
 - safe retry authorization;
-- cancellation of non-terminal steps, including the active-step uncertainty rule (active work becomes NEEDS_REVIEW; pending work is cancelled);
+- cancellation of non-terminal steps, including the active-step uncertainty rule (active work becomes NEEDS_REVIEW; pending work is cancelled); PR #14 CI run 292 passed (45 tests, 0 failures/errors/skipped).
 - file-backed process close/reopen recovery for in-flight and between-step interruption, stale-approval revocation, event idempotency and explicit human resolution;
 - version 1 to version 2 migration with existing row preservation.
 
