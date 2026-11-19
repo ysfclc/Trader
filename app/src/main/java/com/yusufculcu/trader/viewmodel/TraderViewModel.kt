@@ -104,6 +104,7 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
         runId: String,
         target: WorkflowRunStatus,
         outcomeVerified: Boolean = false,
+        reviewResolved: Boolean = false,
         details: String = ""
     ) {
         viewModelScope.launch {
@@ -111,13 +112,14 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
                 runId = runId,
                 target = target,
                 outcomeVerified = outcomeVerified,
+                reviewResolved = reviewResolved,
                 details = details
             )
         }
     }
 
-    fun transitionWorkflowStep(stepId: String, target: WorkflowStepStatus, details: String = "") {
-        viewModelScope.launch { repository.transitionWorkflowStep(stepId, target, details = details) }
+    fun transitionWorkflowStep(stepId: String, target: WorkflowStepStatus, details: String = "", reviewResolved: Boolean = false) {
+        viewModelScope.launch { repository.transitionWorkflowStep(stepId, target, reviewResolved = reviewResolved, details = details) }
     }
 
     fun approveWorkflowStep(stepId: String) {
