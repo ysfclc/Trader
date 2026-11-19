@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 6_
+_Last updated: 2026-11-19 by Continuity Engineer — session 7 (incoming share intent hardening)_
 
 ## 1. Product snapshot
 Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU is the first pilot, not the product boundary. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
@@ -8,7 +8,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | Area | State | Notes |
 |---|---|---|
 | Android shell / EN-TR-PL | 🟡 partial | Builds in CI; visual/device acceptance open |
-| ProblemCase capture | 🟡 partial | Manual + shared text/URL; no file/screenshot/voice |
+| ProblemCase capture | 🟡 partial | Manual + shared text/URL; incoming intent extraction CI-tested; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
 | Plans / workflow records | 🟡 partial | Room persistence, events, approval and lifecycle rules; interrupted runs reconcile safely; active-step cancellation preserves uncertainty for review; current execution remains user-driven |
@@ -34,7 +34,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
 - Browser/app automation, AI providers, public-source discovery, buyer/supplier matching and communications are absent.
-- Search and ACTION_SEND boundary lack direct UI/instrumentation tests; no physical-device test has been recorded.
+- Search has no dedicated UI test; incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test; no physical-device test has been recorded.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
 - No release signing configuration; do not present the debug build as production.
 
@@ -53,6 +53,17 @@ Trader is an Android-first, local-first workspace for capturing general problems
 ## 7. Open questions for the human
 - [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
 - [ ] Before public distribution, configure a dedicated Trader release keystore via protected GitHub Actions secrets; never reuse another app's signing identity.
+
+## Session 7 handoff — incoming share intent hardening
+
+**Implemented on branch `test/incoming-share-intent`**
+- `MainActivity` now reads `Intent.EXTRA_TEXT` as `CharSequence`, matching Android's contract and preserving styled shared text rather than assuming a `String`.
+- Incoming intent extraction is isolated in `extractIncomingContent` and has Robolectric tests for ACTION_SEND, ACTION_VIEW, whitespace-only payloads, missing data and unrelated actions.
+- This does not prove external chooser behavior or Activity-to-Repository persistence; physical-device acceptance remains open.
+
+**Not yet verified**
+- CI has not run on this branch yet. Do not count the new tests as passing until PR CI completes.
+- Device acceptance, search UI tests, backup acceptance and WorkManager remain open.
 
 ## Session handoff
 
