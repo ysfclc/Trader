@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Last reconciled: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`; PR #14 CI run 292 passed._
+_Branch review: 2026-11-19 against feature/evidence-backed-opportunity-loop; PR #16 CI pending. Main baseline: PR #15 merged as `9911be2f97e8e0fa55b1c4dbbd5483e96f90322a`._
 
 ## Source of truth
 
@@ -24,8 +24,11 @@ A row is not marked complete merely because a screen or class exists. The status
 | R-012 | Provide optional AI and authorized discovery/browser/app capabilities without paid services being core dependencies. | Registry marks unsupported capabilities unavailable; no browser, network-search or model adapter is implemented. | Fail-closed behavior covered by `CapabilityRegistryTest`; no adapter tests exist. | `docs/ARCHITECTURE.md#L65-L88`; `docs/OPERATING_RULES.md#L16-L25` and `#L52-L69`; `docs/TASKS.md` and `T4` | ⚪ Not started |
 
 | R-015 | Cancellation with an active workflow step must preserve uncertain side effects for human review; pending work must stop. | `TraderRepository.transitionWorkflowRun` | `WorkflowPersistenceTest::cancellingRunWithActiveStepPreservesUncertainSideEffectAndCancelsRemainingSteps`; `cancellingRunBetweenStepsCancelsAllPendingSteps` | `docs/WORKFLOW_RUNTIME.md`; `docs/TASKS.md` T1.8c; `docs/RISKS.md` R-15 | 🟢 Implemented and CI-verified in PR #14 run 292; physical-device acceptance remains open |
+| R-016 | Optionally track one manually qualified opportunity per ProblemCase with evidence context, stage history, next action, due date, backup and safe contact handoff. | `OpportunityEntity`, `OpportunityDao`, `TraderRepository.saveOpportunity`, `TraderViewModel.opportunities`, Pipeline and per-case editor; Room migration 3→4. | `OpportunityPersistenceTest` (valid upsert, stage event, archived-case rejection and invalid lane/stage/name); `OpportunityRulesTest`; `OpportunityContactRouteTest`; backup v4 round-trip and v3 legacy compatibility tests; Room migration test. PR #16 CI pending. | `docs/DATA_MODEL.md`; `docs/ARCHITECTURE.md`; `docs/TASKS.md` T1.3c/T2.0/T5.2a; `docs/DECISIONS.md` D-019. | 🟡 Implemented on feature branch; CI and physical-device acceptance pending. No discovery, normalized Organization/Person graph, send adapter or background reminder. |
 
 ## Current CI evidence
+
+- PR #15 incoming Android share intent hardening: [run 304](https://github.com/ysfclc/Trader/actions/runs/44594559214), success; merged to main as `9911be2f97e8e0fa55b1c4dbbd5483e96f90322a`.
 
 - PR #14 workflow cancellation safety: [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863), success on the PR merge test revision; **45 tests, 0 failures, 0 errors, 0 skipped**; lint, debug APK assembly, signature verification, package/version assertions and artifact uploads all passed. JUnit artifact `14561772222`; debug APK artifact `14561732215`. Merged as [PR #14](https://github.com/ysfclc/Trader/pull/14), main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
 
