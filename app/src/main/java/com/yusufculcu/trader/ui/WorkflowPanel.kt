@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Stop
@@ -19,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -91,19 +91,11 @@ fun WorkflowPanel(problem: ProblemEntity, viewModel: TraderViewModel) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 runs.forEach { run ->
                     val active = run.id == selectedRun?.id
-                    Surface(
+                    FilterChip(
+                        selected = active,
                         onClick = { selectedRunId = run.id },
-                        shape = RoundedCornerShape(50),
-                        color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-                    ) {
-                        Text(
-                            run.title,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1
-                        )
-                    }
+                        label = { Text(run.title, maxLines = 1) }
+                    )
                 }
             }
             selectedRun?.let { run ->
@@ -249,8 +241,26 @@ private fun CapabilityAvailabilityList() {
 
 @Composable
 private fun StatusLabel(value: String) {
+    val label = stringResource(
+        when (value) {
+            "DRAFT" -> R.string.workflow_status_draft
+            "READY" -> R.string.workflow_status_ready
+            "RUNNING" -> R.string.workflow_status_running
+            "PAUSED" -> R.string.workflow_status_paused
+            "WAITING_FOR_APPROVAL" -> R.string.workflow_status_waiting
+            "NEEDS_REVIEW" -> R.string.workflow_status_review
+            "FAILED" -> R.string.workflow_status_failed
+            "AWAITING_VERIFICATION" -> R.string.workflow_status_verification
+            "VERIFIED" -> R.string.workflow_status_verified
+            "CANCELLED" -> R.string.workflow_status_cancelled
+            "PENDING" -> R.string.workflow_status_pending
+            "COMPLETED" -> R.string.workflow_status_completed
+            "SKIPPED" -> R.string.workflow_status_skipped
+            else -> value.replace('_', ' ')
+        }
+    )
     Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.secondaryContainer) {
-        Text(value.replace('_', ' '), Modifier.padding(horizontal = 9.dp, vertical = 5.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelSmall)
+        Text(label, Modifier.padding(horizontal = 9.dp, vertical = 5.dp), color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelSmall)
     }
 }
 
