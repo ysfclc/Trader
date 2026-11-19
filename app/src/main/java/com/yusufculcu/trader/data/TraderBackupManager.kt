@@ -59,7 +59,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
             output.flush()
         } finally {
             cleartext.fill(0)
-            passphrase.fill('\\u0000')
+            passphrase.fill(0.toChar())
         }
     }
 
@@ -112,7 +112,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
             }
         } finally {
             encrypted.fill(0)
-            passphrase.fill('\\u0000')
+            passphrase.fill(0.toChar())
         }
     }
 
