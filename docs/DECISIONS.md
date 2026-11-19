@@ -166,3 +166,14 @@ Each registered capability declares typed input and output fields, required/opti
 **Reason:** An executor must not infer its input shape, cost, operational limits or definition of success from a free-form workflow title. A contract makes the boundary inspectable before an adapter is implemented.
 
 **Consequences:** The generic validator does not replace adapter-specific semantic or policy checks. Adapter-backed capabilities remain NOT_IMPLEMENTED until the selected adapter declares concrete applicable byte/time/rate/concurrency ceilings, enforces its source/permission/consent policy and verifies postconditions. Unknown provider cost must be shown and explicitly consented to; remote model context transmission is a separate data-disclosure effect.
+
+
+## D-019 — Keep initial opportunity tracking as an optional one-to-one ProblemCase profile
+**Date:** 2026-11-19  
+**Status:** Accepted
+
+The initial mobile opportunity workflow uses one optional OpportunityRecord per ProblemCase. It supports the trade, service, career and other lanes with a manually entered organization label, opportunity name, contact label/route, user-authored fit note, stage, next action and local follow-up date. It is not a canonical Organization/Person graph, buyer requirement, supplier offer, deal or consent record.
+
+**Reason:** The first practical use case needs one compact place to move a captured real-world lead from discovery to qualification, contact and follow-up while preserving its source context. Forcing every ProblemCase to become an opportunity would violate the universal problem model; building the complete commercial graph before validating the workflow would overbuild the first slice.
+
+**Consequences:** User explicitly opts into opportunity tracking. Create/update/stage changes are recorded in ProblemCase activity. Contact route opens only a browser, email composer or dialer after explicit user action; Trader does not send/place calls. Follow-up dates are displayed but do not trigger notifications. Room v3→v4 adds the optional profile, and schema-v3 encrypted backups remain restorable with no opportunity records. Normalize organizations/people and move to multiple opportunities per case only when a validated use case justifies the schema change.
