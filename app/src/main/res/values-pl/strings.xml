@@ -199,4 +199,8 @@
     <string name="open_contact_route">Otwórz kanał kontaktu</string>
     <string name="contact_route_unsupported">Brak obsługiwanej aplikacji dla tego kanału kontaktu.</string>
 
+    <string name="event_opportunity_created">Rozpoczęto śledzenie szansy</string>
+    <string name="event_opportunity_stage_changed">Zmieniono etap szansy</string>
+    <string name="event_opportunity_updated">Zaktualizowano dane szansy</string>
+
 </resources>
