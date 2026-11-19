@@ -608,7 +608,7 @@ object CapabilityRegistry {
         val reason = when {
             descriptor.availability == CapabilityAvailability.BLOCKED -> "Capability is blocked by policy."
             descriptor.availability == CapabilityAvailability.NOT_IMPLEMENTED -> "Capability is not implemented."
-            missing.isNotEmpty() -> "Missing permissions or consent: \${missing.sorted().joinToString()}"
+            missing.isNotEmpty() -> "Missing permissions or consent: " + missing.sorted().joinToString()
             else -> null
         }
         return CapabilityAssessment(
