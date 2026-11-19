@@ -4,7 +4,7 @@ enum class CapabilityAvailability { AVAILABLE, NOT_IMPLEMENTED, BLOCKED }
 
 enum class CapabilityEffect {
     LOCAL_READ, LOCAL_WRITE, LOCAL_COMPUTE, USER_TASK, NETWORK_READ,
-    BROWSER_INTERACTION, APP_HANDOFF, APP_INTERACTION, EXTERNAL_SIDE_EFFECT
+    BROWSER_INTERACTION, APP_HANDOFF, APP_INTERACTION, REMOTE_DATA_DISCLOSURE, EXTERNAL_SIDE_EFFECT
 }
 
 enum class RetryPolicy { SAFE, USER_CONFIRMED, NEVER }
@@ -80,6 +80,11 @@ data class CapabilityDescriptor(
     val requiredPermissions: Set<String> = emptySet(),
     val requiresVisibleSurface: Boolean = false,
     val supportsOffline: Boolean = false
+)
+
+data class CapabilityValidationResult(
+    val valid: Boolean,
+    val issues: List<String>
 )
 
 data class CapabilityAssessment(
@@ -183,8 +188,8 @@ object CapabilityRegistry {
                 capabilityField("sharedText", CapabilityDataType.TEXT, "Text or URL supplied by the Android share intent", required = false),
                 capabilityField("sharedUri", CapabilityDataType.URI, "Shared content URI, when supplied", required = false, sensitive = true),
                 capabilityField("mimeType", CapabilityDataType.STRING, "Intent MIME type", required = false),
-                capabilityField("sourcePackage", CapabilityDataType.STRING, "Originating package when Android provides it", required = false)
-            , constraints = listOf("At least one of sharedText or sharedUri must be present.", "Only data actually granted by the Android share intent may be read.")),
+                capabilityField("sourcePackage", CapabilityDataType.STRING, "Originating package when Android provides it", required = false),
+                constraints = listOf("At least one of sharedText or sharedUri must be present.", "Only data actually granted by the Android share intent may be read.")),
             outputs = capabilityIo(
                 capabilityField("problemCaseId", CapabilityDataType.IDENTIFIER, "ID of the created ProblemCase"),
                 capabilityField("originalContent", CapabilityDataType.TEXT, "Preserved original shared text or URL"),
@@ -195,7 +200,6 @@ object CapabilityRegistry {
             limits = capabilityLimits(CapabilityLimitMode.PLATFORM_BOUNDED, "Bounded by Android intent payloads, granted URI access and local database/storage limits. No additional product-specific cap is declared."),
             postcondition = capabilityPostcondition("Read the saved case back and verify that the original shared text/URL and source metadata are preserved.", PostconditionVerification.LOCAL_READ_BACK),
             sideEffects = listOf("Creates a local ProblemCase from user-shared content; does not fetch the shared URL."),
-            requiredPermissions = setOf("android_share_intent_grant"),
             supportsOffline = true
         ),
         CapabilityDescriptor(
@@ -432,7 +436,7 @@ object CapabilityRegistry {
             title = "Run remote model inference",
             description = "Send an explicitly selected and consented context packet to a remote model",
             availability = CapabilityAvailability.NOT_IMPLEMENTED,
-            effect = CapabilityEffect.NETWORK_READ,
+            effect = CapabilityEffect.REMOTE_DATA_DISCLOSURE,
             retryPolicy = RetryPolicy.USER_CONFIRMED,
             inputs = capabilityIo(
                 capabilityField("providerId", CapabilityDataType.IDENTIFIER, "Selected remote provider"),
@@ -573,6 +577,10 @@ object CapabilityRegistry {
             }) {
             "External side effects require exact approval, explicit cost consent, no retries and provider confirmation"
         }
+        check(descriptors.filter { it.effect == CapabilityEffect.REMOTE_DATA_DISCLOSURE }
+            .all { it.requiresApproval && it.cost.requiresExplicitConsent }) {
+            "Remote data disclosure requires approval and explicit consent"
+        }
         check(descriptors.filter { it.availability == CapabilityAvailability.AVAILABLE }
             .none { it.limits.mode == CapabilityLimitMode.ADAPTER_MUST_DECLARE }) {
             "A capability cannot be executable until its adapter limits are declared"
@@ -613,6 +621,55 @@ object CapabilityRegistry {
             missingPermissions = missing,
             reason = reason
         )
+    }
+
+    fun validateInputs(id: String, values: Map<String, Any?>): CapabilityValidationResult =
+        validateValues(id, values, useInputs = true)
+
+    fun validateOutputs(id: String, values: Map<String, Any?>): CapabilityValidationResult =
+        validateValues(id, values, useInputs = false)
+
+    private fun validateValues(
+        id: String,
+        values: Map<String, Any?>,
+        useInputs: Boolean
+    ): CapabilityValidationResult {
+        val descriptor = byId[id] ?: return CapabilityValidationResult(
+            valid = false,
+            issues = listOf("Unregistered capability: $id")
+        )
+        val contract = if (useInputs) descriptor.inputs else descriptor.outputs
+        val issues = mutableListOf<String>()
+        val fieldsByName = contract.fields.associateBy { it.name }
+
+        contract.fields.forEach { field ->
+            val value = values[field.name]
+            if (value == null) {
+                if (field.required) issues += "Missing required field: ${field.name}"
+            } else if (!matchesType(value, field.type)) {
+                issues += "Field ${field.name} must be ${field.type}"
+            }
+        }
+
+        if (!contract.additionalFieldsAllowed) {
+            (values.keys - fieldsByName.keys).sorted().forEach { name ->
+                issues += "Unexpected field: $name"
+            }
+        }
+        return CapabilityValidationResult(valid = issues.isEmpty(), issues = issues)
+    }
+
+    private fun matchesType(value: Any, type: CapabilityDataType): Boolean = when (type) {
+        CapabilityDataType.IDENTIFIER,
+        CapabilityDataType.STRING,
+        CapabilityDataType.TEXT,
+        CapabilityDataType.URI -> value is String && value.isNotBlank()
+        CapabilityDataType.BOOLEAN -> value is Boolean
+        CapabilityDataType.INTEGER -> value is Byte || value is Short || value is Int || value is Long
+        CapabilityDataType.DECIMAL -> value is Number
+        CapabilityDataType.STRING_LIST -> value is List<*> && value.all { it is String }
+        CapabilityDataType.OBJECT -> value is Map<*, *>
+        CapabilityDataType.OBJECT_LIST -> value is List<*> && value.all { it is Map<*, *> }
     }
 
     fun normalizedRetrySafe(id: String, userDeclaredSafe: Boolean): Boolean =
