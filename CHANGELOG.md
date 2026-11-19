@@ -3,7 +3,7 @@
 ## 2026-11-19 — Workflow cancellation safety
 
 - Cancelling a workflow with an active RUNNING step now preserves the active step and run as NEEDS_REVIEW, clears approval, and cancels only remaining steps; cancellation between steps still completes as CANCELLED.
-- Added regression tests for active-step ambiguity and between-step cancellation. PR #14 CI run 292 passed unit tests, lint, debug APK assembly, signature verification and package/version assertions; merged as `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
+- Added regression tests for active-step ambiguity and between-step cancellation. PR #14 CI run 292 passed **45 tests (0 failures/errors/skipped)**, lint, debug APK assembly, signature verification and package/version assertions; merged as `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
 
 
 ## 2026-11-19 — Typed capability execution contracts
