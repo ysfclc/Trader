@@ -55,7 +55,6 @@ Robolectric tests cover:
 
 ## Next implementation gates
 
-1. Add workflow UI to create a run from a ProblemCase plan, inspect events and approve exact payloads.
-2. Add a user-facing capability browser with availability, permission and policy explanations.
-3. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
-4. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.
+1. Verify the workflow UI on a physical Android device, including create, approve, start, complete, skip, pause/resume, cancel and outcome verification.
+2. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
+3. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.
