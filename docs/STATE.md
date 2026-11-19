@@ -11,7 +11,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | ProblemCase capture | 🟡 partial | Manual + shared text/URL; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
-| Plans / workflow records | 🟡 partial | Room persistence, events, approval and lifecycle rules; interrupted runs reconcile safely on startup; current execution remains user-driven |
+| Plans / workflow records | 🟡 partial | Room persistence, events, approval and lifecycle rules; interrupted runs reconcile safely; active-step cancellation preserves uncertainty for review; current execution remains user-driven |
 | Capability registry | 🟡 partial | All 16 registered operations have typed input/output, cost, limit-mode and postcondition contracts; generic field validation and fail-closed promotion invariants pass CI; adapter-specific semantics/quotas remain open |
 | Context packet | 🟡 partial | Builder tested; Android share chooser not device-accepted |
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
@@ -31,7 +31,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - `app/src/main/java/com/yusufculcu/trader/data/TraderBackupManager.kt` — snapshot compatibility currently requires database schema version 3; future schema changes need backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
-- Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, but WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
+- Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
 - Browser/app automation, AI providers, public-source discovery, buyer/supplier matching and communications are absent.
 - Search and ACTION_SEND boundary lack direct UI/instrumentation tests; no physical-device test has been recorded.
@@ -90,3 +90,25 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - A step marked RUNNING may already have acted; it becomes NEEDS_REVIEW, never auto-retried. Runs interrupted between steps become PAUSED.
 - Restore replaces the entire Room workspace; export first. Lost backup passphrase is unrecoverable. Backup snapshot expects Room schema v3.
 - Physical-device acceptance and release signing remain open. Debug signing is not production signing.
+
+
+## Session 5 handoff — cancellation safety (PR #14 pending verification)
+
+**Implemented on branch** `workflow-cancel-uncertainty`:
+- Workflow cancellation while a step is RUNNING now moves the run and active step to NEEDS_REVIEW instead of falsely declaring the action cancelled.
+- Clears the active step's approval and records that the side effect may already have happened.
+- Cancels remaining non-active steps; cancellation between steps remains CANCELLED.
+- Added regression tests for active-step uncertainty and cancellation between steps.
+- Updated workflow runtime, task ledger (T1.8c), risk register (R-15), coverage matrix and changelog.
+
+
+**Verification status**
+- Source and test edits are present on the PR branch and inspected after the final documentation commits.
+- PR #14 is mergeable, but GitHub Actions reports no workflow runs for its current head; no local Android build/test environment is available in this session. This change is therefore **not CI-verified and not merged**.
+- Do not merge until the Android CI suite is run and passes. Do not claim the new regression tests have passed.
+
+
+**Next**
+- Run Android CI on PR #14 and resolve any failure before merge.
+- Physical-device acceptance remains an independent open gate.
+- WorkManager execution/recovery remains the next major implementation increment after safety gates.

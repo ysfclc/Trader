@@ -186,7 +186,7 @@ class WorkflowPersistenceTest {
     }
 
     @Test
-    fun cancellingRunCancelsEveryNonTerminalStep() = runBlocking {
+    fun cancellingRunWithActiveStepPreservesUncertainSideEffectAndCancelsRemainingSteps() = runBlocking {
         val problemId = repository.createProblem("Stop a multi-step process")
         val runId = repository.createWorkflow(
             problemId,
@@ -201,6 +201,28 @@ class WorkflowPersistenceTest {
         assertTrue(repository.transitionWorkflowStep(steps.first().id, WorkflowStepStatus.RUNNING))
         assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.CANCELLED))
 
+        val run = database.workflowRunDao().getById(runId)!!
+        assertEquals(WorkflowRunStatus.NEEDS_REVIEW.name, run.status)
+        assertTrue(run.lastError.orEmpty().contains("may already have acted"))
+        val updated = database.workflowStepDao().getForRun(runId)
+        assertEquals(WorkflowStepStatus.NEEDS_REVIEW.name, updated.first().status)
+        assertTrue(updated.first().lastError.orEmpty().contains("may already have acted"))
+        assertNull(updated.first().approvedPayloadHash)
+        assertNull(updated.first().approvedAt)
+        assertEquals(WorkflowStepStatus.CANCELLED.name, updated.last().status)
+    }
+
+    @Test
+    fun cancellingRunBetweenStepsCancelsAllPendingSteps() = runBlocking {
+        val problemId = repository.createProblem("Cancel before next step")
+        val runId = repository.createWorkflow(
+            problemId, "Idle cancellation",
+            listOf(WorkflowStepDraft("Pending A"), WorkflowStepDraft("Pending B")),
+            "workflow-request-cancel-idle"
+        )!!
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.READY))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.RUNNING))
+        assertTrue(repository.transitionWorkflowRun(runId, WorkflowRunStatus.CANCELLED))
         assertEquals(WorkflowRunStatus.CANCELLED.name, database.workflowRunDao().getById(runId)?.status)
         assertTrue(database.workflowStepDao().getForRun(runId).all {
             WorkflowStepStatus.from(it.status) == WorkflowStepStatus.CANCELLED

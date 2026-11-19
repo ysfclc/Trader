@@ -17,7 +17,7 @@ Run states:
 
 `DRAFT → READY → RUNNING → PAUSED / WAITING_FOR_APPROVAL / FAILED / NEEDS_REVIEW / AWAITING_VERIFICATION → VERIFIED`
 
-Cancellation is allowed from non-terminal states. A failed run can return to READY only with explicit retry authorization. A review-required run can return to READY only after explicit review resolution. A run cannot become VERIFIED without an explicit verification decision and a non-empty evidence note.
+Cancellation is allowed from non-terminal states. If cancellation is requested while a step is RUNNING, the run and active step become NEEDS_REVIEW because cancellation cannot prove the external side effect stopped; remaining non-active steps are cancelled. Cancellation between steps becomes CANCELLED. A failed run can return to READY only with explicit retry authorization. A review-required run can return to READY only after explicit review resolution. A run cannot become VERIFIED without an explicit verification decision and a non-empty evidence note.
 
 Step states include `PENDING`, `RUNNING`, `WAITING_FOR_APPROVAL`, `COMPLETED`, `FAILED`, `NEEDS_REVIEW`, `SKIPPED` and `CANCELLED`.
 
@@ -29,7 +29,7 @@ A run moves to AWAITING_VERIFICATION only when every step is COMPLETED or SKIPPE
 - Every step input is hashed together with its capability ID using SHA-256.
 - An approval stores the exact current payload hash. Editing the input clears the previous approval.
 - An approval-required step cannot start unless the approved hash matches the current payload hash.
-- Failure or ambiguous completion clears the approval for another attempt. Ambiguous external side effects should be recorded as NEEDS_REVIEW, not retried blindly.
+- Failure or ambiguous completion clears the approval for another attempt. Ambiguous external side effects should be recorded as NEEDS_REVIEW, not retried blindly. Run cancellation is not evidence that an active action stopped: an active step remains NEEDS_REVIEW and future steps are cancelled
 
 The approval hash is a data-layer safety gate. There is not yet a UI that displays and confirms every recipient/channel/payload, nor an external send executor. Those must exist before any consequential capability can run.
 
@@ -43,7 +43,7 @@ Robolectric tests cover:
 - exact-payload approval and approval invalidation after input edits;
 - review-required ambiguous outcomes and retry restrictions;
 - safe retry authorization;
-- cancellation of non-terminal steps;
+- cancellation of non-terminal steps, including the active-step uncertainty rule (active work becomes NEEDS_REVIEW; pending work is cancelled);
 - file-backed process close/reopen recovery for in-flight and between-step interruption, stale-approval revocation, event idempotency and explicit human resolution;
 - version 1 to version 2 migration with existing row preservation.
 
