@@ -145,3 +145,13 @@ Restore validates the authenticated payload, supported file/database schema, ide
 **Reason:** A local-first product needs a user-owned recovery path without a cloud account or paid service. Atomic replacement and authenticated encryption reduce corruption and tampering risk, while the explicit replace semantics prevent a misleading merge promise.
 
 **Consequences:** Keep the format version and database schema version explicit. Every Room schema change must include backup compatibility/migration tests before release. Device acceptance remains a separate release gate; CI passing does not prove document-picker or real-device restore behavior.
+
+## D-017 — Conservative recovery for interrupted workflow steps
+**Date:** 2026-11-19  
+**Status:** Accepted
+
+On app startup, persisted workflows left in RUNNING are reconciled transactionally. If any step was RUNNING, those steps and the run move to NEEDS_REVIEW, the previous step approval is cleared, and an append-only event records that the side effect may have happened. If no step was RUNNING, the run moves to PAUSED. The operation is idempotent.
+
+**Reason:** Process death can occur after an action starts but before its outcome is persisted. Automatically replaying that step could duplicate an external or otherwise consequential action. Pausing between steps preserves safe resumability; an ambiguous in-flight step requires human review.
+
+**Consequences:** This is recovery bookkeeping only, not a WorkManager executor or automatic resume mechanism. Any future worker must use the same conservative ambiguity rule, persist checkpoints and verify postconditions before recording completion.
