@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Last reconciled: 2026-11-19 against main commit `d6ee9a3926df27c78af1c4328ed01989dafe349f`._
+_Last reconciled: 2026-11-19 against application-source commit `d6ee9a3926df27c78af1c4328ed01989dafe349f`; documentation/ledger merge `b0539a960b67d300ccf426a54f05d6860b43406c`._
 
 ## Source of truth
 
