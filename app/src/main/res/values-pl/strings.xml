@@ -96,4 +96,5 @@
     <string name="workflow_status_pending">Oczekujące</string>
     <string name="workflow_status_completed">Ukończone</string>
     <string name="workflow_status_skipped">Pominięte</string>
+    <string name="workflow_skip_unavailable">Pomiń niedostępny krok</string>
 </resources>
