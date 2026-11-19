@@ -1,14 +1,14 @@
 # Trader Project State
 
-Last updated: 2026-11-19 (PR #6 merged; CI passed; device acceptance pending)
+Last updated: 2026-11-19 (usable workspace v1 implemented; CI run 225 passed; device acceptance pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow foundation and first user-facing workflow control surface merged and CI-verified**
+- Status: **Phase 2 — durable workflow foundation and usable local workspace v1 implemented and CI-verified**
 - Android source code: first implementation committed on `build/problem-core-android`.
-- APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
+- APK: latest workspace v1 debug artifact built, downloaded and archive-checked; CI signature/package verification passed; device install/launch not yet verified.
 - Device acceptance: not yet performed.
 - Live discovery or communication integrations: not yet implemented.
 
@@ -200,3 +200,26 @@ This surface is a manually driven workflow tracker, not an autonomous executor. 
 - Debug APK artifact: `14489377527`, 18,340,107 bytes, package `com.yusufculcu.trader.debug`, version `0.1.0-debug`
 - APK SHA-256: `4b063962d3fbc29a152a37ce4026c8c1ab51e526fb35234762ed756c8e74b446`
 - CI verified APK signature and package identity. Device install, launch and workflow acceptance are not yet verified.
+
+
+### 2026-11-19 — Usable local workspace v1
+
+Implemented on `build/usable-workspace-v1`:
+- Added Room v3 migration with reversible `archivedAt` metadata and a separate `evidence_records` table. Earlier ProblemCase, plan, activity and workflow records are retained.
+- Added case editing, active/archived views, full-text search across stored context, archive and restore without destructive deletion.
+- Added source-linked evidence records with captured text, source URL, source type/time and explicit `UNREVIEWED` / user-marked `VERIFIED` state.
+- Added evidence activity history; evidence URLs can be opened in the browser.
+- Added expected-result capture for each plan step.
+- Added a context packet builder that includes the case, desired outcome, constraints, original capture, plan, evidence, sources and verification labels, then shares via Android's system share sheet. It does not send anything automatically or claim to be an AI integration.
+- Localized new workspace/evidence UI in English, Turkish and Polish.
+- Added repository tests for edit/archive/restore, evidence persistence/verification, Room v1→v2→v3 migration/data preservation and context packet construction.
+
+Verification:
+- CI run [225](https://github.com/ysfclc/Trader/actions/runs/44457637361) passed `testDebugUnitTest`, `lintDebug`, `assembleDebug`, `apksigner verify` and exact package/version assertion.
+- Test report artifact `14498985580`: 33 tests, 0 failures, 0 errors, 0 skipped.
+- Source commit: `af20c5c3e7421b86613da377a4827d9a402a43b9`
+- APK artifact: `14498792396`, 18,402,666 bytes; package `com.yusufculcu.trader.debug`, version `0.1.0-debug`.
+- Downloaded APK SHA-256: `1540ecd4453b84120f74a6e4fec4bc154bacdf6b874ae97a9e3298e67866a650`.
+- Debug APK is not a production/release-signed build. Physical device UI/flow acceptance remains pending.
+
+Not implemented yet: encrypted backup/restore, file/screenshot/voice capture, WorkManager execution and process-death recovery, visible browser automation, bounded installed-app automation, AI provider/local model integration, live public-web discovery, buyer/supplier matching, specialized CRM entities and external messaging.
