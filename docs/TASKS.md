@@ -29,7 +29,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T1.8 Complete durable job/task execution, cancellation and process-death recovery. Conservative persisted-workflow recovery is implemented in T1.8b; WorkManager execution and end-to-end worker recovery remain open.
 - [x] T1.9 Implement local case editing, active/archived search, reversible archive/restore, source-linked evidence, expected-result plan steps and context-packet share handoff (CI runs 225, 232, post-merge 233 and main 256 passed; device acceptance and dedicated search/share UI tests remain open).
 - [x] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (CI runs 111 and 112 passed).
-- [x] T1.8b Reconcile persisted RUNNING workflows on app startup: interrupted RUNNING steps become NEEDS_REVIEW (never blindly retried); runs interrupted between steps become PAUSED. File-backed close/reopen test verifies recovery and idempotency.
+- [x] T1.8b Reconcile persisted RUNNING workflows on app startup: interrupted RUNNING steps become NEEDS_REVIEW (never blindly retried); runs interrupted between steps become PAUSED. File-backed close/reopen test verifies recovery, stale-approval revocation, idempotency and guarded human resolution (PR #11 CI run 271 passed; 38 tests total).
 
 ## T2 — Commercial records
 
