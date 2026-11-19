@@ -237,9 +237,20 @@ private fun StatusPill(status: ProblemStatus) {
 }
 
 @Composable
-private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, modifier: Modifier = Modifier) {
+private fun ProblemDetail(
+    problem: ProblemEntity,
+    viewModel: TraderViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val steps by viewModel.stepsFor(problem.id).collectAsState(initial = emptyList())
-    var showStep by remember { mutableStateOf(false) }
+    val evidence by viewModel.evidenceFor(problem.id).collectAsState(initial = emptyList())
+    val context = LocalContext.current
+    val isArchived = problem.archivedAt != null
+    var showStep by rememberSaveable(problem.id) { mutableStateOf(false) }
+    var showEdit by rememberSaveable(problem.id) { mutableStateOf(false) }
+    var showEvidence by rememberSaveable(problem.id) { mutableStateOf(false) }
+
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -248,12 +259,89 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
         item {
             Text(stringResource(when (problem.category) { "General" -> R.string.category_general; "Captured" -> R.string.category_captured; else -> R.string.category_other }), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelMedium, letterSpacing = 1.5.sp)
             Text(problem.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            StatusPill(ProblemStatus.from(problem.status))
+            if (isArchived) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant) {
+                    Text(stringResource(R.string.archived_label), Modifier.padding(horizontal = 10.dp, vertical = 5.dp), style = MaterialTheme.typography.labelSmall)
+                }
+            } else StatusPill(ProblemStatus.from(problem.status))
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (!isArchived) {
+                    OutlinedButton(onClick = { showEdit = true }) {
+                        Icon(Icons.Rounded.Edit, null)
+                        Spacer(Modifier.width(5.dp))
+                        Text(stringResource(R.string.edit_case))
+                    }
+                }
+                OutlinedButton(onClick = {
+                    val packet = ContextPacketBuilder.build(problem, steps, evidence)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "Trader · ${problem.title}")
+                        putExtra(Intent.EXTRA_TEXT, packet)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_context)))
+                }) {
+                    Icon(Icons.Rounded.Share, null)
+                    Spacer(Modifier.width(5.dp))
+                    Text(stringResource(R.string.share_context))
+                }
+            }
+            if (isArchived) {
+                TextButton(onClick = { viewModel.restoreProblem(problem.id) }) {
+                    Icon(Icons.Rounded.Unarchive, null)
+                    Spacer(Modifier.width(5.dp))
+                    Text(stringResource(R.string.restore_case))
+                }
+            } else {
+                TextButton(onClick = { viewModel.archiveProblem(problem.id, onSaved = { if (it) onBack() }) }) {
+                    Icon(Icons.Rounded.Archive, null)
+                    Spacer(Modifier.width(5.dp))
+                    Text(stringResource(R.string.archive_case))
+                }
+            }
         }
         if (problem.description.isNotBlank()) item { DetailSection(stringResource(R.string.context), problem.description) }
         if (problem.desiredOutcome.isNotBlank()) item { DetailSection(stringResource(R.string.desired_outcome), problem.desiredOutcome) }
         if (problem.constraintsText.isNotBlank()) item { DetailSection(stringResource(R.string.constraints), problem.constraintsText) }
         if (problem.originalContent.isNotBlank()) item { DetailSection(stringResource(R.string.original_capture), problem.originalContent) }
+        if (!problem.sourceUri.isNullOrBlank()) {
+            item {
+                TextButton(onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(problem.sourceUri)))
+                }) {
+                    Icon(Icons.Rounded.Link, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.open_original_source))
+                }
+            }
+        }
+
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    Text(stringResource(R.string.evidence), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.5.sp)
+                    Text(stringResource(R.string.evidence_count, evidence.size), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                }
+                if (!isArchived) Button(onClick = { showEvidence = true }) {
+                    Icon(Icons.Rounded.Add, null)
+                    Spacer(Modifier.width(5.dp))
+                    Text(stringResource(R.string.add_evidence))
+                }
+            }
+        }
+        if (evidence.isEmpty()) item { Text(stringResource(R.string.no_evidence), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
+        items(evidence, key = { it.id }) { item ->
+            EvidenceCard(
+                evidence = item,
+                onToggleVerified = { viewModel.setEvidenceVerified(item, item.verificationState != "VERIFIED") },
+                onOpenSource = {
+                    val uri = item.sourceUri?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+                    if (uri != null) context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(uri)))
+                }
+            )
+        }
+
         item {
             Text(stringResource(R.string.plan), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.5.sp)
             Text(stringResource(R.string.next_steps), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
@@ -262,7 +350,11 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
         items(steps, key = { it.id }) { step ->
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = step.status == "DONE", onCheckedChange = { viewModel.toggleStep(step) })
+                    Checkbox(
+                        checked = step.status == "DONE",
+                        onCheckedChange = { if (!isArchived) viewModel.toggleStep(step) },
+                        enabled = !isArchived
+                    )
                     Column(Modifier.weight(1f)) {
                         Text(step.title, fontWeight = FontWeight.Medium)
                         if (step.expectedResult.isNotBlank()) Text(step.expectedResult, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -270,33 +362,95 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                 }
             }
         }
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = { showStep = true }) { Icon(Icons.Rounded.Add, null); Spacer(Modifier.width(5.dp)); Text(stringResource(R.string.add_step)) }
-                val status = ProblemStatus.from(problem.status)
-                val next = when (status) {
-                    ProblemStatus.OPEN -> ProblemStatus.IN_PROGRESS
-                    ProblemStatus.IN_PROGRESS -> ProblemStatus.RESOLVED
-                    ProblemStatus.WAITING -> ProblemStatus.IN_PROGRESS
-                    ProblemStatus.RESOLVED -> ProblemStatus.VERIFIED
-                    ProblemStatus.VERIFIED -> ProblemStatus.IN_PROGRESS
-                }
-                val verifiedNote = stringResource(R.string.outcome_confirmed_by_user)
-                TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) verifiedNote else "") }) {
-                    Text(when (status) {
-                        ProblemStatus.RESOLVED -> stringResource(R.string.confirm_outcome)
-                        ProblemStatus.VERIFIED -> stringResource(R.string.reopen)
-                        else -> stringResource(R.string.advance)
-                    })
+        if (!isArchived) {
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(onClick = { showStep = true }) {
+                        Icon(Icons.Rounded.Add, null)
+                        Spacer(Modifier.width(5.dp))
+                        Text(stringResource(R.string.add_step))
+                    }
+                    val status = ProblemStatus.from(problem.status)
+                    val next = when (status) {
+                        ProblemStatus.OPEN -> ProblemStatus.IN_PROGRESS
+                        ProblemStatus.IN_PROGRESS -> ProblemStatus.RESOLVED
+                        ProblemStatus.WAITING -> ProblemStatus.IN_PROGRESS
+                        ProblemStatus.RESOLVED -> ProblemStatus.VERIFIED
+                        ProblemStatus.VERIFIED -> ProblemStatus.IN_PROGRESS
+                    }
+                    val verifiedNote = stringResource(R.string.outcome_confirmed_by_user)
+                    TextButton(onClick = { viewModel.setStatus(problem, next, if (next == ProblemStatus.VERIFIED) verifiedNote else "") }) {
+                        Text(when (status) {
+                            ProblemStatus.RESOLVED -> stringResource(R.string.confirm_outcome)
+                            ProblemStatus.VERIFIED -> stringResource(R.string.reopen)
+                            else -> stringResource(R.string.advance)
+                        })
+                    }
                 }
             }
+            item { WorkflowPanel(problem, viewModel) }
         }
-        item { WorkflowPanel(problem, viewModel) }
     }
     if (showStep) AddStepDialog(
         onDismiss = { showStep = false },
-        onAdd = { title -> viewModel.addStep(problem.id, title); showStep = false }
+        onAdd = { title, expected -> viewModel.addStep(problem.id, title, expected); showStep = false }
     )
+    if (showEdit) EditProblemDialog(
+        problem = problem,
+        onDismiss = { showEdit = false },
+        onSave = { title, description, outcome, constraints ->
+            viewModel.updateProblem(problem.id, title, description, outcome, constraints) { saved ->
+                if (saved) showEdit = false
+            }
+        }
+    )
+    if (showEvidence) AddEvidenceDialog(
+        onDismiss = { showEvidence = false },
+        onAdd = { title, content, source ->
+            viewModel.addEvidence(problem.id, title, content, source) { saved ->
+                if (saved) showEvidence = false
+            }
+        }
+    )
+}
+
+@Composable
+private fun EvidenceCard(
+    evidence: EvidenceEntity,
+    onToggleVerified: () -> Unit,
+    onOpenSource: () -> Unit
+) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(evidence.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+                Surface(
+                    shape = CircleShape,
+                    color = if (evidence.verificationState == "VERIFIED") MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Text(
+                        stringResource(if (evidence.verificationState == "VERIFIED") R.string.evidence_verified else R.string.evidence_unreviewed),
+                        Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+            if (evidence.content.isNotBlank()) Text(evidence.content, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            if (!evidence.sourceUri.isNullOrBlank()) {
+                TextButton(onClick = onOpenSource) {
+                    Icon(Icons.Rounded.Link, null)
+                    Spacer(Modifier.width(4.dp))
+                    Text(evidence.sourceUri, maxLines = 1)
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onToggleVerified) {
+                    Text(stringResource(if (evidence.verificationState == "VERIFIED") R.string.undo_evidence_verification else R.string.mark_evidence_verified))
+                }
+            }
+            Text(formatDate(evidence.capturedAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }
 
 @Composable
