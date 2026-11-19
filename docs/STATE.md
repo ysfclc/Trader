@@ -56,15 +56,16 @@ Trader is an Android-first, local-first workspace for capturing general problems
 
 ## Session handoff
 **Done this session**
-- Reconciled the PR #8 encrypted-backup implementation and CI evidence against the stale ledger; created a requirement matrix and risk register.
-- No application code changed.
+- Reconciled the PR #8 backup implementation and CI evidence against the stale project ledger.
+- Added the 12-row requirement coverage matrix and 14-item risk register; appended D-016 and corrected README, task and roadmap status.
+- Merged the documentation-only continuity update as PR #9; no application source code changed.
 
 **State changed**
-- See `CHANGELOG.md`; this checkpoint is the documentation/continuity reconciliation for PR #8.
+- `docs/STATE.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `docs/TASKS.md`, `docs/ROADMAP.md`, `README.md` and `CHANGELOG.md`.
 
 **Verified**
-- Build: PASS, `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` (GitHub Actions main run 256).
-- Tests: 37 passed, 0 failed, 0 errors, 0 skipped (main run 256 JUnit artifact `14507792856`).
+- Build: PASS, `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` (PR CI run 257 and post-merge main run 258).
+- Tests: 37 passed, 0 failed, 0 errors, 0 skipped (main run 256 JUnit artifact `14507792856`; runs 257/258 also passed the full Android verification job).
 - APK: CI signature/package checks passed; downloaded archive ZIP integrity checked; SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`.
 
 **Not done / next**
