@@ -1,0 +1,196 @@
+package com.yusufculcu.trader.data
+
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import android.content.Context
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
+
+@RunWith(RobolectricTestRunner::class)
+class TraderBackupManagerTest {
+    private val context: Context = ApplicationProvider.getApplicationContext()
+
+    @Test
+    fun encryptedBackupRoundTripRestoresEveryRecordGroupAndReplacesExistingData() = runBlocking {
+        val source = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val target = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            seedCompleteWorkspace(source)
+            target.problemDao().insert(problem("local-only", "This must be replaced"))
+
+            val output = ByteArrayOutputStream()
+            TraderBackupManager(source).exportEncrypted(output, "correct horse battery".toCharArray())
+            val bytes = output.toByteArray()
+
+            assertTrue(bytes.size > 64)
+            assertFalse(String(bytes, StandardCharsets.ISO_8859_1).contains("CONFIDENTIAL_CASE_TITLE"))
+            TraderBackupManager(target).restoreEncrypted(
+                ByteArrayInputStream(bytes),
+                "correct horse battery".toCharArray()
+            )
+
+            assertEquals(listOf("case-1"), target.problemDao().getAll().map { it.id })
+            assertEquals("CONFIDENTIAL_CASE_TITLE", target.problemDao().getById("case-1")?.title)
+            assertEquals(1, target.planStepDao().getAll().size)
+            assertEquals("Expected result", target.planStepDao().getAll().single().expectedResult)
+            assertEquals(1, target.activityDao().getAll().size)
+            assertEquals(1, target.evidenceDao().getAll().size)
+            assertEquals("VERIFIED", target.evidenceDao().getAll().single().verificationState)
+            assertEquals(1, target.workflowRunDao().getAll().size)
+            assertEquals(1, target.workflowStepDao().getAll().size)
+            assertEquals("approval-hash", target.workflowStepDao().getAll().single().approvedPayloadHash)
+            assertEquals(1, target.workflowEventDao().getAll().size)
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun wrongPassphraseDoesNotModifyExistingWorkspace() = runBlocking {
+        val source = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val target = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            seedCompleteWorkspace(source)
+            target.problemDao().insert(problem("keep-me", "Existing local data"))
+            val output = ByteArrayOutputStream()
+            TraderBackupManager(source).exportEncrypted(output, "correct horse battery".toCharArray())
+
+            var rejected = false
+            try {
+                TraderBackupManager(target).restoreEncrypted(
+                    ByteArrayInputStream(output.toByteArray()),
+                    "wrong password value".toCharArray()
+                )
+            } catch (_: IllegalArgumentException) {
+                rejected = true
+            }
+
+            assertTrue(rejected)
+            assertEquals(listOf("keep-me"), target.problemDao().getAll().map { it.id })
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun tamperedBackupDoesNotModifyExistingWorkspace() = runBlocking {
+        val source = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val target = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            seedCompleteWorkspace(source)
+            target.problemDao().insert(problem("keep-me", "Existing local data"))
+            val output = ByteArrayOutputStream()
+            TraderBackupManager(source).exportEncrypted(output, "correct horse battery".toCharArray())
+            val corrupted = output.toByteArray().also { it[it.lastIndex] = (it.last().toInt() xor 0x01).toByte() }
+
+            var rejected = false
+            try {
+                TraderBackupManager(target).restoreEncrypted(
+                    ByteArrayInputStream(corrupted),
+                    "correct horse battery".toCharArray()
+                )
+            } catch (_: IllegalArgumentException) {
+                rejected = true
+            }
+
+            assertTrue(rejected)
+            assertEquals(listOf("keep-me"), target.problemDao().getAll().map { it.id })
+        } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun backupRequiresAtLeastTwelvePassphraseCharacters() = runBlocking {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            var rejected = false
+            try {
+                TraderBackupManager(database).exportEncrypted(ByteArrayOutputStream(), "short".toCharArray())
+            } catch (_: IllegalArgumentException) {
+                rejected = true
+            }
+            assertTrue(rejected)
+        } finally {
+            database.close()
+        }
+    }
+
+    private suspend fun seedCompleteWorkspace(database: TraderDatabase) {
+        val now = 1_700_000_000_000L
+        database.problemDao().insert(problem("case-1", "CONFIDENTIAL_CASE_TITLE"))
+        database.planStepDao().insert(
+            PlanStepEntity("plan-1", "case-1", "Research", "Reason", "manual.task", "Expected result", "DONE", 0, now, now + 1)
+        )
+        database.activityDao().insert(
+            ActivityEventEntity("activity-1", "case-1", "details_updated", "Changed", "Private details", now + 2)
+        )
+        database.evidenceDao().insert(
+            EvidenceEntity("evidence-1", "case-1", "Source", "Private evidence", "https://example.test/source", "url", "VERIFIED", now + 3)
+        )
+        database.workflowRunDao().insert(
+            WorkflowRunEntity("run-1", "case-1", "Review", "DRAFT", "idempotency-1", now, now + 4, null, null, null)
+        )
+        database.workflowStepDao().insert(
+            WorkflowStepEntity(
+                id = "workflow-step-1",
+                workflowRunId = "run-1",
+                title = "Review source",
+                capabilityId = "manual.task",
+                inputJson = """{"source":"https://example.test"}""",
+                expectedPostcondition = "Evidence reviewed",
+                status = "PENDING",
+                position = 0,
+                retrySafe = true,
+                requiresApproval = false,
+                payloadHash = "payload-hash",
+                approvedPayloadHash = "approval-hash",
+                approvedAt = now + 5,
+                attemptCount = 1,
+                lastError = null,
+                createdAt = now,
+                updatedAt = now + 5,
+                startedAt = null,
+                finishedAt = null
+            )
+        )
+        database.workflowEventDao().insert(
+            WorkflowEventEntity("workflow-event-1", "run-1", "workflow-step-1", "approval_granted", null, null, "Approved", "Exact payload", now + 6)
+        )
+    }
+
+    private fun problem(id: String, title: String) = ProblemEntity(
+        id = id,
+        title = title,
+        description = "Description",
+        desiredOutcome = "Outcome",
+        constraintsText = "Constraints",
+        category = "General",
+        status = "OPEN",
+        inputKind = "manual",
+        originalContent = "Original content",
+        sourceUri = null,
+        outcomeNote = "",
+        createdAt = 1_700_000_000_000L,
+        updatedAt = 1_700_000_000_001L,
+        archivedAt = null
+    )
+}
