@@ -146,5 +146,9 @@
     <string name="backup_restore_success">Yedek geri yüklendi. Çalışma alanın değiştirildi.</string>
     <string name="backup_failed">Yedekleme işlemi başarısız:</string>
     <string name="backup_result_title">Yedekleme durumu</string>
-    <string name="close">Close</string>
+    <string name="workflow_recovery_run_hint">Uygulama kapanmadan önce önceki adım işlem yapmış olabilir. Devam etmeden önce ne olduğunu incele.</string>
+    <string name="workflow_recovery_reviewed">Kesintiye uğrayan iş akışını inceledim</string>
+    <string name="workflow_recovery_step_hint">Bu adımı yalnızca işlemin tamamlanmadığını doğruladıysan sıfırla. Sonuç belirsizse yeniden deneme.</string>
+    <string name="workflow_recovery_reset_step">İncelemeden sonra adımı sıfırla</string>
+    <string name="close">Kapat</string>
 </resources>
