@@ -51,7 +51,7 @@ Robolectric tests cover:
 - No browser, installed-app, AI, communication or network capability is executed by this layer.
 - No WorkManager queue or process-death resumption has been wired yet.
 - Retry and approval policies are now normalized against the Kotlin capability registry. Unimplemented and unknown capabilities may be planned but cannot transition to RUNNING.
-- UI surfaces for workflow creation, approval review, pause/resume and evidence verification are still pending.
+- A first UI surface now creates a workflow from saved plan steps, displays persisted runs/steps/events, exposes exact-step approval, supports manual start/complete and explicit skip of unavailable steps, pause/resume/cancel, and requires a non-empty user evidence note before outcome verification. This is a manually driven workflow surface, not an autonomous executor.
 
 ## Next implementation gates
 
