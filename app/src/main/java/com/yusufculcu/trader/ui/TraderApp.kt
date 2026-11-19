@@ -2,6 +2,8 @@ package com.yusufculcu.trader.ui
 
 import android.content.Intent
 import android.app.DatePickerDialog
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -907,7 +909,22 @@ private fun OpportunityDetailCard(opportunity: OpportunityEntity) {
             Text(opportunity.opportunityName, fontWeight = FontWeight.Medium)
             if (opportunity.fitNotes.isNotBlank()) DetailSection(stringResource(R.string.fit_notes), opportunity.fitNotes)
             if (opportunity.contactName.isNotBlank()) Text(stringResource(R.string.contact_value, opportunity.contactName), style = MaterialTheme.typography.bodySmall)
-            if (opportunity.contactRoute.isNotBlank()) Text(stringResource(R.string.contact_route_value, opportunity.contactRoute), style = MaterialTheme.typography.bodySmall)
+            if (opportunity.contactRoute.isNotBlank()) {
+                Text(stringResource(R.string.contact_route_value, opportunity.contactRoute), style = MaterialTheme.typography.bodySmall)
+                val context = LocalContext.current
+                TextButton(onClick = {
+                    val intent = OpportunityContactRoute.createIntent(opportunity.contactRoute)
+                    if (intent == null) {
+                        Toast.makeText(context, context.getString(R.string.contact_route_unsupported), Toast.LENGTH_SHORT).show()
+                    } else {
+                        runCatching { context.startActivity(intent) }.onFailure {
+                            if (it is ActivityNotFoundException) {
+                                Toast.makeText(context, context.getString(R.string.contact_route_unsupported), Toast.LENGTH_SHORT).show()
+                            } else throw it
+                        }
+                    }
+                }) { Text(stringResource(R.string.open_contact_route)) }
+            }
             if (opportunity.nextAction.isNotBlank()) Text(stringResource(R.string.next_action_prefix, opportunity.nextAction), style = MaterialTheme.typography.bodySmall)
             opportunity.followUpAt?.let { due ->
                 Text(
