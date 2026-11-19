@@ -1,12 +1,12 @@
 # Trader Project State
 
-Last updated: 2026-11-17 (capability registry merged; workflow UI next)
+Last updated: 2026-11-19 (workflow control surface implemented; CI/device acceptance pending)
 
 ## Repository
 - Repository: `ysfclc/Trader`
 - Primary branch: `main`
 - Project: Trader
-- Status: **Phase 2 — durable workflow and capability policy foundation merged**
+- Status: **Phase 2 — durable workflow and capability policy foundation merged; first workflow control surface implemented**
 - Android source code: first implementation committed on `build/problem-core-android`.
 - APK: debug artifact built, downloaded and inspected; device install/launch not yet verified.
 - Device acceptance: not yet performed.
@@ -65,7 +65,7 @@ The audit was targeted to the most relevant projects and files. It was not a lin
 - [x] Verify Room v1→v2 workflow migration and durable workflow repository tests; CI runs 111 and 112 passed.
 - [ ] Add encrypted local backup/export and integrity-verified restore.
 - [ ] Verify share/manual capture, offline retrieval and process-death recovery on Redmi Note 12 Pro 5G.
-- [ ] Workflow UI, capability browser and durable WorkManager execution.
+- [ ] Durable WorkManager execution and process-death recovery. Workflow UI and capability browser are implemented on the current branch but await CI/device acceptance.
 - [ ] Browser/app automation.
 - [ ] AI provider adapters or on-device inference.
 - [ ] Buyer/supplier matching.
@@ -177,3 +177,18 @@ The next branch, `build/capability-registry`, adds a policy catalogue for implem
 PR #4 merged at `959eb52f677ccdeae2548b76c096e61a799ff135`. The registry records availability, effects, permissions, retry policy, mandatory approval and visible-surface requirements. Workflow creation derives safety metadata from registry policy, unknown capabilities fail closed, and runs with no implemented work cannot start. CI runs 129 and 130 passed all 30 unit/Robolectric tests, lint, APK assembly, signature verification and package identity checks. Artifact 14341082290 is recorded above.
 
 Current boundary: Trader can capture problems and persist/track approved workflow plans. It does not yet execute browser, installed-app, AI, network-discovery or communication capabilities. Workflow UI and durable WorkManager execution are the next major implementation phase.
+
+
+### 2026-11-19 — First workflow control surface implementation
+
+Implemented on `build/workflow-control-surface`:
+- Added a workflow panel to each ProblemCase detail, creating a persisted workflow from its ordered plan steps.
+- Added persisted workflow selection and live observation of workflow runs, ordered steps and append-only events.
+- Added user-visible lifecycle controls for draft review, ready, start, pause, resume and cancel.
+- Added manual step start/completion controls for executable capabilities, exact-payload approval affordance, and explicit skip for capabilities that are not implemented.
+- Added outcome verification requiring a non-empty user evidence note; completing steps alone does not verify the ProblemCase outcome.
+- Added an expandable capability availability catalogue; unimplemented capabilities are shown as unavailable rather than presented as working automation.
+- Added English, Turkish and Polish strings for workflow controls and states.
+- Updated the task ledger and workflow runtime documentation.
+
+This surface is a manually driven workflow tracker, not an autonomous executor. It does not add WorkManager execution, process-death recovery, browser/app automation, AI, network discovery or external communication. CI and physical-device acceptance are pending. Verify the latest branch commit before merging.
