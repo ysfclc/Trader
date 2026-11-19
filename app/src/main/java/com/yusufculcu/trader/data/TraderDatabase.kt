@@ -153,6 +153,15 @@ data class WorkflowEventEntity(
 
 @Dao
 interface ProblemDao {
+    @Query("SELECT * FROM problem_cases")
+    suspend fun getAll(): List<ProblemEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<ProblemEntity>)
+
+    @Query("DELETE FROM problem_cases")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM problem_cases WHERE archivedAt IS NULL ORDER BY updatedAt DESC")
     fun observeAll(): Flow<List<ProblemEntity>>
     @Query("SELECT * FROM problem_cases WHERE archivedAt IS NOT NULL ORDER BY archivedAt DESC")
@@ -177,6 +186,15 @@ interface ProblemDao {
 
 @Dao
 interface PlanStepDao {
+    @Query("SELECT * FROM plan_steps")
+    suspend fun getAll(): List<PlanStepEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<PlanStepEntity>)
+
+    @Query("DELETE FROM plan_steps")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM plan_steps WHERE problemId = :problemId ORDER BY position ASC")
     fun observeForProblem(problemId: String): Flow<List<PlanStepEntity>>
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -193,6 +211,15 @@ interface PlanStepDao {
 
 @Dao
 interface ActivityDao {
+    @Query("SELECT * FROM activity_events")
+    suspend fun getAll(): List<ActivityEventEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<ActivityEventEntity>)
+
+    @Query("DELETE FROM activity_events")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM activity_events ORDER BY occurredAt DESC LIMIT 100")
     fun observeRecent(): Flow<List<ActivityEventEntity>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
@@ -202,6 +229,15 @@ interface ActivityDao {
 
 @Dao
 interface EvidenceDao {
+    @Query("SELECT * FROM evidence_records")
+    suspend fun getAll(): List<EvidenceEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<EvidenceEntity>)
+
+    @Query("DELETE FROM evidence_records")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM evidence_records WHERE problemId = :problemId ORDER BY capturedAt DESC")
     fun observeForProblem(problemId: String): Flow<List<EvidenceEntity>>
 
@@ -214,6 +250,15 @@ interface EvidenceDao {
 
 @Dao
 interface WorkflowRunDao {
+    @Query("SELECT * FROM workflow_runs")
+    suspend fun getAll(): List<WorkflowRunEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<WorkflowRunEntity>)
+
+    @Query("DELETE FROM workflow_runs")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM workflow_runs WHERE problemId = :problemId ORDER BY updatedAt DESC")
     fun observeForProblem(problemId: String): Flow<List<WorkflowRunEntity>>
 
@@ -232,6 +277,15 @@ interface WorkflowRunDao {
 
 @Dao
 interface WorkflowStepDao {
+    @Query("SELECT * FROM workflow_steps")
+    suspend fun getAll(): List<WorkflowStepEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<WorkflowStepEntity>)
+
+    @Query("DELETE FROM workflow_steps")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM workflow_steps WHERE workflowRunId = :runId ORDER BY position ASC")
     fun observeForRun(runId: String): Flow<List<WorkflowStepEntity>>
 
@@ -250,6 +304,15 @@ interface WorkflowStepDao {
 
 @Dao
 interface WorkflowEventDao {
+    @Query("SELECT * FROM workflow_events")
+    suspend fun getAll(): List<WorkflowEventEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<WorkflowEventEntity>)
+
+    @Query("DELETE FROM workflow_events")
+    suspend fun deleteAll()
+
     @Query("SELECT * FROM workflow_events WHERE workflowRunId = :runId ORDER BY occurredAt ASC")
     fun observeForRun(runId: String): Flow<List<WorkflowEventEntity>>
 
