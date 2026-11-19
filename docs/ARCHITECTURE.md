@@ -44,6 +44,12 @@ The first device target is Redmi Note 12 Pro 5G, but core logic must remain test
 ### problem
 A user-owned ProblemCase/Goal intake and resolution model. It preserves the original request, desired outcome, constraints, stakes, relevant context, unresolved questions, evidence, candidate paths, selected plan and verified outcome. It can route a case to a specialized workflow (trade, services, careers or a future domain) without forcing every case into one of those types.
 
+### evidence and context handoff
+
+The local-first evidence path stores user-attached text/notes and an optional source URI as a separate record linked to a ProblemCase. Verification is explicitly user-controlled and defaults to unreviewed. Source links are not fetched automatically. A context-packet builder composes the ProblemCase, ordered plan, evidence content/source/verification labels and bounded assistant instructions. The Android share sheet is the only handoff; no external message or AI request is sent without a user action.
+
+Cases can be archived and restored by a nullable archive timestamp. This is soft archival, not deletion. The Room v2→v3 migration adds the archive timestamp and evidence table while preserving existing data.
+
 ### capabilities
 A Trader-owned registry of available capabilities: source discovery, browser sessions, file parsing, app handoff, repository operations, deterministic analysis, optional AI, communication and other tool adapters. Each capability declares inputs, outputs, permissions, cost/availability, limits, side effects, preconditions and verifiable postconditions. A plan may only invoke capabilities actually registered and available.
 
