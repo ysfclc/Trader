@@ -196,4 +196,7 @@
     <string name="contact_route_value">Route: %1$s</string>
     <string name="opportunity_manual_actions_note">Trader records your plan and follow-up date. It does not send messages, contact people or create background notifications.</string>
 
+    <string name="open_contact_route">Open contact route</string>
+    <string name="contact_route_unsupported">No supported app can open this contact route.</string>
+
 </resources>
