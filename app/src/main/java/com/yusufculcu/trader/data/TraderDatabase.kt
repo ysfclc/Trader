@@ -83,6 +83,31 @@ data class EvidenceEntity(
 )
 
 @Entity(
+    tableName = "opportunity_records",
+    foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
+    indices = [
+        Index(value = ["problemId"], unique = true),
+        Index(value = ["stage"]),
+        Index(value = ["followUpAt"])
+    ]
+)
+data class OpportunityEntity(
+    @PrimaryKey val id: String,
+    val problemId: String,
+    val lane: String,
+    val organizationName: String,
+    val opportunityName: String,
+    val contactName: String,
+    val contactRoute: String,
+    val fitNotes: String,
+    val stage: String,
+    val nextAction: String,
+    val followUpAt: Long?,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
+@Entity(
     tableName = "workflow_runs",
     foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
     indices = [
@@ -249,6 +274,33 @@ interface EvidenceDao {
 }
 
 @Dao
+interface OpportunityDao {
+    @Query("SELECT * FROM opportunity_records")
+    suspend fun getAll(): List<OpportunityEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<OpportunityEntity>)
+
+    @Query("DELETE FROM opportunity_records")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM opportunity_records WHERE problemId = :problemId LIMIT 1")
+    fun observeForProblem(problemId: String): Flow<OpportunityEntity?>
+
+    @Query("SELECT * FROM opportunity_records ORDER BY CASE WHEN stage IN ('WON', 'LOST') THEN 1 ELSE 0 END, CASE WHEN followUpAt IS NULL THEN 1 ELSE 0 END, followUpAt ASC, updatedAt DESC")
+    fun observeAll(): Flow<List<OpportunityEntity>>
+
+    @Query("SELECT * FROM opportunity_records WHERE problemId = :problemId LIMIT 1")
+    suspend fun getByProblemId(problemId: String): OpportunityEntity?
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(opportunity: OpportunityEntity)
+
+    @Update
+    suspend fun update(opportunity: OpportunityEntity)
+}
+
+@Dao
 interface WorkflowRunDao {
     @Query("SELECT * FROM workflow_runs")
     suspend fun getAll(): List<WorkflowRunEntity>
@@ -329,11 +381,12 @@ interface WorkflowEventDao {
         PlanStepEntity::class,
         ActivityEventEntity::class,
         EvidenceEntity::class,
+        OpportunityEntity::class,
         WorkflowRunEntity::class,
         WorkflowStepEntity::class,
         WorkflowEventEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -341,6 +394,7 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun planStepDao(): PlanStepDao
     abstract fun activityDao(): ActivityDao
     abstract fun evidenceDao(): EvidenceDao
+    abstract fun opportunityDao(): OpportunityDao
     abstract fun workflowRunDao(): WorkflowRunDao
     abstract fun workflowStepDao(): WorkflowStepDao
     abstract fun workflowEventDao(): WorkflowEventDao
@@ -445,5 +499,35 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS index_evidence_records_problemId ON evidence_records (problemId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_evidence_records_capturedAt ON evidence_records (capturedAt)")
+    }
+}
+
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS opportunity_records (
+                id TEXT NOT NULL,
+                problemId TEXT NOT NULL,
+                lane TEXT NOT NULL,
+                organizationName TEXT NOT NULL,
+                opportunityName TEXT NOT NULL,
+                contactName TEXT NOT NULL,
+                contactRoute TEXT NOT NULL,
+                fitNotes TEXT NOT NULL,
+                stage TEXT NOT NULL,
+                nextAction TEXT NOT NULL,
+                followUpAt INTEGER,
+                createdAt INTEGER NOT NULL,
+                updatedAt INTEGER NOT NULL,
+                PRIMARY KEY(id),
+                FOREIGN KEY(problemId) REFERENCES problem_cases(id) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_opportunity_records_problemId ON opportunity_records (problemId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_opportunity_records_stage ON opportunity_records (stage)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_opportunity_records_followUpAt ON opportunity_records (followUpAt)")
     }
 }

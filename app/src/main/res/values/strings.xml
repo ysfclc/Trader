@@ -151,4 +151,56 @@
     <string name="workflow_recovery_step_hint">Only reset this step if you confirmed the action did not complete. If the result is uncertain, do not retry it.</string>
     <string name="workflow_recovery_reset_step">Reset step after review</string>
     <string name="close">Close</string>
+
+    <string name="pipeline">Pipeline</string>
+    <string name="pipeline_intro">Keep each opportunity connected to its source, evidence, fit and next action.</string>
+    <string name="pipeline_active">Active</string>
+    <string name="pipeline_closed">Closed</string>
+    <string name="pipeline_search">Search companies, roles and actions</string>
+    <string name="pipeline_empty">No opportunities tracked yet</string>
+    <string name="pipeline_empty_hint">Open a captured case and choose Track opportunity to put it in this pipeline.</string>
+    <string name="pipeline_no_results">No opportunities match that search.</string>
+    <string name="pipeline_no_closed">No closed opportunities yet.</string>
+    <string name="pipeline_no_active">No active opportunities.</string>
+    <string name="opportunity_section">OPPORTUNITY</string>
+    <string name="opportunity_section_title">Track the real-world outcome</string>
+    <string name="track_opportunity">Track opportunity</string>
+    <string name="edit_opportunity">Edit opportunity</string>
+    <string name="opportunity_not_tracked">This case is not in the opportunity pipeline. Track it only when it represents a real role, need, offer or commercial possibility.</string>
+    <string name="opportunity_lane">Lane</string>
+    <string name="lane_trade">Trade / sourcing</string>
+    <string name="lane_service">Service / implementation</string>
+    <string name="lane_career">Career / job</string>
+    <string name="lane_other">Other</string>
+    <string name="organization_name">Organization</string>
+    <string name="opportunity_name_required">What is the need, role or offer? (required)</string>
+    <string name="fit_notes">Why it may fit / relevant proof</string>
+    <string name="contact_name">Contact person</string>
+    <string name="contact_route">Contact route (email, LinkedIn, phone)</string>
+    <string name="opportunity_stage">Stage</string>
+    <string name="stage_discovered">Discovered</string>
+    <string name="stage_qualifying">Qualifying</string>
+    <string name="stage_ready_to_contact">Ready to contact</string>
+    <string name="stage_contacted">Contacted</string>
+    <string name="stage_waiting">Waiting</string>
+    <string name="stage_won">Won</string>
+    <string name="stage_lost">Lost</string>
+    <string name="next_action">Next action</string>
+    <string name="next_action_prefix">Next: %1$s</string>
+    <string name="follow_up_date">Follow-up date</string>
+    <string name="choose_follow_up_date">Choose a follow-up date</string>
+    <string name="clear_follow_up_date">Clear date</string>
+    <string name="follow_up_overdue">Overdue · %1$s</string>
+    <string name="follow_up_on">Follow-up · %1$s</string>
+    <string name="contact_value">Contact: %1$s</string>
+    <string name="contact_route_value">Route: %1$s</string>
+    <string name="opportunity_manual_actions_note">Trader records your plan and follow-up date. It does not send messages, contact people or create background notifications.</string>
+
+    <string name="open_contact_route">Open contact route</string>
+    <string name="contact_route_unsupported">No supported app can open this contact route.</string>
+
+    <string name="event_opportunity_created">Opportunity tracking started</string>
+    <string name="event_opportunity_stage_changed">Opportunity stage changed</string>
+    <string name="event_opportunity_updated">Opportunity details updated</string>
+
 </resources>

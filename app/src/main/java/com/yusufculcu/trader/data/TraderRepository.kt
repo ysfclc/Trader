@@ -3,6 +3,7 @@ package com.yusufculcu.trader.data
 import androidx.room.withTransaction
 import com.yusufculcu.trader.domain.CapabilityRegistry
 import com.yusufculcu.trader.domain.ProblemRules
+import com.yusufculcu.trader.domain.OpportunityRules
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.domain.WorkflowRunStatus
 import com.yusufculcu.trader.domain.WorkflowRules
@@ -20,12 +21,31 @@ data class WorkflowStepDraft(
     val requiresApproval: Boolean = false
 )
 
+data class OpportunityDraft(
+    val lane: String,
+    val organizationName: String,
+    val opportunityName: String,
+    val contactName: String,
+    val contactRoute: String,
+    val fitNotes: String,
+    val stage: String,
+    val nextAction: String,
+    val followUpAt: Long?
+)
+
+data class OpportunityListItem(
+    val problem: ProblemEntity,
+    val opportunity: OpportunityEntity
+)
+
 class TraderRepository(private val database: TraderDatabase) {
     fun observeProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeAll()
     fun observeArchivedProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeArchived()
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
     fun observeEvidence(problemId: String): Flow<List<EvidenceEntity>> = database.evidenceDao().observeForProblem(problemId)
+    fun observeOpportunity(problemId: String): Flow<OpportunityEntity?> = database.opportunityDao().observeForProblem(problemId)
+    fun observeOpportunities(): Flow<List<OpportunityEntity>> = database.opportunityDao().observeAll()
     fun observeCount(): Flow<Int> = database.problemDao().observeCount()
     fun observeWorkflowRuns(problemId: String): Flow<List<WorkflowRunEntity>> =
         database.workflowRunDao().observeForProblem(problemId)
@@ -149,6 +169,84 @@ class TraderRepository(private val database: TraderDatabase) {
             )
             true
         }
+
+    suspend fun saveOpportunity(problemId: String, draft: OpportunityDraft): Boolean {
+        val lane = draft.lane.trim().uppercase()
+        val stage = draft.stage.trim().uppercase()
+        val organizationName = draft.organizationName.trim().take(240)
+        val opportunityName = draft.opportunityName.trim().take(300)
+        val contactName = draft.contactName.trim().take(180)
+        val contactRoute = draft.contactRoute.trim().take(500)
+        val fitNotes = draft.fitNotes.trim().take(4_000)
+        val nextAction = draft.nextAction.trim().take(500)
+        val followUpAt = draft.followUpAt?.takeIf { it > 0L }
+
+        if (!OpportunityRules.isValidLane(lane) || !OpportunityRules.isValidStage(stage) || opportunityName.isBlank()) {
+            return false
+        }
+
+        return database.withTransaction {
+            val problem = database.problemDao().getById(problemId) ?: return@withTransaction false
+            if (problem.archivedAt != null) return@withTransaction false
+
+            val existing = database.opportunityDao().getByProblemId(problemId)
+            val now = System.currentTimeMillis()
+            val saved = if (existing == null) {
+                OpportunityEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = problemId,
+                    lane = lane,
+                    organizationName = organizationName,
+                    opportunityName = opportunityName,
+                    contactName = contactName,
+                    contactRoute = contactRoute,
+                    fitNotes = fitNotes,
+                    stage = stage,
+                    nextAction = nextAction,
+                    followUpAt = followUpAt,
+                    createdAt = now,
+                    updatedAt = now
+                ).also { database.opportunityDao().insert(it) }
+            } else {
+                existing.copy(
+                    lane = lane,
+                    organizationName = organizationName,
+                    opportunityName = opportunityName,
+                    contactName = contactName,
+                    contactRoute = contactRoute,
+                    fitNotes = fitNotes,
+                    stage = stage,
+                    nextAction = nextAction,
+                    followUpAt = followUpAt,
+                    updatedAt = now
+                ).also { database.opportunityDao().update(it) }
+            }
+
+            database.problemDao().touch(problemId, now)
+            val eventType: String
+            val summary: String
+            val details: String
+            when {
+                existing == null -> {
+                    eventType = "opportunity_created"
+                    summary = "Opportunity tracking started"
+                    details = saved.lane + " · " + saved.organizationName + " · " + saved.opportunityName
+                }
+                existing.stage != saved.stage -> {
+                    eventType = "opportunity_stage_changed"
+                    summary = "Opportunity stage changed"
+                    details = existing.stage + " → " + saved.stage
+                }
+                else -> {
+                    eventType = "opportunity_updated"
+                    summary = "Opportunity details updated"
+                    details = saved.organizationName + " · " + saved.opportunityName
+                }
+            }
+            addEvent(problemId, eventType, summary, details, now)
+            true
+        }
+    }
 
     suspend fun addStep(problemId: String, title: String, expectedResult: String = "") {
         val clean = title.trim().take(180)

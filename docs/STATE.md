@@ -1,8 +1,8 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 7 (incoming share intent hardening)_
+_Last updated: 2026-11-19 by Continuity Engineer — session 8 (evidence-backed opportunity workflow)_
 
 ## 1. Product snapshot
-Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU is the first pilot, not the product boundary. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
+Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU remains the first commercial pilot, not the product boundary. The feature branch adds an optional evidence-backed opportunity pipeline for manually tracking one real role, service need or commercial lead per ProblemCase. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
 
 ## 2. Status board
 | Area | State | Notes |
@@ -18,22 +18,23 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
 | Browser / installed-app automation | ⚪ not started | No execution adapter |
 | AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
-| Commercial records / outreach | ⚪ not started | No organizations, people, buyer/supplier records or send adapter |
+| Opportunity tracking | 🟡 branch implementation | Optional one-to-one profile, stages, fit notes, next action, date and safe user handoff implemented on feature branch; CI run 306 verified (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open. No normalized organizations/people, buyer/supplier graph, consent tracking, discovery or send adapter |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
+- Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; requires physical-device and user-driven acceptance.
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
 
 ## 4. Known gaps & stubs
-- `app/src/main/java/com/yusufculcu/trader/ui/TraderApp.kt` — only Inbox and Activity tabs; Discover/Matches/Contacts navigation is not implemented.
-- `app/src/main/java/com/yusufculcu/trader/data/TraderBackupManager.kt` — snapshot compatibility currently requires database schema version 3; future schema changes need backup migrations.
+- TraderApp.kt — main currently has Inbox and Activity; the feature branch adds Opportunity Pipeline. Discover/Matches/Contacts are not implemented.
+- TraderBackupManager.kt — feature branch reads schema-v3 and v4 snapshots; older v1/v2 snapshots remain unsupported. Future schema changes need explicit backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
-- Browser/app automation, AI providers, public-source discovery, buyer/supplier matching and communications are absent.
+- Browser/app automation, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters are absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
 - Search has no dedicated UI test; incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test; no physical-device test has been recorded.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
 - No release signing configuration; do not present the debug build as production.
@@ -46,9 +47,9 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.
 
 ## 6. Next three increments
-1. Physical-device acceptance of the current workspace and encrypted backup/restore on the Redmi Note 12 Pro 5G; log each scenario and any data-loss/regression result before extending execution features.
-2. After that gate, implement durable WorkManager execution/recovery (pause, resume, cancel, unique work IDs, idempotency and uncertain side-effect handling) with process-death and postcondition tests.
-3. Add one user-selected file/document capture vertical slice with raw-source preservation, evidence provenance, declared limits and tests; defer screenshot/voice until separately specified.
+1. Merge the CI-verified PR #16, then deliver the debug APK as a pilot build for the manually curated career/service/trade opportunity loop. Physical install/upgrade and real-use acceptance remain separate. Confirm install/upgrade safety and that capture → source/evidence → qualification → next action → contact handoff → follow-up works.
+2. Complete Redmi Note 12 Pro 5G acceptance of the Opportunity Pipeline, existing workspace and encrypted backup/restore. Record actual device results separately from CI.
+3. Add durable local follow-up notifications and/or WorkManager execution only with exact permission, recovery and postcondition semantics; add selected-file/document capture as a separate source-preserving slice. No automatic send or ambiguous retry.
 
 ## 7. Open questions for the human
 - [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
@@ -62,7 +63,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - This does not prove external chooser behavior or Activity-to-Repository persistence; physical-device acceptance remains open.
 
 **Not yet verified**
-- CI has not run on this branch yet. Do not count the new tests as passing until PR CI completes.
+- At the Session 7 handoff, CI had not run on the incoming-share branch. PR #15 subsequently merged after CI run #304 succeeded.
 - Device acceptance, search UI tests, backup acceptance and WorkManager remain open.
 
 ## Session handoff
@@ -123,3 +124,27 @@ Trader is an Android-first, local-first workspace for capturing general problems
 **Next**
 - Physical-device acceptance remains an independent open gate.
 - WorkManager execution/recovery remains the next major implementation increment after safety gates.
+
+
+## Session 8 handoff — evidence-backed opportunity workflow
+
+Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped)
+- Added an optional one-to-one OpportunityRecord attached to a ProblemCase. A case remains general unless the user chooses to track it in the opportunity pipeline.
+- Added trade, service, career and other lanes; organization and contact labels; user-authored fit notes; discovered/qualifying/ready/contacted/waiting/won/lost stages; next action and a local follow-up date.
+- Added Pipeline tab with active/closed filter, text search and due/overdue display. Per-case details can create/edit the profile; stage and profile updates append Activity events.
+- Added user-triggered contact-route handoff restricted to HTTP(S), mailto: and tel:. Browser opens, email composer opens, dialer opens; no message is sent and no call is placed.
+- Room schema migrated from v3 to v4. Encrypted backups now include opportunity profiles; old schema-v3 backup snapshots remain readable and restore without profiles.
+- Added repository persistence, rules, contact route, migration and backup compatibility tests. Added English/Polish/Turkish pipeline, form, activity and handoff strings.
+- Updated DATA_MODEL, ARCHITECTURE, TASKS, COVERAGE (R-016), RISKS (R-16), DECISIONS (D-019), README and CHANGELOG.
+
+Not yet verified
+- PR #16 CI run 306 completed successfully: 59 tests, 0 failures, 0 errors, 0 skipped. Lint, assembleDebug, APK signature verification and exact package/version assertions passed.
+- Debug APK artifact 14569058836 was assembled and CI signature/package-verified (19,172,629 bytes; package com.yusufculcu.trader.debug; version 0.1.0-debug; SHA-256 3b3d42cee05ef8ba886d006361f8262e28e33399c1b8bbe48cc7066c56d0037f). It has not been installed on a physical phone. No user-device or real prospect outcome is claimed.
+- PR #16 CI run 306 used JUnit artifact 14569574990: 59 tests, 0 failures, 0 errors, 0 skipped. Debug APK artifact ID: 14569058836.
+- Follow-up dates are displayed only; they do not schedule background reminders. Discovery, AI qualification, normalized Organization/Person graph, consent, message sending and automatic follow-up remain open.
+
+First intended practical use
+- Share a real job, service lead or industrial buyer/supplier source from Chrome/LinkedIn/another Android app into Trader.
+- Review the preserved original content/source; add a source-linked evidence note and mark it reviewed only after you verify it.
+- Choose Track opportunity; enter its lane, organization, what is needed/offered, why it may fit and the evidence/proof, contact route, stage and next action/date.
+- Use Pipeline to find active opportunities, open the case and launch a user-approved contact route. Record any reply or stage change yourself, then set the next follow-up.

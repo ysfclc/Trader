@@ -13,6 +13,8 @@ import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
+import org.json.JSONArray
+import org.json.JSONObject
 
 @RunWith(RobolectricTestRunner::class)
 class TraderBackupManagerTest {
@@ -46,6 +48,9 @@ class TraderBackupManagerTest {
             assertEquals(1, target.activityDao().getAll().size)
             assertEquals(1, target.evidenceDao().getAll().size)
             assertEquals("VERIFIED", target.evidenceDao().getAll().single().verificationState)
+            assertEquals(1, target.opportunityDao().getAll().size)
+            assertEquals("Industrial tooling introduction", target.opportunityDao().getAll().single().opportunityName)
+            assertEquals("CONTACTED", target.opportunityDao().getAll().single().stage)
             assertEquals(1, target.workflowRunDao().getAll().size)
             assertEquals(1, target.workflowStepDao().getAll().size)
             assertEquals("approval-hash", target.workflowStepDao().getAll().single().approvedPayloadHash)
@@ -53,6 +58,29 @@ class TraderBackupManagerTest {
         } finally {
             source.close()
             target.close()
+        }
+    }
+
+    @Test
+    fun schemaThreeBackupSnapshotRemainsReadableWithoutOpportunityRows() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            val legacy = JSONObject()
+                .put("formatVersion", 1)
+                .put("databaseSchemaVersion", 3)
+                .put("problems", JSONArray())
+                .put("planSteps", JSONArray())
+                .put("activityEvents", JSONArray())
+                .put("evidence", JSONArray())
+                .put("workflowRuns", JSONArray())
+                .put("workflowSteps", JSONArray())
+                .put("workflowEvents", JSONArray())
+
+            val decoded = TraderBackupManager(database).decodeSnapshot(legacy.toString())
+            assertTrue(decoded.opportunities.isEmpty())
+        } finally {
+            database.close()
         }
     }
 
@@ -145,6 +173,23 @@ class TraderBackupManagerTest {
         )
         database.evidenceDao().insert(
             EvidenceEntity("evidence-1", "case-1", "Source", "Private evidence", "https://example.test/source", "url", "VERIFIED", now + 3)
+        )
+        database.opportunityDao().insert(
+            OpportunityEntity(
+                id = "opportunity-1",
+                problemId = "case-1",
+                lane = "TRADE",
+                organizationName = "Example Manufacturing",
+                opportunityName = "Industrial tooling introduction",
+                contactName = "Buyer contact",
+                contactRoute = "buyer@example.test",
+                fitNotes = "Buyer requirement is supported by the attached technical evidence.",
+                stage = "CONTACTED",
+                nextAction = "Follow up on the technical specification",
+                followUpAt = now + 86_400_000L,
+                createdAt = now + 3,
+                updatedAt = now + 4
+            )
         )
         database.workflowRunDao().insert(
             WorkflowRunEntity("run-1", "case-1", "Review", "DRAFT", "idempotency-1", now, now + 4, null, null, null)

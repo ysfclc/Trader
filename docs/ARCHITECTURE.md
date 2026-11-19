@@ -48,7 +48,11 @@ A user-owned ProblemCase/Goal intake and resolution model. It preserves the orig
 
 The local-first evidence path stores user-attached text/notes and an optional source URI as a separate record linked to a ProblemCase. Verification is explicitly user-controlled and defaults to unreviewed. Source links are not fetched automatically. A context-packet builder composes the ProblemCase, ordered plan, evidence content/source/verification labels and bounded assistant instructions. The Android share sheet is the only handoff; no external message or AI request is sent without a user action.
 
-Cases can be archived and restored by a nullable archive timestamp. This is soft archival, not deletion. The Room v2→v3 migration adds the archive timestamp and evidence table while preserving existing data.
+Cases can be archived and restored by a nullable archive timestamp. This is soft archival, not deletion. The Room v2→v3 migration adds the archive timestamp and evidence table while preserving existing data. Room v3→v4 adds an optional one-to-one OpportunityEntity per ProblemCase. Existing cases migrate without a profile; old schema-v3 encrypted backups remain restorable with an empty opportunity set.
+
+The Compose Opportunity Pipeline is a projection of active ProblemCases plus explicitly created opportunity profiles. The profile stores a manually selected lane, organization/contact labels, a user-authored fit note, stage, next action and a local follow-up date. It does not replace the ProblemCase/evidence source record or instantiate normalized Organization/Person entities. Stage changes and profile edits append activity events.
+
+A contact route is only a user-initiated handoff: HTTP(S) to a browser, mailto: to a compose app, or tel: to the dialer. There is no send/call adapter, automatic discovery, or follow-up notification. Dates are visible when the user opens Pipeline; no background reminder is promised.
 
 ### capabilities
 A Trader-owned registry of available capabilities: source discovery, browser sessions, file parsing, app handoff, repository operations, deterministic analysis, optional AI, communication and other tool adapters. Each capability declares inputs, outputs, permissions, cost/availability, limits, side effects, preconditions and verifiable postconditions. A plan may only invoke capabilities actually registered and available.
