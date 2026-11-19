@@ -21,7 +21,7 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 - [ ] Implement goals, plans, plan steps, capability requirements and verifiable completion criteria.
 - [x] Add text search, active/archived filters, reversible archive/restore and activity trail. Deduplication remains open.
 
-Exit gate: capture and manage a real non-commercial problem and a commercial opportunity, preserve context/evidence, edit/search/archive/restore cases, share a useful context packet, and retrieve it offline; no account, paid AI or cloud required. Device acceptance and backup/restore remain open.
+Exit gate: capture and manage a real non-commercial problem and a commercial opportunity, preserve context/evidence, edit/search/archive/restore cases, share a useful context packet, retrieve it offline, and export/restore an encrypted workspace backup; no account, paid AI or cloud required. Backup/restore is CI-verified (PR #8 and main run 256); physical-device acceptance of the workspace and document-picker backup flow remains open.
 
 ## Phase 2 — Context, discovery and qualification
 - [x] Package a ProblemCase, plan and evidence into an explicit user-shareable context packet for assistant handoff; embedded AI and automatic context-return remain open.

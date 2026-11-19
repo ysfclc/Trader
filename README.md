@@ -36,14 +36,21 @@ Trader is not a promise that software can solve every human problem, an open mar
 | [QRKey reuse audit](docs/QRKEY_REUSE_AUDIT.md) | QRKey repository-family source audit, reusable patterns and non-reuse decisions |
 | [Workflow runtime](docs/WORKFLOW_RUNTIME.md) | Durable run/step/event model, approval binding, lifecycle and execution limits |
 | [Capability registry](docs/CAPABILITY_REGISTRY.md) | Explicit capability availability, permissions, side-effect and retry policies |
-| [Project state](docs/STATE.md) | Current verified status; updated at every checkpoint |
+| [Project state](docs/STATE.md) | Compact current status and next actions |
+| [Coverage matrix](docs/COVERAGE.md) | Requirement → implementation → tests → documentation traceability |
+| [Risk register](docs/RISKS.md) | Current product, runtime, security and acceptance risks |
+| [Changelog](CHANGELOG.md) | Dated project milestones and verification evidence |
 | [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
 
 ## Current state
 
-**Usable local workspace v1 is merged into `main`.** Trader now supports manual and share-to-capture, editing cases, searching active and archived cases, reversible archive/restore, source-linked evidence with user-controlled verification, plan steps with expected results, workflow tracking/approval controls, and explicit context-packet sharing through Android's share sheet. English, Turkish and Polish are included. PR [#7](https://github.com/ysfclc/Trader/pull/7) is merged. Its CI run 232, post-merge `main` run [233](https://github.com/ysfclc/Trader/actions/runs/44458618691), and final `main` verification run [236](https://github.com/ysfclc/Trader/actions/runs/44459027707) passed tests, lint, APK assembly, signature verification and package identity checks. This is a practical local case/evidence/planning workspace, not an autonomous agent. Browser/app automation, WorkManager execution/recovery, embedded AI providers, live discovery/matching, encrypted backup/restore and external messaging remain unimplemented. Physical-device acceptance is still open.
+**Latest main:** PR [#8](https://github.com/ysfclc/Trader/pull/8) added passphrase-protected encrypted export/restore for all seven persisted Room record groups. Pull-request CI [run 255](https://github.com/ysfclc/Trader/actions/runs/44478899807) and post-merge main CI [run 256](https://github.com/ysfclc/Trader/actions/runs/44479460220) passed. Run 256 reports **37 tests, 0 failures, 0 errors and 0 skipped**, plus lint, debug APK assembly, signature verification and package identity checks.
 
-The first commercial pilot is industrial tooling and machining between Türkiye and Poland/EU. The model remains category-neutral: this is the first test market, not a hard-coded product category.
+The current app is a useful offline ProblemCase/evidence/planning/workflow workspace. It supports manual and Android text/URL share capture, case editing/search/archive/restore, source-linked evidence, expected-result plan steps, manually driven workflow controls, capability availability display, context-packet share handoff, and encrypted local backup/restore. It is **not an autonomous executor**. Physical-device acceptance (including capture, backup and restore), WorkManager execution/process-death recovery, file/screenshot/voice capture, deduplication, browser/app automation, embedded AI, live discovery/matching, commercial records and external communication remain open.
+
+Latest main debug APK: `com.yusufculcu.trader.debug`, version `0.1.0-debug`, 19,046,757 bytes, SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`. It is a CI debug-signed sideload artifact, **not** a production release. Do not uninstall an existing installation to resolve a signing conflict without first protecting local data.
+
+Use [PROJECT_LOCK.md](docs/PROJECT_LOCK.md) as the canonical product specification; there is no separate `docs/SPEC.md`. Coverage and limitations are tracked in [COVERAGE.md](docs/COVERAGE.md), [RISKS.md](docs/RISKS.md) and [TASKS.md](docs/TASKS.md). Physical-device verification is not inferred from CI.
 
 ## Repository rules
 
