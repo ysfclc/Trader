@@ -98,4 +98,36 @@
     <string name="workflow_status_skipped">Pominięte</string>
     <string name="workflow_skip_unavailable">Pomiń niedostępny krok</string>
         <string name="workflow_status_unknown">Nieznany</string>
+
+    <string name="back">Wstecz</string>
+    <string name="active_cases">Aktywne</string>
+    <string name="archived_cases">Archiwum</string>
+    <string name="archived_label">Zarchiwizowane</string>
+    <string name="search_cases">Szukaj spraw i kontekstu</string>
+    <string name="no_search_results">Brak spraw pasujących do wyszukiwania.</string>
+    <string name="no_archived_cases">Brak zarchiwizowanych spraw.</string>
+    <string name="edit_case">Edytuj sprawę</string>
+    <string name="archive_case">Archiwizuj sprawę</string>
+    <string name="restore_case">Przywróć sprawę</string>
+    <string name="share_context">Udostępnij kontekst</string>
+    <string name="open_original_source">Otwórz źródło</string>
+    <string name="evidence">DOWODY</string>
+    <string name="evidence_count">%1$d rekordów</string>
+    <string name="no_evidence">Nie dodano jeszcze dowodów. Dodaj źródło, notatkę lub obserwację.</string>
+    <string name="add_evidence">Dodaj dowód</string>
+    <string name="evidence_verified">Zweryfikowane przez użytkownika</string>
+    <string name="evidence_unreviewed">Niezweryfikowane</string>
+    <string name="undo_evidence_verification">Cofnij weryfikację</string>
+    <string name="mark_evidence_verified">Oznacz jako zweryfikowane</string>
+    <string name="evidence_title">Tytuł dowodu</string>
+    <string name="evidence_note">Co mówi lub pokazuje to źródło?</string>
+    <string name="evidence_source_url">Adres URL źródła (opcjonalnie)</string>
+    <string name="evidence_note_hint">Trader zapisuje to jako dowód powiązany ze sprawą. Sam adres URL nie oznacza, że strona została sprawdzona.</string>
+    <string name="expected_result">Jaki rezultat powinien dać ten krok?</string>
+    <string name="event_details_updated">Zaktualizowano szczegóły sprawy</string>
+    <string name="event_archived">Zarchiwizowano sprawę</string>
+    <string name="event_restored">Przywrócono sprawę</string>
+    <string name="event_evidence_added">Dodano dowód</string>
+    <string name="event_evidence_verified">Oznaczono dowód jako zweryfikowany</string>
+    <string name="event_evidence_unreviewed">Cofnięto weryfikację dowodu</string>
 </resources>
