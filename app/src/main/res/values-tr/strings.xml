@@ -98,4 +98,36 @@
     <string name="workflow_status_skipped">Atlandı</string>
     <string name="workflow_skip_unavailable">Kullanılamayan adımı atla</string>
         <string name="workflow_status_unknown">Bilinmiyor</string>
+
+    <string name="back">Geri</string>
+    <string name="active_cases">Aktif</string>
+    <string name="archived_cases">Arşiv</string>
+    <string name="archived_label">Arşivlendi</string>
+    <string name="search_cases">Kayıt ve bağlam ara</string>
+    <string name="no_search_results">Bu aramayla eşleşen kayıt yok.</string>
+    <string name="no_archived_cases">Arşivlenmiş kayıt yok.</string>
+    <string name="edit_case">Kaydı düzenle</string>
+    <string name="archive_case">Kaydı arşivle</string>
+    <string name="restore_case">Kaydı geri yükle</string>
+    <string name="share_context">Bağlamı paylaş</string>
+    <string name="open_original_source">Orijinal kaynağı aç</string>
+    <string name="evidence">KANITLAR</string>
+    <string name="evidence_count">%1$d kayıt</string>
+    <string name="no_evidence">Henüz kanıt eklenmedi. Bir kaynak, not veya gözlem ekle.</string>
+    <string name="add_evidence">Kanıt ekle</string>
+    <string name="evidence_verified">Kullanıcı doğruladı</string>
+    <string name="evidence_unreviewed">İncelenmedi</string>
+    <string name="undo_evidence_verification">Doğrulamayı geri al</string>
+    <string name="mark_evidence_verified">Doğrulandı olarak işaretle</string>
+    <string name="evidence_title">Kanıt başlığı</string>
+    <string name="evidence_note">Bu kaynak ne söylüyor veya gösteriyor?</string>
+    <string name="evidence_source_url">Kaynak URL adresi (isteğe bağlı)</string>
+    <string name="evidence_note_hint">Trader bunu kayda bağlı kanıt olarak saklar. URL, sayfanın kontrol edildiğinin kanıtı değildir.</string>
+    <string name="expected_result">Bu adım ne üretmeli?</string>
+    <string name="event_details_updated">Kayıt ayrıntıları güncellendi</string>
+    <string name="event_archived">Kayıt arşivlendi</string>
+    <string name="event_restored">Kayıt geri yüklendi</string>
+    <string name="event_evidence_added">Kanıt eklendi</string>
+    <string name="event_evidence_verified">Kanıt doğrulandı olarak işaretlendi</string>
+    <string name="event_evidence_unreviewed">Kanıt yeniden inceleme bekliyor</string>
 </resources>

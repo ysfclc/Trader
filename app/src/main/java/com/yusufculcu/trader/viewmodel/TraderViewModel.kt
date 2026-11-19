@@ -3,6 +3,7 @@ package com.yusufculcu.trader.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.yusufculcu.trader.data.EvidenceEntity
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.TraderRepository
@@ -16,9 +17,11 @@ import kotlinx.coroutines.launch
 
 class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     val problems = repository.observeProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val archivedProblems = repository.observeArchivedProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val activity = repository.observeActivity().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val problemCount = repository.observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun stepsFor(problemId: String) = repository.observeSteps(problemId)
+    fun evidenceFor(problemId: String) = repository.observeEvidence(problemId)
     fun workflowsFor(problemId: String) = repository.observeWorkflowRuns(problemId)
     fun workflowStepsFor(runId: String) = repository.observeWorkflowSteps(runId)
     fun workflowEventsFor(runId: String) = repository.observeWorkflowEvents(runId)
@@ -44,7 +47,44 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
         }
     }
 
-    fun addStep(problemId: String, title: String) { viewModelScope.launch { repository.addStep(problemId, title) } }
+    fun updateProblem(
+        problemId: String,
+        title: String,
+        description: String,
+        outcome: String,
+        constraints: String,
+        onSaved: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            onSaved(repository.updateProblemDetails(problemId, title, description, outcome, constraints))
+        }
+    }
+
+    fun archiveProblem(problemId: String, onSaved: (Boolean) -> Unit = {}) {
+        viewModelScope.launch { onSaved(repository.archiveProblem(problemId)) }
+    }
+
+    fun restoreProblem(problemId: String, onSaved: (Boolean) -> Unit = {}) {
+        viewModelScope.launch { onSaved(repository.restoreProblem(problemId)) }
+    }
+
+    fun addEvidence(
+        problemId: String,
+        title: String,
+        content: String,
+        sourceUri: String?,
+        onSaved: (Boolean) -> Unit = {}
+    ) {
+        viewModelScope.launch { onSaved(repository.addEvidence(problemId, title, content, sourceUri)) }
+    }
+
+    fun setEvidenceVerified(evidence: EvidenceEntity, verified: Boolean) {
+        viewModelScope.launch { repository.setEvidenceVerification(evidence, verified) }
+    }
+
+    fun addStep(problemId: String, title: String, expectedResult: String = "") {
+        viewModelScope.launch { repository.addStep(problemId, title, expectedResult) }
+    }
     fun toggleStep(step: PlanStepEntity) { viewModelScope.launch { repository.toggleStep(step) } }
     fun setStatus(problem: ProblemEntity, target: ProblemStatus, note: String = "") {
         viewModelScope.launch { repository.setStatus(problem.id, target, note) }

@@ -98,4 +98,36 @@
     <string name="workflow_status_skipped">Skipped</string>
     <string name="workflow_skip_unavailable">Skip unavailable step</string>
         <string name="workflow_status_unknown">Unknown</string>
+
+    <string name="back">Back</string>
+    <string name="active_cases">Active</string>
+    <string name="archived_cases">Archived</string>
+    <string name="archived_label">Archived</string>
+    <string name="search_cases">Search cases and context</string>
+    <string name="no_search_results">No cases match that search.</string>
+    <string name="no_archived_cases">No archived cases.</string>
+    <string name="edit_case">Edit case</string>
+    <string name="archive_case">Archive case</string>
+    <string name="restore_case">Restore case</string>
+    <string name="share_context">Share context</string>
+    <string name="open_original_source">Open original source</string>
+    <string name="evidence">EVIDENCE</string>
+    <string name="evidence_count">%1$d records</string>
+    <string name="no_evidence">No evidence attached yet. Add a source, note or observation.</string>
+    <string name="add_evidence">Add evidence</string>
+    <string name="evidence_verified">User-verified</string>
+    <string name="evidence_unreviewed">Unreviewed</string>
+    <string name="undo_evidence_verification">Undo verification</string>
+    <string name="mark_evidence_verified">Mark as verified</string>
+    <string name="evidence_title">Evidence title</string>
+    <string name="evidence_note">What does this source say or show?</string>
+    <string name="evidence_source_url">Source URL (optional)</string>
+    <string name="evidence_note_hint">Trader stores this as evidence attached to the case. A URL is a reference, not proof that the page was checked.</string>
+    <string name="expected_result">What should this step produce?</string>
+    <string name="event_details_updated">Case details updated</string>
+    <string name="event_archived">Case archived</string>
+    <string name="event_restored">Case restored</string>
+    <string name="event_evidence_added">Evidence added</string>
+    <string name="event_evidence_verified">Evidence marked verified</string>
+    <string name="event_evidence_unreviewed">Evidence returned to unreviewed</string>
 </resources>

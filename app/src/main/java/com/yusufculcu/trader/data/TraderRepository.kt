@@ -22,8 +22,10 @@ data class WorkflowStepDraft(
 
 class TraderRepository(private val database: TraderDatabase) {
     fun observeProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeAll()
+    fun observeArchivedProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeArchived()
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
+    fun observeEvidence(problemId: String): Flow<List<EvidenceEntity>> = database.evidenceDao().observeForProblem(problemId)
     fun observeCount(): Flow<Int> = database.problemDao().observeCount()
     fun observeWorkflowRuns(problemId: String): Flow<List<WorkflowRunEntity>> =
         database.workflowRunDao().observeForProblem(problemId)
@@ -57,13 +59,107 @@ class TraderRepository(private val database: TraderDatabase) {
         return id
     }
 
-    suspend fun addStep(problemId: String, title: String) {
+    suspend fun updateProblemDetails(
+        id: String,
+        title: String,
+        description: String,
+        desiredOutcome: String,
+        constraints: String
+    ): Boolean {
+        val cleanTitle = ProblemRules.normalizeTitle(title)
+        if (cleanTitle.isBlank()) return false
+        val now = System.currentTimeMillis()
+        return database.withTransaction {
+            val existing = database.problemDao().getById(id) ?: return@withTransaction false
+            if (existing.archivedAt != null) return@withTransaction false
+            database.problemDao().updateDetails(
+                id, cleanTitle, description.trim(), desiredOutcome.trim(), constraints.trim(), now
+            )
+            addEvent(id, "details_updated", "Problem details updated", cleanTitle, now)
+            true
+        }
+    }
+
+    suspend fun archiveProblem(id: String): Boolean = setArchiveState(id, true)
+    suspend fun restoreProblem(id: String): Boolean = setArchiveState(id, false)
+
+    private suspend fun setArchiveState(id: String, archived: Boolean): Boolean = database.withTransaction {
+        val existing = database.problemDao().getById(id) ?: return@withTransaction false
+        if ((existing.archivedAt != null) == archived) return@withTransaction true
+        val now = System.currentTimeMillis()
+        database.problemDao().setArchivedAt(id, if (archived) now else null, now)
+        addEvent(
+            id,
+            if (archived) "archived" else "restored",
+            if (archived) "Problem archived" else "Problem restored",
+            existing.title,
+            now
+        )
+        true
+    }
+
+    suspend fun addEvidence(
+        problemId: String,
+        title: String,
+        content: String,
+        sourceUri: String?
+    ): Boolean {
+        val cleanTitle = title.trim().take(180)
+        val cleanContent = content.trim().take(20_000)
+        val cleanUri = sourceUri?.trim()?.takeIf { it.isNotBlank() }?.take(2_000)
+        if (cleanTitle.isBlank() || (cleanContent.isBlank() && cleanUri == null)) return false
+        val now = System.currentTimeMillis()
+        return database.withTransaction {
+            val problem = database.problemDao().getById(problemId) ?: return@withTransaction false
+            if (problem.archivedAt != null) return@withTransaction false
+            val kind = when {
+                cleanUri?.startsWith("http://") == true || cleanUri?.startsWith("https://") == true -> "URL"
+                else -> "NOTE"
+            }
+            database.evidenceDao().insert(
+                EvidenceEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = problemId,
+                    title = cleanTitle,
+                    content = cleanContent,
+                    sourceUri = cleanUri,
+                    sourceKind = kind,
+                    verificationState = "UNREVIEWED",
+                    capturedAt = now
+                )
+            )
+            database.problemDao().touch(problemId, now)
+            addEvent(problemId, "evidence_added", "Evidence added", cleanTitle, now)
+            true
+        }
+    }
+
+    suspend fun setEvidenceVerification(evidence: EvidenceEntity, verified: Boolean): Boolean =
+        database.withTransaction {
+            val state = if (verified) "VERIFIED" else "UNREVIEWED"
+            database.evidenceDao().updateVerificationState(evidence.id, state)
+            val now = System.currentTimeMillis()
+            database.problemDao().touch(evidence.problemId, now)
+            addEvent(
+                evidence.problemId,
+                if (verified) "evidence_verified" else "evidence_unreviewed",
+                if (verified) "Evidence marked verified by user" else "Evidence verification removed",
+                evidence.title,
+                now
+            )
+            true
+        }
+
+    suspend fun addStep(problemId: String, title: String, expectedResult: String = "") {
         val clean = title.trim().take(180)
         if (clean.isBlank()) return
+        val cleanExpected = expectedResult.trim().take(2_000)
         val now = System.currentTimeMillis()
         database.withTransaction {
             val position = database.planStepDao().nextPosition(problemId)
-            database.planStepDao().insert(PlanStepEntity(UUID.randomUUID().toString(), problemId, clean, "", "", "", "TODO", position, now, now))
+            database.planStepDao().insert(
+                PlanStepEntity(UUID.randomUUID().toString(), problemId, clean, "", "", cleanExpected, "TODO", position, now, now)
+            )
             database.problemDao().touch(problemId, now)
             addEvent(problemId, "plan_step_added", "Plan step added", clean, now)
         }

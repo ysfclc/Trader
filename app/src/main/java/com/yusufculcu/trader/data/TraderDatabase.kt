@@ -15,7 +15,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "problem_cases", indices = [Index(value = ["updatedAt"]), Index(value = ["status"])])
+@Entity(tableName = "problem_cases", indices = [Index(value = ["updatedAt"]), Index(value = ["status"]), Index(value = ["archivedAt"])])
 data class ProblemEntity(
     @PrimaryKey val id: String,
     val title: String,
@@ -29,7 +29,8 @@ data class ProblemEntity(
     val sourceUri: String?,
     val outcomeNote: String,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val archivedAt: Long? = null
 )
 
 @Entity(
@@ -62,6 +63,23 @@ data class ActivityEventEntity(
     val summary: String,
     val details: String,
     val occurredAt: Long
+)
+
+
+@Entity(
+    tableName = "evidence_records",
+    foreignKeys = [ForeignKey(entity = ProblemEntity::class, parentColumns = ["id"], childColumns = ["problemId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["problemId"]), Index(value = ["capturedAt"])]
+)
+data class EvidenceEntity(
+    @PrimaryKey val id: String,
+    val problemId: String,
+    val title: String,
+    val content: String,
+    val sourceUri: String?,
+    val sourceKind: String,
+    val verificationState: String,
+    val capturedAt: Long
 )
 
 @Entity(
@@ -135,8 +153,10 @@ data class WorkflowEventEntity(
 
 @Dao
 interface ProblemDao {
-    @Query("SELECT * FROM problem_cases ORDER BY updatedAt DESC")
+    @Query("SELECT * FROM problem_cases WHERE archivedAt IS NULL ORDER BY updatedAt DESC")
     fun observeAll(): Flow<List<ProblemEntity>>
+    @Query("SELECT * FROM problem_cases WHERE archivedAt IS NOT NULL ORDER BY archivedAt DESC")
+    fun observeArchived(): Flow<List<ProblemEntity>>
     @Query("SELECT * FROM problem_cases WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<ProblemEntity?>
     @Query("SELECT * FROM problem_cases WHERE id = :id LIMIT 1")
@@ -145,9 +165,13 @@ interface ProblemDao {
     suspend fun insert(problem: ProblemEntity)
     @Query("UPDATE problem_cases SET updatedAt = :updatedAt WHERE id = :id")
     suspend fun touch(id: String, updatedAt: Long)
+    @Query("UPDATE problem_cases SET title = :title, description = :description, desiredOutcome = :desiredOutcome, constraintsText = :constraintsText, updatedAt = :updatedAt WHERE id = :id AND archivedAt IS NULL")
+    suspend fun updateDetails(id: String, title: String, description: String, desiredOutcome: String, constraintsText: String, updatedAt: Long)
+    @Query("UPDATE problem_cases SET archivedAt = :archivedAt, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setArchivedAt(id: String, archivedAt: Long?, updatedAt: Long)
     @Query("UPDATE problem_cases SET status = :status, outcomeNote = :note, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateStatus(id: String, status: String, note: String, updatedAt: Long)
-    @Query("SELECT COUNT(*) FROM problem_cases")
+    @Query("SELECT COUNT(*) FROM problem_cases WHERE archivedAt IS NULL")
     fun observeCount(): Flow<Int>
 }
 
@@ -159,6 +183,10 @@ interface PlanStepDao {
     suspend fun insert(step: PlanStepEntity)
     @Query("UPDATE plan_steps SET status = :status, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateStatus(id: String, status: String, updatedAt: Long)
+    @Update
+    suspend fun update(step: PlanStepEntity)
+    @Query("DELETE FROM plan_steps WHERE id = :id")
+    suspend fun deleteById(id: String)
     @Query("SELECT COALESCE(MAX(position), -1) + 1 FROM plan_steps WHERE problemId = :problemId")
     suspend fun nextPosition(problemId: String): Int
 }
@@ -169,6 +197,19 @@ interface ActivityDao {
     fun observeRecent(): Flow<List<ActivityEventEntity>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(event: ActivityEventEntity)
+}
+
+
+@Dao
+interface EvidenceDao {
+    @Query("SELECT * FROM evidence_records WHERE problemId = :problemId ORDER BY capturedAt DESC")
+    fun observeForProblem(problemId: String): Flow<List<EvidenceEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(evidence: EvidenceEntity)
+
+    @Query("UPDATE evidence_records SET verificationState = :state WHERE id = :id")
+    suspend fun updateVerificationState(id: String, state: String)
 }
 
 @Dao
@@ -224,17 +265,19 @@ interface WorkflowEventDao {
         ProblemEntity::class,
         PlanStepEntity::class,
         ActivityEventEntity::class,
+        EvidenceEntity::class,
         WorkflowRunEntity::class,
         WorkflowStepEntity::class,
         WorkflowEventEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
     abstract fun problemDao(): ProblemDao
     abstract fun planStepDao(): PlanStepDao
     abstract fun activityDao(): ActivityDao
+    abstract fun evidenceDao(): EvidenceDao
     abstract fun workflowRunDao(): WorkflowRunDao
     abstract fun workflowStepDao(): WorkflowStepDao
     abstract fun workflowEventDao(): WorkflowEventDao
@@ -313,5 +356,31 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_events_workflowRunId` ON `workflow_events` (`workflowRunId`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_workflow_events_occurredAt` ON `workflow_events` (`occurredAt`)")
+    }
+}
+
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE problem_cases ADD COLUMN archivedAt INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_problem_cases_archivedAt ON problem_cases (archivedAt)")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS evidence_records (
+                id TEXT NOT NULL,
+                problemId TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                sourceUri TEXT,
+                sourceKind TEXT NOT NULL,
+                verificationState TEXT NOT NULL,
+                capturedAt INTEGER NOT NULL,
+                PRIMARY KEY(id),
+                FOREIGN KEY(problemId) REFERENCES problem_cases(id) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_evidence_records_problemId ON evidence_records (problemId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_evidence_records_capturedAt ON evidence_records (capturedAt)")
     }
 }

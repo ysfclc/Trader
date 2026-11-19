@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.yusufculcu.trader.domain.WorkflowRunStatus
 import com.yusufculcu.trader.domain.WorkflowStepStatus
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -207,6 +208,54 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun caseDetailsCanBeEditedAndArchivedWithoutDeletingItsHistory() = runBlocking {
+        val problemId = repository.createProblem(
+            "Old title",
+            description = "Original context",
+            desiredOutcome = "Old outcome",
+            constraints = "Old constraint"
+        )
+
+        assertTrue(repository.updateProblemDetails(
+            problemId,
+            "Updated title",
+            "Updated context",
+            "Updated outcome",
+            "Updated constraint"
+        ))
+        assertEquals("Updated title", database.problemDao().getById(problemId)?.title)
+        assertEquals("Updated context", database.problemDao().getById(problemId)?.description)
+
+        assertTrue(repository.archiveProblem(problemId))
+        assertTrue(database.problemDao().observeArchived().firstForTest().any { it.id == problemId })
+        assertFalse(database.problemDao().observeAll().firstForTest().any { it.id == problemId })
+        assertNotNull(database.problemDao().getById(problemId))
+        assertTrue(repository.restoreProblem(problemId))
+        assertTrue(database.problemDao().observeAll().firstForTest().any { it.id == problemId })
+        assertNull(database.problemDao().getById(problemId)?.archivedAt)
+    }
+
+    @Test
+    fun evidenceIsStoredWithSourceAndUserVerificationState() = runBlocking {
+        val problemId = repository.createProblem("Compare a supplier")
+        assertTrue(repository.addEvidence(
+            problemId,
+            "Supplier capability page",
+            "The page lists five-axis machining and ISO certification.",
+            "https://supplier.example.test/capabilities"
+        ))
+        val first = database.evidenceDao().observeForProblem(problemId).firstForTest().single()
+        assertEquals("URL", first.sourceKind)
+        assertEquals("UNREVIEWED", first.verificationState)
+        assertEquals("https://supplier.example.test/capabilities", first.sourceUri)
+
+        assertTrue(repository.setEvidenceVerification(first, true))
+        assertEquals("VERIFIED", database.evidenceDao().observeForProblem(problemId).firstForTest().single().verificationState)
+        assertTrue(repository.setEvidenceVerification(first.copy(verificationState = "VERIFIED"), false))
+        assertEquals("UNREVIEWED", database.evidenceDao().observeForProblem(problemId).firstForTest().single().verificationState)
+    }
+
+    @Test
     fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() = runBlocking {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)
@@ -263,7 +312,7 @@ class WorkflowPersistenceTest {
         old.close()
 
         val migrated = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .allowMainThreadQueries()
             .build()
         try {
@@ -277,13 +326,31 @@ class WorkflowPersistenceTest {
             } finally {
                 preservedRows.close()
             }
-            val table = migrated.openHelper.readableDatabase.query(
+            val workflowTable = migrated.openHelper.readableDatabase.query(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='workflow_runs'"
             )
             try {
-                assertTrue(table.moveToFirst())
+                assertTrue(workflowTable.moveToFirst())
             } finally {
-                table.close()
+                workflowTable.close()
+            }
+            val evidenceTable = migrated.openHelper.readableDatabase.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='evidence_records'"
+            )
+            try {
+                assertTrue(evidenceTable.moveToFirst())
+            } finally {
+                evidenceTable.close()
+            }
+            val archiveColumn = migrated.openHelper.readableDatabase.query("PRAGMA table_info(problem_cases)")
+            try {
+                var found = false
+                while (archiveColumn.moveToNext()) {
+                    if (archiveColumn.getString(1) == "archivedAt") found = true
+                }
+                assertTrue(found)
+            } finally {
+                archiveColumn.close()
             }
         } finally {
             migrated.close()
@@ -291,3 +358,6 @@ class WorkflowPersistenceTest {
         }
     }
 }
+
+
+private suspend fun <T> kotlinx.coroutines.flow.Flow<T>.firstForTest(): T = first()
