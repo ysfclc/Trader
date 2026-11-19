@@ -10,7 +10,17 @@ A user-owned problem, question, objective or situation that needs a useful outco
 
 Store the original user statement and input references (URL, shared text, file, screenshot, voice transcript or manual note); desired outcome and completion criteria; constraints, urgency, risk/stakes and deadline; user-confirmed context, source-derived facts, inferences, assumptions and unknowns as distinct items; linked evidence, related records, candidate paths and selected workflow specialization; status and privacy/retention controls.
 
-A ProblemCase may link to a trade, service, career or future specialized record, but remains valid without any such link. It is not automatically an opportunity or a task list.\n\nThe current mobile implementation supports editing the case's title/context/outcome/constraints, source-linked evidence, active/archived views and reversible archival. The context packet share action packages user-provided case content, ordered plan steps and evidence for an explicit Android share-sheet handoff.
+A ProblemCase may link to a trade, service, career or future specialized record, but remains valid without any such link. It is not automatically an opportunity or a task list.
+
+The current mobile implementation supports editing the case's title/context/outcome/constraints, source-linked evidence, active/archived views and reversible archival. The context packet share action packages user-provided case content, ordered plan steps and evidence for an explicit Android share-sheet handoff.
+
+### OpportunityRecord (initial mobile profile)
+
+An optional, manually created one-to-one profile for a ProblemCase that the user explicitly chooses to track as a real opportunity. The current mobile profile carries one lane (TRADE, SERVICE, CAREER or OTHER), organization label, need/role/offer, user-authored fit notes, contact name and route, stage (DISCOVERED, QUALIFYING, READY_TO_CONTACT, CONTACTED, WAITING, WON, LOST), next action and optional local follow-up date.
+
+This is intentionally a thin operator-owned tracker, not the normalized commercial graph. Organization and person values are plain labels/contact routes; they are not canonical Organization/Person records, verified identities, or permission/consent records. One profile per ProblemCase is supported in this increment. Original capture and EvidenceRecord remain the source context, while each create/update/stage change appends a ProblemCase activity event.
+
+Opening a contact route is explicitly user initiated and scheme restricted: HTTP(S) opens a browser, mailto: opens a compose handler, and tel: opens the dialer. Trader does not send a message or place a call. A follow-up date is displayed in the Pipeline but does not yet schedule a notification or background reminder. Source URLs are not fetched automatically.
 
 ### EvidenceRecord
 
