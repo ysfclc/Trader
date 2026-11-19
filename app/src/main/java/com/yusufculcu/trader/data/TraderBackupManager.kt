@@ -27,48 +27,53 @@ import javax.crypto.spec.SecretKeySpec
  */
 class TraderBackupManager(private val database: TraderDatabase) {
     suspend fun exportEncrypted(output: OutputStream, passphrase: CharArray) = withContext(Dispatchers.IO) {
-        requireValidPassphrase(passphrase)
-        val snapshot = database.withTransaction {
-            BackupSnapshot(
-                problems = database.problemDao().getAll(),
-                planSteps = database.planStepDao().getAll(),
-                activityEvents = database.activityDao().getAll(),
-                evidence = database.evidenceDao().getAll(),
-                workflowRuns = database.workflowRunDao().getAll(),
-                workflowSteps = database.workflowStepDao().getAll(),
-                workflowEvents = database.workflowEventDao().getAll()
-            )
-        }
-        val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
-        require(cleartext.size <= MAX_BACKUP_BYTES) { "Workspace is too large for one backup file." }
         try {
-            val salt = ByteArray(SALT_BYTES).also(random::nextBytes)
-            val iv = ByteArray(IV_BYTES).also(random::nextBytes)
-            val header = ByteBuffer.allocate(HEADER_BYTES)
-                .put(MAGIC)
-                .put(FORMAT_VERSION)
-                .putInt(KDF_ITERATIONS)
-                .put(salt)
-                .put(iv)
-                .array()
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.ENCRYPT_MODE, deriveKey(passphrase, salt, KDF_ITERATIONS), GCMParameterSpec(GCM_TAG_BITS, iv))
-            cipher.updateAAD(header)
-            output.write(header)
-            output.write(cipher.doFinal(cleartext))
-            output.flush()
+            requireValidPassphrase(passphrase)
+            val snapshot = database.withTransaction {
+                BackupSnapshot(
+                    problems = database.problemDao().getAll(),
+                    planSteps = database.planStepDao().getAll(),
+                    activityEvents = database.activityDao().getAll(),
+                    evidence = database.evidenceDao().getAll(),
+                    workflowRuns = database.workflowRunDao().getAll(),
+                    workflowSteps = database.workflowStepDao().getAll(),
+                    workflowEvents = database.workflowEventDao().getAll()
+                )
+            }
+            val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
+            try {
+                require(cleartext.size <= MAX_BACKUP_BYTES) { "Workspace is too large for one backup file." }
+                val salt = ByteArray(SALT_BYTES).also(random::nextBytes)
+                val iv = ByteArray(IV_BYTES).also(random::nextBytes)
+                val header = ByteBuffer.allocate(HEADER_BYTES)
+                    .put(MAGIC)
+                    .put(FORMAT_VERSION)
+                    .putInt(KDF_ITERATIONS)
+                    .put(salt)
+                    .put(iv)
+                    .array()
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                cipher.init(Cipher.ENCRYPT_MODE, deriveKey(passphrase, salt, KDF_ITERATIONS), GCMParameterSpec(GCM_TAG_BITS, iv))
+                cipher.updateAAD(header)
+                output.write(header)
+                output.write(cipher.doFinal(cleartext))
+                output.flush()
+            } finally {
+                cleartext.fill(0)
+            }
         } finally {
-            cleartext.fill(0)
             passphrase.fill(0.toChar())
         }
     }
 
     suspend fun restoreEncrypted(input: InputStream, passphrase: CharArray) = withContext(Dispatchers.IO) {
-        requireValidPassphrase(passphrase)
-        val encrypted = readBounded(input)
+        var encrypted: ByteArray? = null
         try {
-            require(encrypted.size >= HEADER_BYTES + GCM_TAG_BYTES) { "This file is not a complete Trader backup." }
-            val header = encrypted.copyOfRange(0, HEADER_BYTES)
+            requireValidPassphrase(passphrase)
+            val fileBytes = readBounded(input)
+            encrypted = fileBytes
+            require(fileBytes.size >= HEADER_BYTES + GCM_TAG_BYTES) { "This file is not a complete Trader backup." }
+            val header = fileBytes.copyOfRange(0, HEADER_BYTES)
             val headerBuffer = ByteBuffer.wrap(header)
             val magic = ByteArray(MAGIC.size)
             headerBuffer.get(magic)
@@ -82,7 +87,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
             cipher.init(Cipher.DECRYPT_MODE, deriveKey(passphrase, salt, iterations), GCMParameterSpec(GCM_TAG_BITS, iv))
             cipher.updateAAD(header)
             val cleartext = try {
-                cipher.doFinal(encrypted, HEADER_BYTES, encrypted.size - HEADER_BYTES)
+                cipher.doFinal(fileBytes, HEADER_BYTES, fileBytes.size - HEADER_BYTES)
             } catch (_: AEADBadTagException) {
                 throw IllegalArgumentException("The passphrase is incorrect or the backup file has been damaged.")
             }
@@ -111,7 +116,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
                 cleartext.fill(0)
             }
         } finally {
-            encrypted.fill(0)
+            encrypted?.fill(0)
             passphrase.fill(0.toChar())
         }
     }
@@ -136,7 +141,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
         while (true) {
             val count = input.read(buffer)
             if (count < 0) break
-            require(output.size().toLong() + count <= MAX_BACKUP_BYTES) { "Backup file exceeds the supported size limit." }
+            require(output.size().toLong() + count <= MAX_BACKUP_BYTES + HEADER_BYTES + GCM_TAG_BYTES) { "Backup file exceeds the supported size limit." }
             output.write(buffer, 0, count)
         }
         return output.toByteArray()
