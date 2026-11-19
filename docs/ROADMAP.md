@@ -15,15 +15,16 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 - [ ] Create Android project, build configuration and repeatable signed debug/release APK workflow.
 - [ ] Implement local database, migrations, backup/export and import.
 - [ ] Add universal Problem Inbox for URLs, shared text, notes, screenshots, voice, documents and manually described problems/goals.
-- [ ] Preserve original input, desired outcome, constraints, urgency and unresolved questions in a ProblemCase.
-- [ ] Store source URL, capture time, raw evidence, extracted facts and verification status.
+- [x] Preserve original input, desired outcome, constraints and source URI in a ProblemCase. Urgency, deadline and unresolved-question fields remain open.
+- [x] Store source URL, capture time, raw capture and separate user-attached evidence with source reference and user-controlled verification state. Automated extraction/parser provenance remains open.
 - [ ] Implement organizations, people, buyer needs, supplier offers, services and job opportunities as specialized records linked to a universal ProblemCase where relevant.
 - [ ] Implement goals, plans, plan steps, capability requirements and verifiable completion criteria.
-- [ ] Add search, filters, deduplication and an audit trail.
+- [x] Add text search, active/archived filters, reversible archive/restore and activity trail. Deduplication remains open.
 
-Exit gate: capture and manage a real non-commercial problem as well as a commercial opportunity, preserve its original context and evidence, and retrieve it offline; no account, paid AI or cloud required.
+Exit gate: capture and manage a real non-commercial problem and a commercial opportunity, preserve context/evidence, edit/search/archive/restore cases, share a useful context packet, and retrieve it offline; no account, paid AI or cloud required. Device acceptance and backup/restore remain open.
 
 ## Phase 2 — Context, discovery and qualification
+- [x] Package a ProblemCase, plan and evidence into an explicit user-shareable context packet for assistant handoff; embedded AI and automatic context-return remain open.
 - [ ] Build a capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; every capability declares limits and postconditions.
 - [ ] Resolve a ProblemCase into a structured context packet, missing-information questions and evidence-backed candidate paths.
 - [ ] Build source adapters for public web search, public company pages, directories and user-authorized browser sessions.
