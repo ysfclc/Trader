@@ -155,3 +155,14 @@ On app startup, persisted workflows left in RUNNING are reconciled transactional
 **Reason:** Process death can occur after an action starts but before its outcome is persisted. Automatically replaying that step could duplicate an external or otherwise consequential action. Pausing between steps preserves safe resumability; an ambiguous in-flight step requires human review.
 
 **Consequences:** This is recovery bookkeeping only, not a WorkManager executor or automatic resume mechanism. Any future worker must use the same conservative ambiguity rule, persist checkpoints and verify postconditions before recording completion.
+
+
+## D-018 — Every registered capability must carry a typed execution contract
+**Date:** 2026-11-19  
+**Status:** Accepted
+
+Each registered capability declares typed input and output fields, required/optional and sensitive attributes, availability, permission/consent requirements, effect and side effects, retry/approval rules, cost disclosure, limit mode and a required postcondition with a verification method. Registry-level validation rejects missing required values, wrong primitive/container types and undeclared fields.
+
+**Reason:** An executor must not infer its input shape, cost, operational limits or definition of success from a free-form workflow title. A contract makes the boundary inspectable before an adapter is implemented.
+
+**Consequences:** The generic validator does not replace adapter-specific semantic or policy checks. Adapter-backed capabilities remain NOT_IMPLEMENTED until the selected adapter declares concrete applicable byte/time/rate/concurrency ceilings, enforces its source/permission/consent policy and verifies postconditions. Unknown provider cost must be shown and explicitly consented to; remote model context transmission is a separate data-disclosure effect.

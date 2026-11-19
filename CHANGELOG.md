@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-19 — Typed capability execution contracts
+
+- Completed typed input/output contracts for all 16 registered capabilities, including required/optional and sensitive fields, cross-field constraints, availability, permissions/consent and explicit side effects.
+- Added cost disclosures, operational limit modes and required postconditions with verification methods; the registry prevents adapter-backed operations from being marked AVAILABLE while limits remain undeclared.
+- Added generic input/output field validation for required values, primitive/container types and unexpected keys; documented that adapters still own semantic policy enforcement and concrete quotas.
+- Classified remote model inference as a data-disclosure effect requiring explicit approval and consent. External send/submit operations still require exact approval, prohibit retries and require provider confirmation.
+- Added coverage for complete contracts, validation failures, unknown capabilities and data-disclosure controls. PR #12 CI [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973) passed on final tested head `9edf8f9b62844caebddd95e9e813733b16fdda46`: **44 tests, 0 failures, 0 errors, 0 skipped**, plus lint, debug APK assembly, signature and package/version checks. JUnit artifact `14516142308`.
+
+
 ## 2026-11-19 — Conservative interrupted-workflow recovery
 
 - Added transactional startup reconciliation for workflows left RUNNING after process interruption.
