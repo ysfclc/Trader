@@ -10,7 +10,13 @@ A user-owned problem, question, objective or situation that needs a useful outco
 
 Store the original user statement and input references (URL, shared text, file, screenshot, voice transcript or manual note); desired outcome and completion criteria; constraints, urgency, risk/stakes and deadline; user-confirmed context, source-derived facts, inferences, assumptions and unknowns as distinct items; linked evidence, related records, candidate paths and selected workflow specialization; status and privacy/retention controls.
 
-A ProblemCase may link to a trade, service, career or future specialized record, but remains valid without any such link. It is not automatically an opportunity or a task list.
+A ProblemCase may link to a trade, service, career or future specialized record, but remains valid without any such link. It is not automatically an opportunity or a task list.\n\nThe current mobile implementation supports editing the case's title/context/outcome/constraints, source-linked evidence, active/archived views and reversible archival. The context packet share action packages user-provided case content, ordered plan steps and evidence for an explicit Android share-sheet handoff.
+
+### EvidenceRecord
+
+A source-linked item attached to a ProblemCase. Current local implementation stores title, captured note/text, optional source URL, source kind, capture time and a verification state. `UNREVIEWED` is the default. `VERIFIED` means the user explicitly marked the record as reviewed; it is not an independent claim that Trader validated the source. Source URLs are references and are not automatically fetched.
+
+Evidence remains separate from the original ProblemCase capture and from workflow completion events. Deleting a ProblemCase cascades to its evidence records; archiving is reversible and does not delete any data.
 
 ### Goal
 
