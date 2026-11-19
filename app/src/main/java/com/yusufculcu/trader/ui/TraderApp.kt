@@ -1,6 +1,7 @@
 package com.yusufculcu.trader.ui
 
 import android.content.Intent
+import android.app.DatePickerDialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,6 +16,8 @@ import com.yusufculcu.trader.data.TraderBackupManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Inbox
+import androidx.compose.material.icons.rounded.BusinessCenter
 import androidx.compose.material.icons.rounded.Timeline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Archive
@@ -45,16 +49,22 @@ import com.yusufculcu.trader.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yusufculcu.trader.data.EvidenceEntity
+import com.yusufculcu.trader.data.OpportunityDraft
+import com.yusufculcu.trader.data.OpportunityEntity
+import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.domain.ContextPacketBuilder
 import com.yusufculcu.trader.domain.ProblemStatus
+import com.yusufculcu.trader.domain.OpportunityLane
+import com.yusufculcu.trader.domain.OpportunityStage
 import com.yusufculcu.trader.viewmodel.TraderViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, ACTIVITY }
+private enum class AppTab { INBOX, PIPELINE, ACTIVITY }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +72,7 @@ fun TraderApp(viewModel: TraderViewModel) {
     val problems by viewModel.problems.collectAsState()
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
+    val opportunities by viewModel.opportunities.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
@@ -135,6 +146,7 @@ fun TraderApp(viewModel: TraderViewModel) {
         bottomBar = {
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
             }
         },
@@ -157,6 +169,11 @@ fun TraderApp(viewModel: TraderViewModel) {
                 problems = if (showArchived) archivedProblems else problems,
                 showArchived = showArchived,
                 onShowArchived = { showArchived = it },
+                onOpen = { selectedId = it.id },
+                modifier = Modifier.padding(padding)
+            )
+            tab == AppTab.PIPELINE -> OpportunityPipelineContent(
+                opportunities = opportunities,
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
@@ -343,6 +360,96 @@ private fun InboxContent(
     }
 }
 
+
+@Composable
+private fun OpportunityPipelineContent(
+    opportunities: List<OpportunityListItem>,
+    onOpen: (ProblemEntity) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var search by rememberSaveable { mutableStateOf("") }
+    var showClosed by rememberSaveable { mutableStateOf(false) }
+    val visible = remember(opportunities, search, showClosed) {
+        val query = search.trim()
+        opportunities.filter { item ->
+            val closed = item.opportunity.stage == OpportunityStage.WON.name ||
+                item.opportunity.stage == OpportunityStage.LOST.name
+            val matchesQuery = query.isBlank() || listOf(
+                item.problem.title,
+                item.opportunity.organizationName,
+                item.opportunity.opportunityName,
+                item.opportunity.contactName,
+                item.opportunity.fitNotes,
+                item.opportunity.nextAction
+            ).any { it.contains(query, ignoreCase = true) }
+            closed == showClosed && matchesQuery
+        }
+    }
+
+    Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+        Spacer(Modifier.height(18.dp))
+        Text(stringResource(R.string.your_workspace), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
+        Text(stringResource(R.string.pipeline), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.pipeline_intro), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = !showClosed, onClick = { showClosed = false }, label = { Text(stringResource(R.string.pipeline_active)) })
+            FilterChip(selected = showClosed, onClick = { showClosed = true }, label = { Text(stringResource(R.string.pipeline_closed)) })
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = search,
+            onValueChange = { search = it },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+            placeholder = { Text(stringResource(R.string.pipeline_search)) }
+        )
+        Spacer(Modifier.height(16.dp))
+        when {
+            visible.isEmpty() && opportunities.isEmpty() -> {
+                Text(stringResource(R.string.pipeline_empty), fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.pipeline_empty_hint), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            }
+            visible.isEmpty() && search.isNotBlank() -> Text(stringResource(R.string.pipeline_no_results), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            visible.isEmpty() -> Text(stringResource(if (showClosed) R.string.pipeline_no_closed else R.string.pipeline_no_active), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
+                items(visible, key = { it.opportunity.id }) { item ->
+                    OpportunityPipelineCard(item, onClick = { onOpen(item.problem) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OpportunityPipelineCard(item: OpportunityListItem, onClick: () -> Unit) {
+    val opportunity = item.opportunity
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(laneLabelRes(opportunity.lane)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.2.sp)
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant) {
+                    Text(stringResource(stageLabelRes(opportunity.stage)), Modifier.padding(horizontal = 9.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            Text(opportunity.organizationName.ifBlank { item.problem.title }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(opportunity.opportunityName, style = MaterialTheme.typography.bodyMedium)
+            if (opportunity.nextAction.isNotBlank()) {
+                Text(stringResource(R.string.next_action_prefix, opportunity.nextAction), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            opportunity.followUpAt?.let { due ->
+                val overdue = isBeforeToday(due)
+                Text(
+                    stringResource(if (overdue) R.string.follow_up_overdue else R.string.follow_up_on, formatDateOnly(due)),
+                    color = if (overdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun EmptyState() {
     Column(Modifier.fillMaxWidth().padding(top = 34.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -400,11 +507,13 @@ private fun ProblemDetail(
 ) {
     val steps by viewModel.stepsFor(problem.id).collectAsState(initial = emptyList())
     val evidence by viewModel.evidenceFor(problem.id).collectAsState(initial = emptyList())
+    val opportunity by viewModel.opportunityFor(problem.id).collectAsState(initial = null)
     val context = LocalContext.current
     val isArchived = problem.archivedAt != null
     var showStep by rememberSaveable(problem.id) { mutableStateOf(false) }
     var showEdit by rememberSaveable(problem.id) { mutableStateOf(false) }
     var showEvidence by rememberSaveable(problem.id) { mutableStateOf(false) }
+    var showOpportunityEditor by rememberSaveable(problem.id) { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -468,6 +577,30 @@ private fun ProblemDetail(
                     Icon(Icons.Rounded.Link, null)
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.open_original_source))
+                }
+            }
+        }
+
+
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.opportunity_section), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.5.sp)
+                        Text(stringResource(R.string.opportunity_section_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    }
+                    if (!isArchived) {
+                        OutlinedButton(onClick = { showOpportunityEditor = true }) {
+                            Icon(Icons.Rounded.Edit, null)
+                            Spacer(Modifier.width(5.dp))
+                            Text(stringResource(if (opportunity == null) R.string.track_opportunity else R.string.edit_opportunity))
+                        }
+                    }
+                }
+                if (opportunity == null) {
+                    Text(stringResource(R.string.opportunity_not_tracked), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                } else {
+                    OpportunityDetailCard(opportunity!!)
                 }
             }
         }
@@ -564,6 +697,15 @@ private fun ProblemDetail(
         onAdd = { title, content, source ->
             viewModel.addEvidence(problem.id, title, content, source) { saved ->
                 if (saved) showEvidence = false
+            }
+        }
+    )
+    if (showOpportunityEditor) OpportunityEditorDialog(
+        existing = opportunity,
+        onDismiss = { showOpportunityEditor = false },
+        onSave = { draft ->
+            viewModel.saveOpportunity(problem.id, draft) { saved ->
+                if (saved) showOpportunityEditor = false
             }
         }
     )
@@ -749,5 +891,222 @@ private fun AddStepDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
+
+
+@Composable
+private fun OpportunityDetailCard(opportunity: OpportunityEntity) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(laneLabelRes(opportunity.lane)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant) {
+                    Text(stringResource(stageLabelRes(opportunity.stage)), Modifier.padding(horizontal = 9.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            if (opportunity.organizationName.isNotBlank()) Text(opportunity.organizationName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(opportunity.opportunityName, fontWeight = FontWeight.Medium)
+            if (opportunity.fitNotes.isNotBlank()) DetailSection(stringResource(R.string.fit_notes), opportunity.fitNotes)
+            if (opportunity.contactName.isNotBlank()) Text(stringResource(R.string.contact_value, opportunity.contactName), style = MaterialTheme.typography.bodySmall)
+            if (opportunity.contactRoute.isNotBlank()) Text(stringResource(R.string.contact_route_value, opportunity.contactRoute), style = MaterialTheme.typography.bodySmall)
+            if (opportunity.nextAction.isNotBlank()) Text(stringResource(R.string.next_action_prefix, opportunity.nextAction), style = MaterialTheme.typography.bodySmall)
+            opportunity.followUpAt?.let { due ->
+                Text(
+                    stringResource(if (isBeforeToday(due)) R.string.follow_up_overdue else R.string.follow_up_on, formatDateOnly(due)),
+                    color = if (isBeforeToday(due)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OpportunityEditorDialog(
+    existing: OpportunityEntity?,
+    onDismiss: () -> Unit,
+    onSave: (OpportunityDraft) -> Unit
+) {
+    var lane by remember(existing?.id) { mutableStateOf(existing?.lane ?: OpportunityLane.SERVICE.name) }
+    var organizationName by remember(existing?.id) { mutableStateOf(existing?.organizationName.orEmpty()) }
+    var opportunityName by remember(existing?.id) { mutableStateOf(existing?.opportunityName.orEmpty()) }
+    var contactName by remember(existing?.id) { mutableStateOf(existing?.contactName.orEmpty()) }
+    var contactRoute by remember(existing?.id) { mutableStateOf(existing?.contactRoute.orEmpty()) }
+    var fitNotes by remember(existing?.id) { mutableStateOf(existing?.fitNotes.orEmpty()) }
+    var stage by remember(existing?.id) { mutableStateOf(existing?.stage ?: OpportunityStage.DISCOVERED.name) }
+    var nextAction by remember(existing?.id) { mutableStateOf(existing?.nextAction.orEmpty()) }
+    var followUpAt by remember(existing?.id) { mutableStateOf(existing?.followUpAt) }
+    val context = LocalContext.current
+    val lanes = OpportunityLane.entries.map { it.name to stringResource(laneLabelRes(it.name)) }
+    val stages = OpportunityStage.entries.map { it.name to stringResource(stageLabelRes(it.name)) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (existing == null) R.string.track_opportunity else R.string.edit_opportunity)) },
+        text = {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                OpportunityChoice(stringResource(R.string.opportunity_lane), lane, lanes) { lane = it }
+                OutlinedTextField(
+                    value = organizationName,
+                    onValueChange = { organizationName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.organization_name)) },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = opportunityName,
+                    onValueChange = { opportunityName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.opportunity_name_required)) },
+                    minLines = 2
+                )
+                OutlinedTextField(
+                    value = fitNotes,
+                    onValueChange = { fitNotes = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.fit_notes)) },
+                    minLines = 2
+                )
+                OutlinedTextField(
+                    value = contactName,
+                    onValueChange = { contactName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.contact_name)) },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = contactRoute,
+                    onValueChange = { contactRoute = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.contact_route)) },
+                    singleLine = true
+                )
+                OpportunityChoice(stringResource(R.string.opportunity_stage), stage, stages) { stage = it }
+                OutlinedTextField(
+                    value = nextAction,
+                    onValueChange = { nextAction = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.next_action)) },
+                    minLines = 2
+                )
+                Text(stringResource(R.string.follow_up_date), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                Button(
+                    onClick = {
+                        val current = Calendar.getInstance().apply { timeInMillis = followUpAt ?: System.currentTimeMillis() }
+                        DatePickerDialog(
+                            context,
+                            { _, year, month, day ->
+                                followUpAt = Calendar.getInstance().apply {
+                                    set(year, month, day, 9, 0, 0)
+                                    set(Calendar.MILLISECOND, 0)
+                                }.timeInMillis
+                            },
+                            current.get(Calendar.YEAR),
+                            current.get(Calendar.MONTH),
+                            current.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(followUpAt?.let { formatDateOnly(it) } ?: stringResource(R.string.choose_follow_up_date))
+                }
+                if (followUpAt != null) {
+                    TextButton(onClick = { followUpAt = null }) { Text(stringResource(R.string.clear_follow_up_date)) }
+                }
+                Text(stringResource(R.string.opportunity_manual_actions_note), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        OpportunityDraft(
+                            lane = lane,
+                            organizationName = organizationName,
+                            opportunityName = opportunityName,
+                            contactName = contactName,
+                            contactRoute = contactRoute,
+                            fitNotes = fitNotes,
+                            stage = stage,
+                            nextAction = nextAction,
+                            followUpAt = followUpAt
+                        )
+                    )
+                },
+                enabled = opportunityName.isNotBlank()
+            ) { Text(stringResource(R.string.save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+private fun OpportunityChoice(
+    label: String,
+    selected: String,
+    options: List<Pair<String, String>>,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember(selected) { mutableStateOf(false) }
+    val selectedLabel = options.firstOrNull { it.first == selected }?.second ?: selected
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+        Box {
+            OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(selectedLabel, modifier = Modifier.weight(1f))
+                Icon(Icons.Rounded.MoreVert, contentDescription = null)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.second) },
+                        onClick = {
+                            onSelected(option.first)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun laneLabelRes(lane: String): Int = when (lane) {
+    OpportunityLane.TRADE.name -> R.string.lane_trade
+    OpportunityLane.SERVICE.name -> R.string.lane_service
+    OpportunityLane.CAREER.name -> R.string.lane_career
+    else -> R.string.lane_other
+}
+
+private fun stageLabelRes(stage: String): Int = when (stage) {
+    OpportunityStage.DISCOVERED.name -> R.string.stage_discovered
+    OpportunityStage.QUALIFYING.name -> R.string.stage_qualifying
+    OpportunityStage.READY_TO_CONTACT.name -> R.string.stage_ready_to_contact
+    OpportunityStage.CONTACTED.name -> R.string.stage_contacted
+    OpportunityStage.WAITING.name -> R.string.stage_waiting
+    OpportunityStage.WON.name -> R.string.stage_won
+    else -> R.string.stage_lost
+}
+
+private fun isBeforeToday(time: Long): Boolean {
+    val due = Calendar.getInstance().apply {
+        timeInMillis = time
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return due.before(today)
+}
+
+private fun formatDateOnly(time: Long): String = SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(time))
 
 private fun formatDate(time: Long): String = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(time))
