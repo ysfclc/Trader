@@ -128,7 +128,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 
 ## Session 8 handoff — evidence-backed opportunity workflow
 
-Implemented on feature/evidence-backed-opportunity-loop; PR #16 / CI pending
+Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped)
 - Added an optional one-to-one OpportunityRecord attached to a ProblemCase. A case remains general unless the user chooses to track it in the opportunity pipeline.
 - Added trade, service, career and other lanes; organization and contact labels; user-authored fit notes; discovered/qualifying/ready/contacted/waiting/won/lost stages; next action and a local follow-up date.
 - Added Pipeline tab with active/closed filter, text search and due/overdue display. Per-case details can create/edit the profile; stage and profile updates append Activity events.
