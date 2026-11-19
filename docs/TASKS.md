@@ -22,7 +22,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
-- [x] T1.3c Add Room v3→v4 optional opportunity profiles; legacy schema-v3 encrypted backups remain readable with an empty opportunity set. CI and migration acceptance tracked in PR #16.
+- [x] T1.3c Add Room v3→v4 optional opportunity profiles; legacy schema-v3 encrypted backups remain readable with an empty opportunity set. PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device migration acceptance remains open.
 - [x] T1.4 Implement passphrase-protected local backup/export and integrity-verified restore for all eight current Room record groups using AES-256-GCM and PBKDF2-HMAC-SHA256 (210,000 iterations, random 16-byte salt and 12-byte IV); validate the authenticated payload/schema/relationships and replace rows atomically. CI verified in PR #8 and main run 256 (4 backup tests; 37 total tests passed). Device acceptance remains open; see `docs/COVERAGE.md` R-007 and `docs/RISKS.md`.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Incoming intent extraction now has Robolectric coverage for styled CharSequence text, VIEW URLs, blank/missing payloads and unrelated actions; Android chooser/device acceptance, quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
@@ -35,7 +35,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T2 — Commercial records
 
-- [x] T2.0 Add an optional one-to-one OpportunityRecord per ProblemCase for a manually tracked trade/service/career/other opportunity: organization and contact labels, fit notes, explicit stage, next action and follow-up date; preserve source/evidence, log stage changes, include it in encrypted backup/restore, and allow scheme-restricted user handoff to browser/email composer/dialer. This does not implement normalized Organization/Person records, discovery, send, call, or background reminders. Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI pending; physical-device acceptance remains open.
+- [x] T2.0 Add an optional one-to-one OpportunityRecord per ProblemCase for a manually tracked trade/service/career/other opportunity: organization and contact labels, fit notes, explicit stage, next action and follow-up date; preserve source/evidence, log stage changes, include it in encrypted backup/restore, and allow scheme-restricted user handoff to browser/email composer/dialer. This does not implement normalized Organization/Person records, discovery, send, call, or background reminders. Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open.
 - [ ] T2.1 Implement Organization and Person records.
 - [ ] T2.2 Implement BuyerRequirement and line items: quantity, specification, target price when stated, destination, timing and evidence.
 - [ ] T2.3 Implement SupplierOffer: capability, capacity, MOQ, pricing basis, lead time, certifications and evidence.
@@ -74,7 +74,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 - [ ] T5.1 Generate personalized drafts from verified facts only.
 - [ ] T5.2 Implement approved message drafting and Android share/email handoff.
-- [x] T5.2a Add user-initiated scheme-restricted contact-route handoff (browser, email composer or dialer); it does not send or place calls. CI pending in PR #16.
+- [x] T5.2a Add user-initiated scheme-restricted contact-route handoff (browser, email composer or dialer); it does not send or place calls. CI run 306 passed in PR #16; physical-device acceptance remains open.
 - [ ] T5.3 Evaluate Unipile alternatives channel by channel; do not assume inbox sync is available.
 - [ ] T5.4 Bind explicit approval to exact recipient, channel, purpose and payload hash before consequential sends.
 - [ ] T5.5 Track draft, approved, handed-off, confirmed-sent, failed, uncertain and replied states accurately.
