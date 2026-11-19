@@ -5,7 +5,7 @@
 - Added explicit, scheme-restricted contact handoff to HTTP(S) browser, mailto composer or tel dialer. The app does not send messages or place calls.
 - Added Room v3→v4 migration and included opportunity profiles in encrypted backup. Schema-v3 backup snapshots remain restorable without opportunity records.
 - Added persistence, validation, legacy-backup, migration and safe-contact-route tests, plus EN/PL/TR strings.
-- No automatic prospect discovery, AI fit qualification, normalized Organization/Person entities, consent tracking, message sending, calls or background reminders are implemented. CI and APK verification are pending; no physical-device acceptance is claimed.
+- No automatic prospect discovery, AI fit qualification, normalized Organization/Person entities, consent tracking, message sending, calls or background reminders are implemented. PR #16 CI run 306 passed **59 tests, 0 failures, 0 errors, 0 skipped**, lint, debug APK assembly, signature verification and package/version checks. Physical-device acceptance is not claimed.
 
 # Changelog
 
