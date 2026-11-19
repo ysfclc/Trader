@@ -121,7 +121,7 @@
     <string name="mark_evidence_verified">Doğrulandı olarak işaretle</string>
     <string name="evidence_title">Kanıt başlığı</string>
     <string name="evidence_note">Bu kaynak ne söylüyor veya gösteriyor?</string>
-    <string name="evidence_source_url">Kaynak URL'si (isteğe bağlı)</string>
+    <string name="evidence_source_url">Kaynak URL adresi (isteğe bağlı)</string>
     <string name="evidence_note_hint">Trader bunu kayda bağlı kanıt olarak saklar. URL, sayfanın kontrol edildiğinin kanıtı değildir.</string>
     <string name="expected_result">Bu adım ne üretmeli?</string>
     <string name="event_details_updated">Kayıt ayrıntıları güncellendi</string>
