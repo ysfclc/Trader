@@ -22,7 +22,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
-- [ ] T1.4 Add encrypted local backup/export and integrity-verified restore.
+- [x] T1.4 Add passphrase-protected local backup/export and integrity-verified restore: all seven Room record groups are snapshotted, encrypted with AES-256-GCM using a PBKDF2-HMAC-SHA256 key (210,000 iterations, random salt and IV), and exported through Android's document picker. Restore validates authenticated bytes, schema, IDs and relationships before replacing records in one Room transaction. Wrong-passphrase, tamper, round-trip and replacement tests added; CI/device acceptance pending.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
