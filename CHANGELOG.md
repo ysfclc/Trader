@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-19 — Workflow cancellation safety
+
+- Cancelling a workflow with an active RUNNING step now preserves the active step and run as NEEDS_REVIEW, clears approval, and cancels only remaining steps; cancellation between steps still completes as CANCELLED.
+- Added regression tests for active-step ambiguity and between-step cancellation. CI verification pending.
+
+
 ## 2026-11-19 — Typed capability execution contracts
 
 - Completed typed input/output contracts for all 16 registered capabilities, including required/optional and sensitive fields, cross-field constraints, availability, permissions/consent and explicit side effects.
