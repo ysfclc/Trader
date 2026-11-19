@@ -4,7 +4,8 @@
 
 - Added transactional startup reconciliation for workflows left RUNNING after process interruption.
 - In-flight steps become NEEDS_REVIEW with prior approval cleared; runs interrupted between steps become PAUSED. Append-only events explain each recovery decision.
-- Added a file-backed close/reopen test covering both paths and repeated-call idempotency.
+- Added a file-backed close/reopen test covering both paths, repeated-call idempotency and explicit human resolution.
+- Added English, Turkish and Polish UI controls to review the interrupted run and reset a step only after confirming the action did not complete.
 - This is not WorkManager execution or automatic resume; no capability is executed during recovery.
 
 ## 2026-11-19 — State and requirement traceability reconciliation (PR #9)
