@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.TraderRepository
+import com.yusufculcu.trader.data.WorkflowStepDraft
 import com.yusufculcu.trader.domain.ProblemStatus
+import com.yusufculcu.trader.domain.WorkflowRunStatus
+import com.yusufculcu.trader.domain.WorkflowStepStatus
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -16,6 +19,9 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     val activity = repository.observeActivity().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val problemCount = repository.observeCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
     fun stepsFor(problemId: String) = repository.observeSteps(problemId)
+    fun workflowsFor(problemId: String) = repository.observeWorkflowRuns(problemId)
+    fun workflowStepsFor(runId: String) = repository.observeWorkflowSteps(runId)
+    fun workflowEventsFor(runId: String) = repository.observeWorkflowEvents(runId)
 
     fun createProblem(title: String, description: String, outcome: String, constraints: String) {
         viewModelScope.launch { repository.createProblem(title, description, outcome, constraints) }
@@ -42,6 +48,36 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     fun toggleStep(step: PlanStepEntity) { viewModelScope.launch { repository.toggleStep(step) } }
     fun setStatus(problem: ProblemEntity, target: ProblemStatus, note: String = "") {
         viewModelScope.launch { repository.setStatus(problem.id, target, note) }
+    }
+
+    fun createWorkflow(problemId: String, title: String, steps: List<WorkflowStepDraft>, onCreated: (String) -> Unit) {
+        viewModelScope.launch {
+            repository.createWorkflow(problemId, title, steps)?.let(onCreated)
+        }
+    }
+
+    fun transitionWorkflowRun(
+        runId: String,
+        target: WorkflowRunStatus,
+        outcomeVerified: Boolean = false,
+        details: String = ""
+    ) {
+        viewModelScope.launch {
+            repository.transitionWorkflowRun(
+                runId = runId,
+                target = target,
+                outcomeVerified = outcomeVerified,
+                details = details
+            )
+        }
+    }
+
+    fun transitionWorkflowStep(stepId: String, target: WorkflowStepStatus, details: String = "") {
+        viewModelScope.launch { repository.transitionWorkflowStep(stepId, target, details = details) }
+    }
+
+    fun approveWorkflowStep(stepId: String) {
+        viewModelScope.launch { repository.approveWorkflowStep(stepId, "Approved by user in workflow review") }
     }
 }
 
