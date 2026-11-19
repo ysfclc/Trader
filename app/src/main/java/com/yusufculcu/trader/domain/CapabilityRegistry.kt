@@ -215,8 +215,8 @@ object CapabilityRegistry {
                 capabilityField("stepId", CapabilityDataType.IDENTIFIER, "Existing step for update/archive/restore", required = false),
                 capabilityField("title", CapabilityDataType.TEXT, "Step title", required = false),
                 capabilityField("expectedResult", CapabilityDataType.TEXT, "Expected result or postcondition", required = false),
-                capabilityField("position", CapabilityDataType.INTEGER, "Requested order within the plan", required = false)
-            , constraints = listOf("The required fields depend on operation: create requires title; update/archive/restore require stepId.")),
+                capabilityField("position", CapabilityDataType.INTEGER, "Requested order within the plan", required = false),
+                constraints = listOf("The required fields depend on operation: create requires title; update/archive/restore require stepId.")),
             outputs = capabilityIo(
                 capabilityField("stepId", CapabilityDataType.IDENTIFIER, "Affected plan-step ID"),
                 capabilityField("persistedState", CapabilityDataType.STRING, "State after the operation"),
@@ -262,8 +262,8 @@ object CapabilityRegistry {
             inputs = capabilityIo(
                 capabilityField("url", CapabilityDataType.URI, "URL to open"),
                 capabilityField("sessionPurpose", CapabilityDataType.TEXT, "Why the page is being opened"),
-                capabilityField("allowedOrigins", CapabilityDataType.STRING_LIST, "Optional origin scope for the session", required = false)
-            , constraints = listOf("Only HTTP/HTTPS URLs are permitted.", "The user must be able to see, pause and take over the browser session.", "Authentication, paywall, CAPTCHA and other access controls must not be bypassed.")),
+                capabilityField("allowedOrigins", CapabilityDataType.STRING_LIST, "Optional origin scope for the session", required = false),
+                constraints = listOf("Only HTTP/HTTPS URLs are permitted.", "The user must be able to see, pause and take over the browser session.", "Authentication, paywall, CAPTCHA and other access controls must not be bypassed.")),
             outputs = capabilityIo(
                 capabilityField("sessionId", CapabilityDataType.IDENTIFIER, "Visible browser session ID"),
                 capabilityField("currentUrl", CapabilityDataType.URI, "Current page URL"),
@@ -288,8 +288,8 @@ object CapabilityRegistry {
                 capabilityField("query", CapabilityDataType.TEXT, "Search terms or question"),
                 capabilityField("sourceScope", CapabilityDataType.STRING_LIST, "Allowed public source domains or source IDs"),
                 capabilityField("locale", CapabilityDataType.STRING, "Preferred result language/locale", required = false),
-                capabilityField("maxResults", CapabilityDataType.INTEGER, "Maximum number of results", required = false)
-            , constraints = listOf("Only permitted public sources may be searched.", "Source terms, robots directives, rate limits and access restrictions must be checked by the adapter.")),
+                capabilityField("maxResults", CapabilityDataType.INTEGER, "Maximum number of results", required = false),
+                constraints = listOf("Only permitted public sources may be searched.", "Source terms, robots directives, rate limits and access restrictions must be checked by the adapter.")),
             outputs = capabilityIo(
                 capabilityField("results", CapabilityDataType.OBJECT_LIST, "Results with title, URL, excerpt and source identifier"),
                 capabilityField("capturedAt", CapabilityDataType.STRING, "UTC retrieval timestamp"),
@@ -311,8 +311,8 @@ object CapabilityRegistry {
             inputs = capabilityIo(
                 capabilityField("url", CapabilityDataType.URI, "Public page URL"),
                 capabilityField("sourcePolicyId", CapabilityDataType.IDENTIFIER, "Approved source access-policy record"),
-                capabilityField("maxBytes", CapabilityDataType.INTEGER, "Requested response-byte ceiling", required = false)
-            , constraints = listOf("Only permitted public pages may be fetched.", "The adapter must not follow redirects outside the approved origin scope without re-evaluation.", "Do not bypass authentication, paywalls, CAPTCHAs or technical access controls.")),
+                capabilityField("maxBytes", CapabilityDataType.INTEGER, "Requested response-byte ceiling", required = false),
+                constraints = listOf("Only permitted public pages may be fetched.", "The adapter must not follow redirects outside the approved origin scope without re-evaluation.", "Do not bypass authentication, paywalls, CAPTCHAs or technical access controls.")),
             outputs = capabilityIo(
                 capabilityField("finalUrl", CapabilityDataType.URI, "Final URL after allowed redirects"),
                 capabilityField("httpStatus", CapabilityDataType.INTEGER, "HTTP response status"),
@@ -337,8 +337,8 @@ object CapabilityRegistry {
                 capabilityField("targetUri", CapabilityDataType.URI, "Deep link or content URI to open"),
                 capabilityField("intentAction", CapabilityDataType.STRING, "Android intent action"),
                 capabilityField("packageName", CapabilityDataType.STRING, "Preferred target package", required = false),
-                capabilityField("handoffPurpose", CapabilityDataType.TEXT, "User-visible reason for opening the app")
-            , constraints = listOf("The handoff must remain user initiated and visible.", "Trader must not claim the target action succeeded merely because an intent was launched.")),
+                capabilityField("handoffPurpose", CapabilityDataType.TEXT, "User-visible reason for opening the app"),
+                constraints = listOf("The handoff must remain user initiated and visible.", "Trader must not claim the target action succeeded merely because an intent was launched.")),
             outputs = capabilityIo(
                 capabilityField("launchState", CapabilityDataType.STRING, "Launched, no handler, cancelled or failed"),
                 capabilityField("resolvedPackage", CapabilityDataType.STRING, "Resolved target package", required = false),
@@ -363,8 +363,8 @@ object CapabilityRegistry {
                 capabilityField("screenScope", CapabilityDataType.TEXT, "Allowed screen or task scope"),
                 capabilityField("targetDescription", CapabilityDataType.TEXT, "User-reviewed target element description"),
                 capabilityField("action", CapabilityDataType.STRING, "Specific bounded UI action"),
-                capabilityField("approvedPayloadHash", CapabilityDataType.STRING, "Hash of the exact approved action payload")
-            , constraints = listOf("Only the reviewed screen scope and target action may be used.", "No password, secure-field, access-control or anti-abuse bypass.", "An ambiguous action outcome must be sent to NEEDS_REVIEW and never automatically retried.")),
+                capabilityField("approvedPayloadHash", CapabilityDataType.STRING, "Hash of the exact approved action payload"),
+                constraints = listOf("Only the reviewed screen scope and target action may be used.", "No password, secure-field, access-control or anti-abuse bypass.", "An ambiguous action outcome must be sent to NEEDS_REVIEW and never automatically retried.")),
             outputs = capabilityIo(
                 capabilityField("observedActionState", CapabilityDataType.STRING, "Observed, not observed, blocked or uncertain"),
                 capabilityField("resultingScreenEvidenceRef", CapabilityDataType.IDENTIFIER, "Evidence reference for the resulting visible state", required = false),
@@ -390,8 +390,8 @@ object CapabilityRegistry {
                 capabilityField("evidenceIds", CapabilityDataType.STRING_LIST, "Explicitly selected evidence IDs", required = false),
                 capabilityField("planStepIds", CapabilityDataType.STRING_LIST, "Explicitly selected plan-step IDs", required = false),
                 capabilityField("instructions", CapabilityDataType.TEXT, "User-editable task instructions", required = false, sensitive = true),
-                capabilityField("maxContextBytes", CapabilityDataType.INTEGER, "User-selected context size ceiling")
-            , constraints = listOf("Only selected records may enter the packet.", "Original evidence and provenance must remain linked; redaction must not overwrite source records.")),
+                capabilityField("maxContextBytes", CapabilityDataType.INTEGER, "User-selected context size ceiling"),
+                constraints = listOf("Only selected records may enter the packet.", "Original evidence and provenance must remain linked; redaction must not overwrite source records.")),
             outputs = capabilityIo(
                 capabilityField("contextPacketId", CapabilityDataType.IDENTIFIER, "Packet identifier"),
                 capabilityField("content", CapabilityDataType.TEXT, "Inspectable context content", sensitive = true),
@@ -416,8 +416,8 @@ object CapabilityRegistry {
                 capabilityField("modelId", CapabilityDataType.IDENTIFIER, "Explicitly selected local model"),
                 capabilityField("contextPacketId", CapabilityDataType.IDENTIFIER, "Selected bounded context packet"),
                 capabilityField("prompt", CapabilityDataType.TEXT, "Prompt/instructions", sensitive = true),
-                capabilityField("maxOutputTokens", CapabilityDataType.INTEGER, "Requested generation ceiling")
-            , constraints = listOf("Model files must be locally available and compatible with the device.", "No external network request may be made by this capability.")),
+                capabilityField("maxOutputTokens", CapabilityDataType.INTEGER, "Requested generation ceiling"),
+                constraints = listOf("Model files must be locally available and compatible with the device.", "No external network request may be made by this capability.")),
             outputs = capabilityIo(
                 capabilityField("text", CapabilityDataType.TEXT, "Generated suggestion", sensitive = true),
                 capabilityField("modelId", CapabilityDataType.IDENTIFIER, "Model that produced the output"),
@@ -444,8 +444,8 @@ object CapabilityRegistry {
                 capabilityField("contextPacketId", CapabilityDataType.IDENTIFIER, "Exact context packet to transmit"),
                 capabilityField("prompt", CapabilityDataType.TEXT, "Prompt/instructions", sensitive = true),
                 capabilityField("maxOutputTokens", CapabilityDataType.INTEGER, "Maximum requested output tokens"),
-                capabilityField("remoteConsentId", CapabilityDataType.IDENTIFIER, "Consent record for this provider and context", sensitive = true)
-            , constraints = listOf("Show the exact context, provider, model and current cost information before transmission.", "Paid credits must remain optional; do not make this capability a dependency of core workflows.", "Provider credentials must never be part of the context packet.")),
+                capabilityField("remoteConsentId", CapabilityDataType.IDENTIFIER, "Consent record for this provider and context", sensitive = true),
+                constraints = listOf("Show the exact context, provider, model and current cost information before transmission.", "Paid credits must remain optional; do not make this capability a dependency of core workflows.", "Provider credentials must never be part of the context packet.")),
             outputs = capabilityIo(
                 capabilityField("text", CapabilityDataType.TEXT, "Generated suggestion", sensitive = true),
                 capabilityField("providerRequestId", CapabilityDataType.STRING, "Provider request identifier", required = false),
@@ -473,8 +473,8 @@ object CapabilityRegistry {
                 capabilityField("purpose", CapabilityDataType.TEXT, "Reason for contacting the recipient"),
                 capabilityField("language", CapabilityDataType.STRING, "Requested draft language"),
                 capabilityField("verifiedFactIds", CapabilityDataType.STRING_LIST, "Evidence-backed facts permitted in the draft"),
-                capabilityField("instructions", CapabilityDataType.TEXT, "User-provided drafting instructions", required = false, sensitive = true)
-            , constraints = listOf("Do not invent relationships, authority, prices, stock, delivery, certifications or prior contact.", "Claims without supporting evidence must be visibly flagged, not stated as fact.")),
+                capabilityField("instructions", CapabilityDataType.TEXT, "User-provided drafting instructions", required = false, sensitive = true),
+                constraints = listOf("Do not invent relationships, authority, prices, stock, delivery, certifications or prior contact.", "Claims without supporting evidence must be visibly flagged, not stated as fact.")),
             outputs = capabilityIo(
                 capabilityField("draftId", CapabilityDataType.IDENTIFIER, "Persisted draft ID"),
                 capabilityField("content", CapabilityDataType.TEXT, "Draft message", sensitive = true),
@@ -500,8 +500,8 @@ object CapabilityRegistry {
                 capabilityField("purpose", CapabilityDataType.TEXT, "Approved communication purpose"),
                 capabilityField("payload", CapabilityDataType.TEXT, "Exact message content", sensitive = true),
                 capabilityField("payloadSha256", CapabilityDataType.STRING, "Hash of the exact message payload"),
-                capabilityField("approvalRecordId", CapabilityDataType.IDENTIFIER, "Approval record bound to recipient, channel, purpose and payload")
-            , constraints = listOf("Immediately before sending, re-check recipient, channel, purpose and payload hash against the approval.", "Never automatically retry an uncertain send.", "Respect suppression, contact basis, consent and jurisdiction/channel policy.")),
+                capabilityField("approvalRecordId", CapabilityDataType.IDENTIFIER, "Approval record bound to recipient, channel, purpose and payload"),
+                constraints = listOf("Immediately before sending, re-check recipient, channel, purpose and payload hash against the approval.", "Never automatically retry an uncertain send.", "Respect suppression, contact basis, consent and jurisdiction/channel policy.")),
             outputs = capabilityIo(
                 capabilityField("outcomeState", CapabilityDataType.STRING, "Confirmed sent, rejected, failed or uncertain"),
                 capabilityField("providerMessageId", CapabilityDataType.STRING, "Provider receipt/message identifier", required = false),
@@ -528,8 +528,8 @@ object CapabilityRegistry {
                 capabilityField("targetUrl", CapabilityDataType.URI, "Exact form submission destination"),
                 capabilityField("formValues", CapabilityDataType.OBJECT, "Exact reviewed form field/value map", sensitive = true),
                 capabilityField("payloadSha256", CapabilityDataType.STRING, "Hash of the exact form payload"),
-                capabilityField("approvalRecordId", CapabilityDataType.IDENTIFIER, "Approval record bound to destination and payload")
-            , constraints = listOf("Immediately before submission, re-check URL, form fields and payload hash against approval.", "Never automatically retry an uncertain submission.", "The user must be able to inspect and take over the visible browser session.")),
+                capabilityField("approvalRecordId", CapabilityDataType.IDENTIFIER, "Approval record bound to destination and payload"),
+                constraints = listOf("Immediately before submission, re-check URL, form fields and payload hash against approval.", "Never automatically retry an uncertain submission.", "The user must be able to inspect and take over the visible browser session.")),
             outputs = capabilityIo(
                 capabilityField("outcomeState", CapabilityDataType.STRING, "Confirmed submitted, rejected, failed or uncertain"),
                 capabilityField("confirmationText", CapabilityDataType.TEXT, "Observed confirmation message", required = false),
