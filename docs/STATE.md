@@ -20,7 +20,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
 | Commercial records / outreach | ⚪ not started | No organizations, people, buyer/supplier records or send adapter |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
-| Documentation / traceability | ✅ done | 81-line ledger, 12-row coverage matrix, 14-item risk register and changelog are on main |
+| Documentation / traceability | ✅ done | 83-line ledger, 12-row coverage matrix, 14-item risk register and changelog are on main |
 
 ## 3. Currently in flight
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; blocked on a physical Android device and user-driven acceptance.
