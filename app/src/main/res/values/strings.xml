@@ -82,4 +82,18 @@
     <string name="workflow_available">Available</string>
     <string name="workflow_not_implemented">Not built yet</string>
     <string name="workflow_blocked">Blocked</string>
+
+    <string name="workflow_status_draft">Draft</string>
+    <string name="workflow_status_ready">Ready</string>
+    <string name="workflow_status_running">Running</string>
+    <string name="workflow_status_paused">Paused</string>
+    <string name="workflow_status_waiting">Waiting for approval</string>
+    <string name="workflow_status_review">Needs review</string>
+    <string name="workflow_status_failed">Failed</string>
+    <string name="workflow_status_verification">Awaiting verification</string>
+    <string name="workflow_status_verified">Verified</string>
+    <string name="workflow_status_cancelled">Cancelled</string>
+    <string name="workflow_status_pending">Pending</string>
+    <string name="workflow_status_completed">Completed</string>
+    <string name="workflow_status_skipped">Skipped</string>
 </resources>
