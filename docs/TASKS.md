@@ -43,7 +43,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T3 — Discovery and browser/app automation
 
-- [x] T3.0 Complete the capability contract for all 16 currently registered operations: typed inputs/outputs, availability, permissions/consent, effects/side effects, retry/approval, cost, limit mode and required postcondition. Registry field validation and promotion gates are CI-tested. Adapter-specific numeric limits and semantic policy validation remain mandatory before any adapter-backed descriptor can become AVAILABLE.
+- [x] T3.0 Complete the capability contract for all 16 currently registered operations: typed inputs/outputs, availability, permissions/consent, effects/side effects, retry/approval, cost, limit mode and required postcondition. Registry field validation and promotion gates passed PR #12 CI run 279 (44 tests). Adapter-specific numeric limits and semantic policy validation remain mandatory before any adapter-backed descriptor can become AVAILABLE.
 - [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.
 - [x] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (CI runs 111 and 112 passed).
 - [x] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts (PR #4 merged; CI runs 129 and 130 passed).
