@@ -256,6 +256,61 @@ class WorkflowPersistenceTest {
     }
 
     @Test
+    fun processReopenRecoversRunningStepToReviewAndIdleRunToPaused() = runBlocking {
+        val dbName = "trader-recovery-${UUID.randomUUID()}.db"
+        val firstOpen = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
+            .allowMainThreadQueries().build()
+        val firstRepository = TraderRepository(firstOpen)
+        val problemId = firstRepository.createProblem("Recover interrupted work")
+
+        val activeRunId = firstRepository.createWorkflow(
+            problemId, "Action interrupted mid-step",
+            listOf(WorkflowStepDraft("Perform bounded action", capabilityId = "manual.task")),
+            "recovery-active-${UUID.randomUUID()}"
+        )!!
+        val activeStep = firstOpen.workflowStepDao().getForRun(activeRunId).single()
+        assertTrue(firstRepository.transitionWorkflowRun(activeRunId, WorkflowRunStatus.READY))
+        assertTrue(firstRepository.transitionWorkflowRun(activeRunId, WorkflowRunStatus.RUNNING))
+        assertTrue(firstRepository.transitionWorkflowStep(activeStep.id, WorkflowStepStatus.RUNNING))
+
+        val idleRunId = firstRepository.createWorkflow(
+            problemId, "Interrupted between steps",
+            listOf(WorkflowStepDraft("Next action", capabilityId = "manual.task")),
+            "recovery-idle-${UUID.randomUUID()}"
+        )!!
+        assertTrue(firstRepository.transitionWorkflowRun(idleRunId, WorkflowRunStatus.READY))
+        assertTrue(firstRepository.transitionWorkflowRun(idleRunId, WorkflowRunStatus.RUNNING))
+        firstOpen.close()
+
+        val reopened = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
+            .allowMainThreadQueries().build()
+        try {
+            val recoveredRepository = TraderRepository(reopened)
+            assertEquals(2, recoveredRepository.recoverInterruptedWorkflows())
+            assertEquals(WorkflowRunStatus.NEEDS_REVIEW.name, reopened.workflowRunDao().getById(activeRunId)?.status)
+            val recoveredStep = reopened.workflowStepDao().getForRun(activeRunId).single()
+            assertEquals(WorkflowStepStatus.NEEDS_REVIEW.name, recoveredStep.status)
+            assertNull(recoveredStep.approvedPayloadHash)
+            assertTrue(recoveredStep.lastError.orEmpty().contains("Confirm whether its action completed"))
+            assertEquals(WorkflowRunStatus.PAUSED.name, reopened.workflowRunDao().getById(idleRunId)?.status)
+            assertEquals(1, reopened.workflowEventDao().getForRun(activeRunId).count {
+                it.eventType == "step_interrupted_needs_review"
+            })
+            assertEquals(1, reopened.workflowEventDao().getForRun(idleRunId).count {
+                it.eventType == "run_interrupted_paused"
+            })
+            val eventCount = reopened.workflowEventDao().getForRun(activeRunId).size +
+                reopened.workflowEventDao().getForRun(idleRunId).size
+            assertEquals(0, recoveredRepository.recoverInterruptedWorkflows())
+            assertEquals(eventCount, reopened.workflowEventDao().getForRun(activeRunId).size +
+                reopened.workflowEventDao().getForRun(idleRunId).size)
+        } finally {
+            reopened.close()
+            context.deleteDatabase(dbName)
+        }
+    }
+
+    @Test
     fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() = runBlocking {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)

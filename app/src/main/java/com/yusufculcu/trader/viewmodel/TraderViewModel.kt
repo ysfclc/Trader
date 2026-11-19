@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
+    init {
+        viewModelScope.launch { repository.recoverInterruptedWorkflows() }
+    }
+
     val problems = repository.observeProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val archivedProblems = repository.observeArchivedProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val activity = repository.observeActivity().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
