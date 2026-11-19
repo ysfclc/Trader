@@ -199,4 +199,8 @@
     <string name="open_contact_route">İletişim yolunu aç</string>
     <string name="contact_route_unsupported">Bu iletişim yolunu açabilecek desteklenen bir uygulama yok.</string>
 
+    <string name="event_opportunity_created">Fırsat takibi başlatıldı</string>
+    <string name="event_opportunity_stage_changed">Fırsat aşaması değiştirildi</string>
+    <string name="event_opportunity_updated">Fırsat bilgileri güncellendi</string>
+
 </resources>
