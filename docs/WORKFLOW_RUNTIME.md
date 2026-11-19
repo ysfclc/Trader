@@ -50,7 +50,7 @@ Robolectric tests cover:
 
 On ViewModel startup, Trader reconciles persisted runs still marked RUNNING. If one or more steps were RUNNING, those steps and the run move to NEEDS_REVIEW, the previous step approval is cleared, and append-only events explain that the operator must determine whether the action completed. If no step was RUNNING, the run moves to PAUSED so the operator can inspect and resume it.
 
-The reconciliation runs in one Room transaction and is idempotent: a second startup does not append duplicate recovery events. It is a conservative recovery boundary, not a WorkManager executor; no capability is automatically resumed or executed.
+The reconciliation runs in one Room transaction and is idempotent: a second startup does not append duplicate recovery events. It is a conservative recovery boundary, not a WorkManager executor; no capability is automatically resumed or executed. The workflow UI then requires the operator to acknowledge review of the run; a flagged step can be reset to PENDING only after the operator explicitly confirms that the interrupted action did not complete. An uncertain or completed action must not be reset for retry.
 
 ## Explicit limitations
 
