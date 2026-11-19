@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 1_
+_Last updated: 2026-11-19 by Continuity Engineer — session 2_
 
 ## 1. Product snapshot
 Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU is the first pilot, not the product boundary. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
@@ -11,16 +11,16 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | ProblemCase capture | 🟡 partial | Manual + shared text/URL; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
-| Plans / workflow records | 🟡 partial | Room persistence, events, approval and lifecycle rules; user-driven only |
+| Plans / workflow records | 🟡 partial | Room persistence, events, approval and lifecycle rules; interrupted runs now reconcile safely on startup; execution remains user-driven |
 | Capability registry | 🟡 partial | Fail-closed baseline; full inputs/outputs/cost/limits contract incomplete |
 | Context packet | 🟡 partial | Builder tested; Android share chooser not device-accepted |
 | Encrypted backup/restore | 🟡 partial | PR #8 + main CI verified; physical document-picker/restore acceptance open |
-| WorkManager executor / recovery | ⚪ not started | No durable automatic step executor or process-death recovery |
+| WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
 | Browser / installed-app automation | ⚪ not started | No execution adapter |
 | AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
 | Commercial records / outreach | ⚪ not started | No organizations, people, buyer/supplier records or send adapter |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
-| Documentation / traceability | ✅ done | 83-line ledger, 12-row coverage matrix, 14-item risk register and changelog are on main |
+| Documentation / traceability | ✅ done | 93-line ledger, 12-row coverage matrix, 14-item risk register and changelog are on main |
 
 ## 3. Currently in flight
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; blocked on a physical Android device and user-driven acceptance.
@@ -32,7 +32,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - `app/src/main/java/com/yusufculcu/trader/data/TraderBackupManager.kt` — snapshot compatibility currently requires database schema version 3; future schema changes need backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
-- Workflow surface is manual; WorkManager is a dependency but no durable worker execution or process-death recovery is implemented.
+- Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, but WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Browser/app automation, AI providers, public-source discovery, buyer/supplier matching and communications are absent.
 - Search and ACTION_SEND boundary lack direct UI/instrumentation tests; no physical-device test has been recorded.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
@@ -55,28 +55,38 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - [ ] Before public distribution, configure a dedicated Trader release keystore via protected GitHub Actions secrets; never reuse another app's signing identity.
 
 ## Session handoff
+
 **Done this session**
-- Reconciled the PR #8 backup implementation and CI evidence against the stale project ledger.
-- Added the 12-row requirement coverage matrix and 14-item risk register; appended D-016 and corrected README, task and roadmap status.
-- Merged the documentation-only continuity update as PR #9; no application source code changed.
+- Implemented transactional startup reconciliation for workflows left RUNNING after process interruption.
+- In-flight steps become NEEDS_REVIEW and lose stale approval; runs interrupted between steps become PAUSED.
+- Added English/Turkish/Polish controls for human review and a guarded reset that requires confirmation the interrupted action did not complete.
+- Added file-backed close/reopen, idempotency and guarded-resolution test coverage; recorded D-017 and updated task, runtime, coverage and risk docs.
 
 **State changed**
-- `docs/STATE.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `docs/TASKS.md`, `docs/ROADMAP.md`, `README.md` and `CHANGELOG.md`.
+- `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt`
+- `app/src/main/java/com/yusufculcu/trader/viewmodel/TraderViewModel.kt`
+- `app/src/main/java/com/yusufculcu/trader/ui/WorkflowPanel.kt`
+- `app/src/test/java/com/yusufculcu/trader/data/WorkflowPersistenceTest.kt`
+- `app/src/main/res/values/strings.xml`, `values-tr/strings.xml`, `values-pl/strings.xml`
+- `docs/TASKS.md`, `docs/WORKFLOW_RUNTIME.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `CHANGELOG.md`, `docs/STATE.md`
 
 **Verified**
-- Build: PASS, `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` (PR CI run 257 and post-merge main run 258).
-- Tests: 37 passed, 0 failed, 0 errors, 0 skipped (main run 256 JUnit artifact `14507792856`; runs 257/258 also passed the full Android verification job).
-- APK: CI signature/package checks passed; downloaded archive ZIP integrity checked; SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`.
+- Build: PASS, `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` (PR #11 CI run 271).
+- Tests: 38 passed, 0 failed, 0 errors, 0 skipped (JUnit artifact `14513125241`).
+- APK: debug assembly, signature verification and package/version assertion passed in run 271; physical-device install remains untested.
 
 **Not done / next**
-1. Install on Redmi Note 12 Pro 5G and run the workspace + backup/restore acceptance checklist.
-2. Record device results and update R-01/T6.0; fix any defect before starting a new feature increment.
+1. Install on Redmi Note 12 Pro 5G and exercise capture, workflow lifecycle, interrupted-run review and encrypted backup/restore.
+2. Implement the durable WorkManager executor on top of persisted lifecycle and conservative recovery, with unique work IDs, cancellation, idempotency and postcondition checks.
+3. Add one user-selected file/document capture vertical slice with raw-source preservation, evidence provenance, limits and tests.
 
 **Open questions**
-- None blocking. Preserve whole-workspace replacement and separate release-signing setup.
+- None blocking. Ambiguous in-flight steps must remain human-reviewed; never auto-retry.
 
 **Risks / landmines**
-- Restore replaces the entire Room workspace; export the current state first.
-- Lost backup passphrase is unrecoverable.
-- Current backup snapshot is tied to Room schema v3.
-- Debug APK signing is not release signing; do not uninstall over a signature conflict without protecting local data.
+- A step marked RUNNING may already have performed its action; recovery moves it to NEEDS_REVIEW and clears its approval.
+- The UI only resets an interrupted step after explicit user confirmation that the action did not complete; uncertain outcomes must not be retried.
+- Runs interrupted between steps become PAUSED, not automatically resumed.
+- Restore replaces the entire Room workspace; export first. Lost backup passphrase is unrecoverable.
+- Backup snapshot expects Room schema v3; future schema changes need backup compatibility tests.
+- Debug signing is not release signing.

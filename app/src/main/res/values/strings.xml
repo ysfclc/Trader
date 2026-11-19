@@ -146,5 +146,9 @@
     <string name="backup_restore_success">Backup restored. Your workspace has been replaced.</string>
     <string name="backup_failed">Backup operation failed:</string>
     <string name="backup_result_title">Backup status</string>
+    <string name="workflow_recovery_run_hint">The previous step may have acted before the app stopped. Review what happened before continuing.</string>
+    <string name="workflow_recovery_reviewed">I reviewed the interrupted workflow</string>
+    <string name="workflow_recovery_step_hint">Only reset this step if you confirmed the action did not complete. If the result is uncertain, do not retry it.</string>
+    <string name="workflow_recovery_reset_step">Reset step after review</string>
     <string name="close">Close</string>
 </resources>

@@ -186,6 +186,61 @@ class TraderRepository(private val database: TraderDatabase) {
         return true
     }
 
+    /**
+     * Reconciles persisted RUNNING workflows after process death without replaying actions.
+     * An in-flight step is ambiguous and requires review; a run interrupted between steps pauses.
+     */
+    suspend fun recoverInterruptedWorkflows(): Int = database.withTransaction {
+        val interruptedRuns = database.workflowRunDao().getAll().filter {
+            WorkflowRunStatus.from(it.status) == WorkflowRunStatus.RUNNING
+        }
+        var recovered = 0
+        val now = System.currentTimeMillis()
+        interruptedRuns.forEach { run ->
+            val activeSteps = database.workflowStepDao().getForRun(run.id).filter {
+                WorkflowStepStatus.from(it.status) == WorkflowStepStatus.RUNNING
+            }
+            if (activeSteps.isNotEmpty()) {
+                val reason = "App process stopped while this step was running. Confirm whether its action completed before retrying."
+                activeSteps.forEach { step ->
+                    database.workflowStepDao().update(step.copy(
+                        status = WorkflowStepStatus.NEEDS_REVIEW.name,
+                        approvedPayloadHash = null,
+                        approvedAt = null,
+                        lastError = reason,
+                        updatedAt = now,
+                        finishedAt = null
+                    ))
+                    addWorkflowEvent(run.id, step.id, "step_interrupted_needs_review",
+                        WorkflowStepStatus.RUNNING.name, WorkflowStepStatus.NEEDS_REVIEW.name,
+                        "Interrupted step requires review", reason, now)
+                }
+                database.workflowRunDao().update(run.copy(
+                    status = WorkflowRunStatus.NEEDS_REVIEW.name,
+                    updatedAt = now,
+                    finishedAt = null,
+                    lastError = reason
+                ))
+                addWorkflowEvent(run.id, null, "run_interrupted_needs_review",
+                    WorkflowRunStatus.RUNNING.name, WorkflowRunStatus.NEEDS_REVIEW.name,
+                    "Interrupted workflow requires review", reason, now)
+            } else {
+                val reason = "App process stopped between workflow steps. Review saved state before resuming."
+                database.workflowRunDao().update(run.copy(
+                    status = WorkflowRunStatus.PAUSED.name,
+                    updatedAt = now,
+                    finishedAt = null,
+                    lastError = reason
+                ))
+                addWorkflowEvent(run.id, null, "run_interrupted_paused",
+                    WorkflowRunStatus.RUNNING.name, WorkflowRunStatus.PAUSED.name,
+                    "Interrupted workflow paused safely", reason, now)
+            }
+            recovered++
+        }
+        recovered
+    }
+
     suspend fun createWorkflow(
         problemId: String,
         title: String,

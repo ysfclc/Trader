@@ -146,5 +146,9 @@
     <string name="backup_restore_success">Przywrócono kopię. Dane obszaru roboczego zostały zastąpione.</string>
     <string name="backup_failed">Operacja kopii zapasowej nie powiodła się:</string>
     <string name="backup_result_title">Stan kopii zapasowej</string>
-    <string name="close">Close</string>
+    <string name="workflow_recovery_run_hint">Poprzedni krok mógł wykonać działanie przed zamknięciem aplikacji. Sprawdź, co się stało, zanim przejdziesz dalej.</string>
+    <string name="workflow_recovery_reviewed">Sprawdziłem przerwany przepływ pracy</string>
+    <string name="workflow_recovery_step_hint">Zresetuj ten krok tylko wtedy, gdy potwierdzisz, że działanie nie zostało wykonane. Jeśli wynik jest niepewny, nie ponawiaj próby.</string>
+    <string name="workflow_recovery_reset_step">Zresetuj krok po sprawdzeniu</string>
+    <string name="close">Zamknij</string>
 </resources>
