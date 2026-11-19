@@ -199,4 +199,8 @@
     <string name="open_contact_route">Open contact route</string>
     <string name="contact_route_unsupported">No supported app can open this contact route.</string>
 
+    <string name="event_opportunity_created">Opportunity tracking started</string>
+    <string name="event_opportunity_stage_changed">Opportunity stage changed</string>
+    <string name="event_opportunity_updated">Opportunity details updated</string>
+
 </resources>
