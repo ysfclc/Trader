@@ -1,6 +1,6 @@
 # Risk register
 
-_Last reviewed: 2026-11-19 against main commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`._
+_Last reviewed: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`._
 
 | ID | Risk | Severity | Current control / evidence | Required mitigation / trigger |
 |---|---|---|---|---|
@@ -17,7 +17,7 @@ _Last reviewed: 2026-11-19 against main commit `cb929afc81b0e04cf5e7b81d1d199c2a
 | R-11 | Debug APK has a CI debug signing identity; release signing and update continuity are not configured. | High | CI verifies signature and package identity only. No release keystore is committed. | Configure a dedicated Trader release keystore through protected GitHub secrets and verify upgrade/install path before public distribution. |
 | R-12 | No browser/app automation, live web discovery, embedded AI, buyer/supplier matching or external communication adapter exists. | High | Capability registry shows unsupported operations; roadmap and tasks remain open. | Deliver a single evidence-backed vertical slice per adapter, with access-policy checks, provenance, human approval and observable postconditions. |
 | R-13 | The local Room database does not currently use a dedicated application-level database encryption layer. | Medium | No SQLCipher or other Room database-encryption dependency is configured; Android app sandbox/device encryption still applies. | Decide on an at-rest encryption requirement based on the data threat model before storing credentials or highly sensitive evidence; do not mistake encrypted exports for encrypted live database storage. |
-| R-15 | Cancelling a workflow while a step is RUNNING can falsely imply that its external side effect stopped. | High | Cancellation now routes the active step and run to NEEDS_REVIEW, clears approval, and cancels remaining non-active steps; regression tests added in PR #14. | CI must verify the cancellation behavior before merge; review the actual provider outcome before retrying. |
+| R-15 | Cancelling a workflow while a step is RUNNING can falsely imply that its external side effect stopped. | High | Cancellation now routes the active step and run to NEEDS_REVIEW, clears approval, and cancels remaining non-active steps; regression tests passed in PR #14 CI run 292. | Review the actual provider outcome before retrying; physical-device workflow acceptance remains open. |
 | R-14 | No release-grade production signing or real device validation means current build evidence is development-grade only. | High | Main artifact is `0.1.0-debug`, CI debug signed. | Keep release claims blocked until release signing and device acceptance are separately demonstrated. |
 
 ## Operating rule
