@@ -97,4 +97,5 @@
     <string name="workflow_status_completed">Tamamlandı</string>
     <string name="workflow_status_skipped">Atlandı</string>
     <string name="workflow_skip_unavailable">Kullanılamayan adımı atla</string>
+        <string name="workflow_status_unknown">Bilinmiyor</string>
 </resources>
