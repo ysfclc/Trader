@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Last reconciled: 2026-11-19 against main commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`; PR #12 tested head `131d6985a140f335d017c35d37dbfa001743b05b`._
+_Last reconciled: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`; PR #14 CI run 292 passed._
 
 ## Source of truth
 
@@ -23,9 +23,12 @@ A row is not marked complete merely because a screen or class exists. The status
 | R-011 | Expand capture beyond text/URL to user-selected documents, screenshots and voice; add deterministic deduplication and reviewed entity merge. | Not implemented in current app surfaces/repository. | No tests yet. | `docs/PROJECT_LOCK.md#L33-L45`; `docs/TASKS.md`, `#T1.6`, `#T1.7` | ⚪ Not started |
 | R-012 | Provide optional AI and authorized discovery/browser/app capabilities without paid services being core dependencies. | Registry marks unsupported capabilities unavailable; no browser, network-search or model adapter is implemented. | Fail-closed behavior covered by `CapabilityRegistryTest`; no adapter tests exist. | `docs/ARCHITECTURE.md#L65-L88`; `docs/OPERATING_RULES.md#L16-L25` and `#L52-L69`; `docs/TASKS.md` and `T4` | ⚪ Not started |
 
-| R-015 | Cancellation with an active workflow step must preserve uncertain side effects for human review; pending work must stop. | `TraderRepository.transitionWorkflowRun` | `WorkflowPersistenceTest::cancellingRunWithActiveStepPreservesUncertainSideEffectAndCancelsRemainingSteps`; `cancellingRunBetweenStepsCancelsAllPendingSteps` | `docs/WORKFLOW_RUNTIME.md`; `docs/TASKS.md` T1.8c; `docs/RISKS.md` R-15 | 🟡 Implemented in PR #14; CI not available/observed yet |
+| R-015 | Cancellation with an active workflow step must preserve uncertain side effects for human review; pending work must stop. | `TraderRepository.transitionWorkflowRun` | `WorkflowPersistenceTest::cancellingRunWithActiveStepPreservesUncertainSideEffectAndCancelsRemainingSteps`; `cancellingRunBetweenStepsCancelsAllPendingSteps` | `docs/WORKFLOW_RUNTIME.md`; `docs/TASKS.md` T1.8c; `docs/RISKS.md` R-15 | 🟢 Implemented and CI-verified in PR #14 run 292; physical-device acceptance remains open |
 
 ## Current CI evidence
+
+- PR #14 workflow cancellation safety: [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863), success on the PR merge test revision; unit tests, lint, debug APK assembly, signature verification, package/version assertions and artifact uploads all passed. JUnit artifact `14561772222`; debug APK artifact `14561732215`. Merged as [PR #14](https://github.com/ysfclc/Trader/pull/14), main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
+
 
 - PR #12 typed capability contracts: [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973), success on application-source head `9edf8f9b62844caebddd95e9e813733b16fdda46`. JUnit artifact `14516142308`: **44 tests, 0 failures, 0 errors, 0 skipped**.
 - PR #12 final documentation/state head `131d6985a140f335d017c35d37dbfa001743b05b`: [run 285](https://github.com/ysfclc/Trader/actions/runs/44499826271), success; JUnit artifact `14517540622`: **44 tests, 0 failures, 0 errors, 0 skipped**. This was merged as PR [#12](https://github.com/ysfclc/Trader/pull/12), main commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`.
