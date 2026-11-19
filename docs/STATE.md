@@ -237,3 +237,11 @@ Not implemented yet: encrypted backup/restore, file/screenshot/voice capture, Wo
 - APK ZIP integrity checked locally; CI verified apksigner signature and exact package/version.
 - This is a debug-signed sideload build, not a production/release-signed app. If Android reports a signature conflict over an earlier CI debug build, stop rather than uninstalling and risking local data.
 - Physical-device acceptance remains pending.
+
+
+### Final main-branch APK artifact
+- Final main verification CI: [run 236](https://github.com/ysfclc/Trader/actions/runs/44459027707), commit `f91c36c31c2a3cd1208c699d36c0db29a024a446`, all build/test/lint/signature/package steps passed.
+- Main debug APK artifact: `14499515211`; extracted APK size 19,004,225 bytes.
+- Final download file: `Trader-usable-workspace-debug.apk`.
+- SHA-256: `0d93169147ac52f5cfd766ade94b2ffd43288778e0c7372e1812d6d1d08835eb`.
+- Locally checked APK ZIP integrity; CI verified signature and package `com.yusufculcu.trader.debug`, version `0.1.0-debug`.
