@@ -13,7 +13,7 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 
 ## Phase 1 — Local problem workspace
 - [ ] Create Android project, build configuration and repeatable signed debug/release APK workflow.
-- [ ] Implement local database, migrations, backup/export and import.
+- [x] Implement local database, migrations, and passphrase-protected encrypted backup/export plus validated transactional restore (AES-256-GCM; PBKDF2-HMAC-SHA256). CI/device acceptance is tracked separately.
 - [ ] Add universal Problem Inbox for URLs, shared text, notes, screenshots, voice, documents and manually described problems/goals.
 - [x] Preserve original input, desired outcome, constraints and source URI in a ProblemCase. Urgency, deadline and unresolved-question fields remain open.
 - [x] Store source URL, capture time, raw capture and separate user-attached evidence with source reference and user-controlled verification state. Automated extraction/parser provenance remains open.
