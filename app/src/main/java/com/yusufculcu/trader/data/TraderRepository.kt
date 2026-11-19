@@ -408,27 +408,39 @@ class TraderRepository(private val database: TraderDatabase) {
             )
         ) return@withTransaction false
 
+        val runningStepsAtCancellation = if (target == WorkflowRunStatus.CANCELLED) {
+            steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.RUNNING }
+        } else emptyList()
+        // Cancelling while a step is active cannot prove that its side effect stopped.
+        // Preserve that uncertainty for review and cancel only the remaining work.
+        val effectiveTarget = if (runningStepsAtCancellation.isNotEmpty()) {
+            WorkflowRunStatus.NEEDS_REVIEW
+        } else target
+        val cancellationDetails = if (runningStepsAtCancellation.isNotEmpty()) {
+            "Workflow cancellation requested while a step was running. The active step may already have acted; verify its outcome. Remaining steps were cancelled."
+        } else details
+
         val now = System.currentTimeMillis()
-        val finishedAt = when (target) {
+        val finishedAt = when (effectiveTarget) {
             WorkflowRunStatus.VERIFIED, WorkflowRunStatus.CANCELLED, WorkflowRunStatus.FAILED -> now
             WorkflowRunStatus.READY, WorkflowRunStatus.RUNNING -> null
             else -> run.finishedAt
         }
-        val lastError = when (target) {
-            WorkflowRunStatus.FAILED, WorkflowRunStatus.NEEDS_REVIEW -> details.takeIf { it.isNotBlank() } ?: run.lastError
+        val lastError = when (effectiveTarget) {
+            WorkflowRunStatus.FAILED, WorkflowRunStatus.NEEDS_REVIEW -> cancellationDetails.takeIf { it.isNotBlank() } ?: run.lastError
             WorkflowRunStatus.READY, WorkflowRunStatus.RUNNING, WorkflowRunStatus.VERIFIED -> null
             else -> run.lastError
         }
         database.workflowRunDao().update(run.copy(
-            status = target.name,
+            status = effectiveTarget.name,
             updatedAt = now,
-            startedAt = if (target == WorkflowRunStatus.RUNNING && run.startedAt == null) now else run.startedAt,
+            startedAt = if (effectiveTarget == WorkflowRunStatus.RUNNING && run.startedAt == null) now else run.startedAt,
             finishedAt = finishedAt,
             lastError = lastError
         ))
-        addWorkflowEvent(runId, null, "run_status_changed", from.name, target.name, "Workflow status changed", details, now)
+        addWorkflowEvent(runId, null, "run_status_changed", from.name, effectiveTarget.name, "Workflow status changed", cancellationDetails, now)
 
-        if (from == WorkflowRunStatus.WAITING_FOR_APPROVAL && target == WorkflowRunStatus.RUNNING) {
+        if (from == WorkflowRunStatus.WAITING_FOR_APPROVAL && effectiveTarget == WorkflowRunStatus.RUNNING) {
             steps.filter { WorkflowStepStatus.from(it.status) == WorkflowStepStatus.WAITING_FOR_APPROVAL }.forEach { step ->
                 database.workflowStepDao().update(step.copy(
                     status = WorkflowStepStatus.RUNNING.name,
@@ -440,13 +452,21 @@ class TraderRepository(private val database: TraderDatabase) {
         } else if (target == WorkflowRunStatus.CANCELLED) {
             steps.filter { !WorkflowRules.isTerminal(WorkflowStepStatus.from(it.status)) }.forEach { step ->
                 val previous = WorkflowStepStatus.from(step.status)
-                if (WorkflowRules.canTransitionStep(previous, WorkflowStepStatus.CANCELLED)) {
+                val next = if (previous == WorkflowStepStatus.RUNNING) {
+                    WorkflowStepStatus.NEEDS_REVIEW
+                } else WorkflowStepStatus.CANCELLED
+                if (WorkflowRules.canTransitionStep(previous, next, reviewResolved = false)) {
                     database.workflowStepDao().update(step.copy(
-                        status = WorkflowStepStatus.CANCELLED.name,
+                        status = next.name,
                         updatedAt = now,
-                        finishedAt = now
+                        finishedAt = if (next == WorkflowStepStatus.CANCELLED) now else null,
+                        lastError = if (next == WorkflowStepStatus.NEEDS_REVIEW) cancellationDetails else null,
+                        approvedPayloadHash = if (next == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedPayloadHash,
+                        approvedAt = if (next == WorkflowStepStatus.NEEDS_REVIEW) null else step.approvedAt
                     ))
-                    addWorkflowEvent(runId, step.id, "step_cancelled", previous.name, WorkflowStepStatus.CANCELLED.name, "Step cancelled with workflow", details, now)
+                    val eventType = if (next == WorkflowStepStatus.NEEDS_REVIEW) "step_cancelled_while_running_needs_review" else "step_cancelled"
+                    val summary = if (next == WorkflowStepStatus.NEEDS_REVIEW) "Cancellation left an active step uncertain" else "Step cancelled with workflow"
+                    addWorkflowEvent(runId, step.id, eventType, previous.name, next.name, summary, cancellationDetails, now)
                 }
             }
         }
