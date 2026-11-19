@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-19 — Conservative interrupted-workflow recovery
+
+- Added transactional startup reconciliation for workflows left RUNNING after process interruption.
+- In-flight steps become NEEDS_REVIEW with prior approval cleared; runs interrupted between steps become PAUSED. Append-only events explain each recovery decision.
+- Added a file-backed close/reopen test covering both paths and repeated-call idempotency.
+- This is not WorkManager execution or automatic resume; no capability is executed during recovery.
+
 ## 2026-11-19 — State and requirement traceability reconciliation (PR #9)
 
 - Merged [PR #9](https://github.com/ysfclc/Trader/pull/9) as `b0539a960b67d300ccf426a54f05d6860b43406c`.
