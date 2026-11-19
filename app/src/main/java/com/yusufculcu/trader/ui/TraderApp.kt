@@ -518,13 +518,73 @@ private fun CreateProblemDialog(onDismiss: () -> Unit, onCreate: (String, String
 }
 
 @Composable
-private fun AddStepDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
+private fun EditProblemDialog(
+    problem: ProblemEntity,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, String) -> Unit
+) {
+    var title by remember(problem.id) { mutableStateOf(problem.title) }
+    var description by remember(problem.id) { mutableStateOf(problem.description) }
+    var outcome by remember(problem.id) { mutableStateOf(problem.desiredOutcome) }
+    var constraints by remember(problem.id) { mutableStateOf(problem.constraintsText) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.edit_case)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.what_needs_solving)) }, singleLine = true)
+                OutlinedTextField(description, { description = it }, label = { Text(stringResource(R.string.context_prompt)) }, minLines = 2)
+                OutlinedTextField(outcome, { outcome = it }, label = { Text(stringResource(R.string.good_result_prompt)) }, minLines = 2)
+                OutlinedTextField(constraints, { constraints = it }, label = { Text(stringResource(R.string.constraints_optional)) }, minLines = 2)
+            }
+        },
+        confirmButton = { Button(onClick = { if (title.isNotBlank()) onSave(title, description, outcome, constraints) }, enabled = title.isNotBlank()) { Text(stringResource(R.string.save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+private fun AddEvidenceDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String, String, String?) -> Unit
+) {
     var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    var source by remember { mutableStateOf("") }
+    val canSave = title.isNotBlank() && (content.isNotBlank() || source.isNotBlank())
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.add_evidence)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.evidence_title)) }, singleLine = true)
+                OutlinedTextField(content, { content = it }, label = { Text(stringResource(R.string.evidence_note)) }, minLines = 3)
+                OutlinedTextField(source, { source = it }, label = { Text(stringResource(R.string.evidence_source_url)) }, singleLine = true)
+                Text(stringResource(R.string.evidence_note_hint), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = { Button(onClick = { if (canSave) onAdd(title, content, source.trim().ifBlank { null }) }, enabled = canSave) { Text(stringResource(R.string.add)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+private fun AddStepDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String, String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var expected by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_next_step)) },
-        text = { OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.action_label)) }, singleLine = true) },
-        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title) }, enabled = title.isNotBlank()) { Text(stringResource(R.string.add)) } },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(title, { title = it }, label = { Text(stringResource(R.string.action_label)) }, singleLine = true)
+                OutlinedTextField(expected, { expected = it }, label = { Text(stringResource(R.string.expected_result)) }, minLines = 2)
+            }
+        },
+        confirmButton = { Button(onClick = { if (title.isNotBlank()) onAdd(title, expected) }, enabled = title.isNotBlank()) { Text(stringResource(R.string.add)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
