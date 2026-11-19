@@ -130,4 +130,21 @@
     <string name="event_evidence_added">Kanıt eklendi</string>
     <string name="event_evidence_verified">Kanıt doğrulandı olarak işaretlendi</string>
     <string name="event_evidence_unreviewed">Kanıt yeniden inceleme bekliyor</string>
+    <string name="backup_restore">Yedekle ve geri yükle</string>
+    <string name="backup_intro">Tüm kayıtların, kanıtların, planların ve iş akışı geçmişinin parola korumalı kopyasını oluştur veya önceki bir Trader yedeğini geri yükle.</string>
+    <string name="backup_passphrase">Yedekleme parolası</string>
+    <string name="backup_confirm_passphrase">Parolayı doğrula</string>
+    <string name="backup_passphrase_hint">En az 12 karakter kullan. Trader bu parolayı saklamaz veya göndermez. Kaybedersen yedeğin kilidini açamazsın.</string>
+    <string name="backup_export">Şifreli yedek oluştur</string>
+    <string name="backup_import">Yedekten geri yükle</string>
+    <string name="backup_restore_warning">Geri yükleme, mevcut tüm Trader kayıtlarının yerine seçilen yedekteki kayıtları koyar.</string>
+    <string name="backup_restore_ack">Mevcut çalışma alanımın değiştirileceğini anlıyorum.</string>
+    <string name="backup_passphrase_too_short">En az 12 karakter kullan.</string>
+    <string name="backup_passphrase_mismatch">Parolalar eşleşmiyor.</string>
+    <string name="backup_ack_required">Çalışma alanının değiştirileceğini onayla.</string>
+    <string name="backup_export_success">Şifreli yedek oluşturuldu.</string>
+    <string name="backup_restore_success">Yedek geri yüklendi. Çalışma alanın değiştirildi.</string>
+    <string name="backup_failed">Yedekleme işlemi başarısız:</string>
+    <string name="backup_result_title">Yedekleme durumu</string>
+    <string name="close">Close</string>
 </resources>
