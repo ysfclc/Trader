@@ -67,6 +67,10 @@ dependencies {
 
 
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
+    // Robolectric's default repo1 endpoint intermittently returns 404 for checksum sidecars.
+    // Use Maven Central's canonical host so Android SDK artifacts resolve consistently in CI.
+    systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+    systemProperty("robolectric.dependency.repo.id", "central")
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

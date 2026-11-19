@@ -55,4 +55,47 @@
     <string name="category_general">GENEL</string>
     <string name="category_captured">KAYDEDİLDİ</string>
     <string name="category_other">DİĞER</string>
+
+    <string name="workflow_section">İŞ AKIŞI</string>
+    <string name="workflow_title">Planı eyleme dönüştür</string>
+    <string name="workflow_intro">İş akışı adımları, izinleri ve sonuçları takip eder. Trader, kullanılamayan yetenekleri çalıştırmaz.</string>
+    <string name="workflow_add_plan_first">İş akışı oluşturmadan önce en az bir plan adımı ekle.</string>
+    <string name="workflow_create">Plandan iş akışı oluştur</string>
+    <string name="workflow_mark_ready">İncele ve hazır olarak işaretle</string>
+    <string name="workflow_start">İş akışını başlat</string>
+    <string name="workflow_pause">Duraklat</string>
+    <string name="workflow_cancel">İş akışını iptal et</string>
+    <string name="workflow_resume">Devam et</string>
+    <string name="workflow_verification_note">Sonucu hangi kanıt doğruluyor?</string>
+    <string name="workflow_confirm_outcome">Sonucu doğrula</string>
+    <string name="workflow_waiting_approval">Onay bekleniyor</string>
+    <string name="workflow_needs_review">Bu iş akışını incelemen gerekiyor.</string>
+    <string name="workflow_verified">Sonuç kullanıcı tarafından doğrulandı.</string>
+    <string name="workflow_cancelled">İş akışı iptal edildi.</string>
+    <string name="workflow_history">SON İŞ AKIŞI OLAYLARI</string>
+    <string name="workflow_capability_unavailable">Bu yetenek henüz çalıştırılamıyor.</string>
+    <string name="workflow_approve_exact_step">Bu adımı aynen onayla</string>
+    <string name="workflow_mark_started">Başladı olarak işaretle</string>
+    <string name="workflow_mark_completed">Tamamlandı olarak işaretle</string>
+    <string name="workflow_hide_capabilities">Yetenek durumunu gizle</string>
+    <string name="workflow_show_capabilities">Trader neler yapabiliyor?</string>
+    <string name="workflow_available">Kullanılabilir</string>
+    <string name="workflow_not_implemented">Henüz geliştirilmedi</string>
+    <string name="workflow_blocked">Engellendi</string>
+
+    <string name="workflow_status_draft">Taslak</string>
+    <string name="workflow_status_ready">Hazır</string>
+    <string name="workflow_status_running">Çalışıyor</string>
+    <string name="workflow_status_paused">Duraklatıldı</string>
+    <string name="workflow_status_waiting">Onay bekliyor</string>
+    <string name="workflow_status_review">İnceleme gerekli</string>
+    <string name="workflow_status_failed">Başarısız</string>
+    <string name="workflow_status_verification">Doğrulama bekliyor</string>
+    <string name="workflow_status_verified">Doğrulandı</string>
+    <string name="workflow_status_cancelled">İptal edildi</string>
+    <string name="workflow_status_pending">Bekliyor</string>
+    <string name="workflow_status_completed">Tamamlandı</string>
+    <string name="workflow_status_skipped">Atlandı</string>
+    <string name="workflow_skip_unavailable">Kullanılamayan adımı atla</string>
+        <string name="workflow_status_unknown">Bilinmiyor</string>
 </resources>

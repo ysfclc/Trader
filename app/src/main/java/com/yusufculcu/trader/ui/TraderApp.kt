@@ -223,6 +223,7 @@ private fun ProblemDetail(problem: ProblemEntity, viewModel: TraderViewModel, mo
                 }
             }
         }
+        item { WorkflowPanel(problem, viewModel) }
     }
     if (showStep) AddStepDialog(
         onDismiss = { showStep = false },

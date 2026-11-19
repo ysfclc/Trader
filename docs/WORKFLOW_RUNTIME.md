@@ -1,6 +1,6 @@
 # Trader Workflow Runtime
 
-**Status:** Room v2 workflow persistence (PR #3) and capability registry enforcement (PR #4) are merged; CI tests passed.  
+**Status:** Room v2 workflow persistence (PR #3) and capability registry enforcement (PR #4) are merged; the first user-facing workflow/capability surface is implemented on `build/workflow-control-surface` and awaiting CI verification.  
 **Scope:** Durable workflow planning and lifecycle tracking. This is not yet a capability executor.
 
 ## Data model
@@ -51,11 +51,10 @@ Robolectric tests cover:
 - No browser, installed-app, AI, communication or network capability is executed by this layer.
 - No WorkManager queue or process-death resumption has been wired yet.
 - Retry and approval policies are now normalized against the Kotlin capability registry. Unimplemented and unknown capabilities may be planned but cannot transition to RUNNING.
-- UI surfaces for workflow creation, approval review, pause/resume and evidence verification are still pending.
+- A first UI surface now creates a workflow from saved plan steps, displays persisted runs/steps/events, exposes exact-step approval, supports manual start/complete and explicit skip of unavailable steps, pause/resume/cancel, and requires a non-empty user evidence note before outcome verification. This is a manually driven workflow surface, not an autonomous executor.
 
 ## Next implementation gates
 
-1. Add workflow UI to create a run from a ProblemCase plan, inspect events and approve exact payloads.
-2. Add a user-facing capability browser with availability, permission and policy explanations.
-3. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
-4. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.
+1. Verify the workflow UI on a physical Android device, including create, approve, start, complete, skip, pause/resume, cancel and outcome verification.
+2. Add durable WorkManager execution with unique work IDs, cancellation, process-death recovery and postcondition checks.
+3. Add visible browser and bounded Android app adapters only after their capability contracts and permission gates are in place.

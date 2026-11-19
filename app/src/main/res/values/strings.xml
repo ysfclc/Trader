@@ -55,4 +55,47 @@
     <string name="category_general">GENERAL</string>
     <string name="category_captured">CAPTURED</string>
     <string name="category_other">OTHER</string>
+
+    <string name="workflow_section">WORKFLOW</string>
+    <string name="workflow_title">Turn the plan into action</string>
+    <string name="workflow_intro">A workflow tracks each step, its permissions and its outcome. Trader will not execute capabilities that are unavailable.</string>
+    <string name="workflow_add_plan_first">Add at least one plan step before creating a workflow.</string>
+    <string name="workflow_create">Create workflow from plan</string>
+    <string name="workflow_mark_ready">Review and mark ready</string>
+    <string name="workflow_start">Start workflow</string>
+    <string name="workflow_pause">Pause</string>
+    <string name="workflow_cancel">Cancel workflow</string>
+    <string name="workflow_resume">Resume</string>
+    <string name="workflow_verification_note">What evidence confirms the outcome?</string>
+    <string name="workflow_confirm_outcome">Verify outcome</string>
+    <string name="workflow_waiting_approval">Waiting for approval</string>
+    <string name="workflow_needs_review">This workflow needs your review.</string>
+    <string name="workflow_verified">Outcome verified by user.</string>
+    <string name="workflow_cancelled">Workflow cancelled.</string>
+    <string name="workflow_history">RECENT WORKFLOW EVENTS</string>
+    <string name="workflow_capability_unavailable">This capability is not available to execute yet.</string>
+    <string name="workflow_approve_exact_step">Approve this exact step</string>
+    <string name="workflow_mark_started">Mark as started</string>
+    <string name="workflow_mark_completed">Mark as completed</string>
+    <string name="workflow_hide_capabilities">Hide capability availability</string>
+    <string name="workflow_show_capabilities">See what Trader can do</string>
+    <string name="workflow_available">Available</string>
+    <string name="workflow_not_implemented">Not built yet</string>
+    <string name="workflow_blocked">Blocked</string>
+
+    <string name="workflow_status_draft">Draft</string>
+    <string name="workflow_status_ready">Ready</string>
+    <string name="workflow_status_running">Running</string>
+    <string name="workflow_status_paused">Paused</string>
+    <string name="workflow_status_waiting">Waiting for approval</string>
+    <string name="workflow_status_review">Needs review</string>
+    <string name="workflow_status_failed">Failed</string>
+    <string name="workflow_status_verification">Awaiting verification</string>
+    <string name="workflow_status_verified">Verified</string>
+    <string name="workflow_status_cancelled">Cancelled</string>
+    <string name="workflow_status_pending">Pending</string>
+    <string name="workflow_status_completed">Completed</string>
+    <string name="workflow_status_skipped">Skipped</string>
+    <string name="workflow_skip_unavailable">Skip unavailable step</string>
+        <string name="workflow_status_unknown">Unknown</string>
 </resources>

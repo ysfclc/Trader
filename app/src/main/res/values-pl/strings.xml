@@ -55,4 +55,47 @@
     <string name="category_general">OGÓLNE</string>
     <string name="category_captured">ZAPISANE</string>
     <string name="category_other">INNE</string>
+
+    <string name="workflow_section">PRZEPŁYW PRACY</string>
+    <string name="workflow_title">Zamień plan w działanie</string>
+    <string name="workflow_intro">Przepływ śledzi kroki, uprawnienia i wynik. Trader nie uruchomi funkcji, które nie są dostępne.</string>
+    <string name="workflow_add_plan_first">Dodaj co najmniej jeden krok planu, aby utworzyć przepływ.</string>
+    <string name="workflow_create">Utwórz przepływ z planu</string>
+    <string name="workflow_mark_ready">Sprawdź i oznacz jako gotowe</string>
+    <string name="workflow_start">Uruchom przepływ</string>
+    <string name="workflow_pause">Wstrzymaj</string>
+    <string name="workflow_cancel">Anuluj przepływ</string>
+    <string name="workflow_resume">Wznów</string>
+    <string name="workflow_verification_note">Jaki dowód potwierdza rezultat?</string>
+    <string name="workflow_confirm_outcome">Zweryfikuj rezultat</string>
+    <string name="workflow_waiting_approval">Oczekiwanie na zatwierdzenie</string>
+    <string name="workflow_needs_review">Ten przepływ wymaga Twojej kontroli.</string>
+    <string name="workflow_verified">Rezultat potwierdzony przez użytkownika.</string>
+    <string name="workflow_cancelled">Przepływ anulowany.</string>
+    <string name="workflow_history">OSTATNIE ZDARZENIA PRZEPŁYWU</string>
+    <string name="workflow_capability_unavailable">Ta funkcja nie jest jeszcze dostępna do wykonania.</string>
+    <string name="workflow_approve_exact_step">Zatwierdź dokładnie ten krok</string>
+    <string name="workflow_mark_started">Oznacz jako rozpoczęty</string>
+    <string name="workflow_mark_completed">Oznacz jako ukończony</string>
+    <string name="workflow_hide_capabilities">Ukryj dostępność funkcji</string>
+    <string name="workflow_show_capabilities">Co potrafi Trader?</string>
+    <string name="workflow_available">Dostępne</string>
+    <string name="workflow_not_implemented">Jeszcze nie wdrożono</string>
+    <string name="workflow_blocked">Zablokowane</string>
+
+    <string name="workflow_status_draft">Szkic</string>
+    <string name="workflow_status_ready">Gotowe</string>
+    <string name="workflow_status_running">W toku</string>
+    <string name="workflow_status_paused">Wstrzymane</string>
+    <string name="workflow_status_waiting">Oczekuje na zatwierdzenie</string>
+    <string name="workflow_status_review">Wymaga kontroli</string>
+    <string name="workflow_status_failed">Niepowodzenie</string>
+    <string name="workflow_status_verification">Oczekuje na weryfikację</string>
+    <string name="workflow_status_verified">Zweryfikowane</string>
+    <string name="workflow_status_cancelled">Anulowane</string>
+    <string name="workflow_status_pending">Oczekujące</string>
+    <string name="workflow_status_completed">Ukończone</string>
+    <string name="workflow_status_skipped">Pominięte</string>
+    <string name="workflow_skip_unavailable">Pomiń niedostępny krok</string>
+        <string name="workflow_status_unknown">Nieznany</string>
 </resources>

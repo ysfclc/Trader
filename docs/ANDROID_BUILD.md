@@ -30,6 +30,9 @@ The debug build has the application ID `com.yusufculcu.trader.debug`. It is sign
 
 GitHub Actions runs the same Gradle tasks on pushes to `main` and `build/**`, and on pull requests targeting `main`. The workflow uploads the debug APK as the `trader-debug-apk` artifact for 14 days.
 
+
+Robolectric tests use Maven Central's canonical `repo.maven.apache.org` host for Android SDK artifacts rather than the default `repo1.maven.org` checksum endpoint, which returned intermittent 404 responses in CI.
+
 ## Release signing
 
 No production signing key or password belongs in this repository. A release-signing workflow must be added only after the user configures GitHub Actions secrets for a dedicated Trader keystore and passwords. Never reuse signing identities from VaultOS, Memo or another project. Until that exists, do not describe a debug APK as a production release.
