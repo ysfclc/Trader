@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-19 — State and requirement traceability reconciliation (PR #9)
+
+- Merged [PR #9](https://github.com/ysfclc/Trader/pull/9) as `b0539a960b67d300ccf426a54f05d6860b43406c`.
+- Reconciled the current state ledger with the code and CI evidence after PR #8; moved historical milestones into this changelog.
+- Added a 12-row requirement-to-implementation/test/docs matrix and a 14-item risk register; appended D-016 and corrected README, tasks and roadmap.
+- The change is documentation-only; application source did not change.
+- PR CI [run 257](https://github.com/ysfclc/Trader/actions/runs/44485329566) and post-merge main CI [run 258](https://github.com/ysfclc/Trader/actions/runs/44485773498) passed.
+
 Project history is recorded as dated milestones. Detailed current status belongs in `docs/STATE.md`; outstanding work belongs in `docs/TASKS.md`.
 
 ## 2026-11-19 — Encrypted workspace backup and restore (PR #8)
