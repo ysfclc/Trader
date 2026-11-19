@@ -196,4 +196,7 @@
     <string name="contact_route_value">Kanal: %1$s</string>
     <string name="opportunity_manual_actions_note">Trader planını ve takip tarihini kaydeder. Mesaj göndermez, kimseyle iletişim kurmaz ve arka planda bildirim oluşturmaz.</string>
 
+    <string name="open_contact_route">İletişim yolunu aç</string>
+    <string name="contact_route_unsupported">Bu iletişim yolunu açabilecek desteklenen bir uygulama yok.</string>
+
 </resources>
