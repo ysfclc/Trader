@@ -132,3 +132,16 @@ Trader must accept problems from outside its current specialized workflows, but 
 Trader will reuse engineering principles from QRKey's product and automation repositories, not its code or runtime. Adopt idempotent side-effect keys, append-only event history, deterministic workflow routing, bounded context loading, pre-flight state checks, approval gates, cancellation, timeouts and explicit recovery states. Do not import the Node/Claude development-agent pipeline, web product stack or treat web QA automation as Android app automation.
 
 **Reason:** QRKey's most useful automation system is designed to orchestrate software-development agents and repository tasks. It is not a consumer mobile automation engine. Trader needs an independent Android runtime with explicit capability contracts and user-visible execution.
+
+
+## D-016 — Portable encrypted workspace backup with explicit replacement semantics
+**Date:** 2026-11-19  
+**Status:** Accepted
+
+Trader's local workspace backup is a user-triggered, portable `.traderbackup` file. The snapshot contains all seven current Room record groups and is encrypted with AES-256-GCM. A PBKDF2-HMAC-SHA256 key is derived from a user passphrase using a random salt; the random IV and versioned header are authenticated as GCM additional authenticated data. The passphrase is not persisted by the backup manager.
+
+Restore validates the authenticated payload, supported file/database schema, identifiers, relationships and ordered-step uniqueness before replacing all workspace rows in one Room transaction. Restore is intentionally **replacement, not merge**, and the UI requires explicit destructive-restore acknowledgement. A lost passphrase cannot be recovered. Android preferences and files outside the current Room workspace are not included.
+
+**Reason:** A local-first product needs a user-owned recovery path without a cloud account or paid service. Atomic replacement and authenticated encryption reduce corruption and tampering risk, while the explicit replace semantics prevent a misleading merge promise.
+
+**Consequences:** Keep the format version and database schema version explicit. Every Room schema change must include backup compatibility/migration tests before release. Device acceptance remains a separate release gate; CI passing does not prove document-picker or real-device restore behavior.

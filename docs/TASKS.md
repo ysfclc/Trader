@@ -22,12 +22,12 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
-- [x] T1.4 Add passphrase-protected local backup/export and integrity-verified restore: all seven Room record groups are snapshotted, encrypted with AES-256-GCM using a PBKDF2-HMAC-SHA256 key (210,000 iterations, random salt and IV), and exported through Android's document picker. Restore validates authenticated bytes, schema, IDs and relationships before replacing records in one Room transaction. Wrong-passphrase, tamper, round-trip and replacement tests added; CI/device acceptance pending.
+- [x] T1.4 Implement passphrase-protected local backup/export and integrity-verified restore for all seven Room record groups using AES-256-GCM and PBKDF2-HMAC-SHA256 (210,000 iterations, random 16-byte salt and 12-byte IV); validate the authenticated payload/schema/relationships and replace rows atomically. CI verified in PR #8 and main run 256 (4 backup tests; 37 total tests passed). Device acceptance remains open; see `docs/COVERAGE.md` R-007 and `docs/RISKS.md`.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
 - [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
-- [x] T1.9 Make the local workspace practical to manage: edit cases, search active and archived records, reversibly archive/restore, attach and review evidence, add expected results to plan steps, and share a complete context packet to another Android app (CI runs 225, 232 and post-merge 233 passed; device acceptance pending).
+- [x] T1.9 Implement local case editing, active/archived search, reversible archive/restore, source-linked evidence, expected-result plan steps and context-packet share handoff (CI runs 225, 232, post-merge 233 and main 256 passed; device acceptance and dedicated search/share UI tests remain open).
 - [x] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (CI runs 111 and 112 passed).
 
 ## T2 — Commercial records
@@ -42,7 +42,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T3 — Discovery and browser/app automation
 
-- [ ] T3.0 Define a capability registry for every tool/automation operation, including inputs/outputs, availability, permissions, side effects, cost, limits and postconditions.
+- [ ] T3.0 Complete the capability contract for every tool/automation operation (inputs/outputs, availability, permissions, side effects, cost, limits and postconditions). A typed baseline registry and fail-closed enforcement exist (T3.0c), but not every descriptor yet carries the full contract; keep this parent requirement open.
 - [x] T3.0a Define and unit-test deterministic workflow run/step lifecycle rules, including approval, safe retry, review and outcome-verification gates.
 - [x] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (CI runs 111 and 112 passed).
 - [x] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts (PR #4 merged; CI runs 129 and 130 passed).
@@ -93,4 +93,4 @@ Do not treat trade, services and careers as an exhaustive list of supported prob
 
 ## Current execution rule
 
-Do not start broad scraping, bulk outreach, cloud sync or large AI integrations before the local data/evidence workflow is reliable. Build one complete vertical slice at a time. Code presence is not verification.
+Do not start broad scraping, bulk outreach, cloud sync or large AI integrations before the local data/evidence workflow is reliable. Build one complete vertical slice at a time. Code presence is not verification. Use `docs/COVERAGE.md` for requirement traceability and `docs/RISKS.md` for unresolved acceptance/security risks. A checked implementation task does not imply physical-device acceptance.
