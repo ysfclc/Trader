@@ -103,7 +103,7 @@ Trader is an Android-first, local-first workspace for capturing general problems
 
 
 **Verification status**
-- PR #14 Android CI [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863) completed successfully. All workflow steps passed, including `Verify and build`, unit-test report upload, debug APK signature/package verification and artifact upload.
+- PR #14 Android CI [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863) completed successfully: **45 tests, 0 failures, 0 errors, 0 skipped** (JUnit artifact `14561772222`). All workflow steps passed, including lint, debug APK assembly, signature/package verification and artifact upload.
 - Artifacts: JUnit report `14561772222`; debug APK `14561732215` (CI debug-signed, not a production release).
 - PR #14 merged to `main` as `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
 - This is CI verification, not physical-device acceptance; no device test is claimed.
