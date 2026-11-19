@@ -12,6 +12,12 @@ import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Inbox
 import androidx.compose.material.icons.rounded.Timeline
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Archive
+import androidx.compose.material.icons.rounded.Unarchive
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -20,12 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.yusufculcu.trader.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yusufculcu.trader.data.EvidenceEntity
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
+import com.yusufculcu.trader.domain.ContextPacketBuilder
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.viewmodel.TraderViewModel
 import java.text.SimpleDateFormat
@@ -38,11 +47,13 @@ private enum class AppTab { INBOX, ACTIVITY }
 @Composable
 fun TraderApp(viewModel: TraderViewModel) {
     val problems by viewModel.problems.collectAsState()
+    val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
-    val selected = problems.firstOrNull { it.id == selectedId }
+    var showArchived by rememberSaveable { mutableStateOf(false) }
+    val selected = (problems + archivedProblems).firstOrNull { it.id == selectedId }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -55,7 +66,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                     }
                 },
                 navigationIcon = {
-                    if (selected != null) IconButton(onClick = { selectedId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = "Back") }
+                    if (selected != null) IconButton(onClick = { selectedId = null }) { Icon(Icons.Rounded.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -67,7 +78,7 @@ fun TraderApp(viewModel: TraderViewModel) {
             }
         },
         floatingActionButton = {
-            if (selected == null && tab == AppTab.INBOX) FloatingActionButton(
+            if (selected == null && tab == AppTab.INBOX && !showArchived) FloatingActionButton(
                 onClick = { showCreate = true },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -75,8 +86,19 @@ fun TraderApp(viewModel: TraderViewModel) {
         }
     ) { padding ->
         when {
-            selected != null -> ProblemDetail(selected, viewModel, Modifier.padding(padding))
-            tab == AppTab.INBOX -> InboxContent(problems, onOpen = { selectedId = it.id }, modifier = Modifier.padding(padding))
+            selected != null -> ProblemDetail(
+                selected,
+                viewModel,
+                onBack = { selectedId = null },
+                modifier = Modifier.padding(padding)
+            )
+            tab == AppTab.INBOX -> InboxContent(
+                problems = if (showArchived) archivedProblems else problems,
+                showArchived = showArchived,
+                onShowArchived = { showArchived = it },
+                onOpen = { selectedId = it.id },
+                modifier = Modifier.padding(padding)
+            )
             else -> ActivityContent(events, Modifier.padding(padding))
         }
     }
@@ -88,39 +110,6 @@ fun TraderApp(viewModel: TraderViewModel) {
             showCreate = false
         }
     )
-}
-
-@Composable
-private fun InboxContent(problems: List<ProblemEntity>, onOpen: (ProblemEntity) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-        Spacer(Modifier.height(18.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-            Column {
-                Text(stringResource(R.string.your_workspace), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.8.sp)
-                Text(stringResource(R.string.problem_inbox), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            }
-            Text(stringResource(R.string.problems_captured, problems.size), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
-        }
-        Spacer(Modifier.height(18.dp))
-        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Box(Modifier.background(Brush.linearGradient(listOf(Color(0xFF1C3430), Color(0xFF172226)))).padding(18.dp)) {
-                Column {
-                    Text(stringResource(R.string.start_with_real_thing), color = Color(0xFF9DE7C9), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.what_needs_to_move), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
-                    Spacer(Modifier.height(5.dp))
-                    Text(stringResource(R.string.capture_intro), color = Color(0xFFB9C9C4), style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-        }
-        Spacer(Modifier.height(22.dp))
-        Text(stringResource(R.string.recent), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.6.sp)
-        Spacer(Modifier.height(10.dp))
-        if (problems.isEmpty()) EmptyState()
-        else LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 100.dp)) {
-            items(problems, key = { it.id }) { problem -> ProblemCard(problem) { onOpen(problem) } }
-        }
-    }
 }
 
 @Composable
