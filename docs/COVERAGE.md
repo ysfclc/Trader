@@ -27,7 +27,7 @@ A row is not marked complete merely because a screen or class exists. The status
 
 ## Current CI evidence
 
-- PR #14 workflow cancellation safety: [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863), success on the PR merge test revision; unit tests, lint, debug APK assembly, signature verification, package/version assertions and artifact uploads all passed. JUnit artifact `14561772222`; debug APK artifact `14561732215`. Merged as [PR #14](https://github.com/ysfclc/Trader/pull/14), main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
+- PR #14 workflow cancellation safety: [run 292](https://github.com/ysfclc/Trader/actions/runs/44587062863), success on the PR merge test revision; **45 tests, 0 failures, 0 errors, 0 skipped**; lint, debug APK assembly, signature verification, package/version assertions and artifact uploads all passed. JUnit artifact `14561772222`; debug APK artifact `14561732215`. Merged as [PR #14](https://github.com/ysfclc/Trader/pull/14), main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`.
 
 
 - PR #12 typed capability contracts: [run 279](https://github.com/ysfclc/Trader/actions/runs/44498767973), success on application-source head `9edf8f9b62844caebddd95e9e813733b16fdda46`. JUnit artifact `14516142308`: **44 tests, 0 failures, 0 errors, 0 skipped**.
