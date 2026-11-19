@@ -365,7 +365,7 @@ class TraderBackupManager(private val database: TraderDatabase) {
         private const val MIN_KDF_ITERATIONS = 100_000
         private const val MAX_KDF_ITERATIONS = 1_000_000
         private const val MIN_PASSPHRASE_LENGTH = 12
-        private const val MAX_BACKUP_BYTES = 50 * 1024 * 1024
+        private const val MAX_BACKUP_BYTES = 49 * 1024 * 1024
         private const val MAX_ROWS = 100_000
         private val random = SecureRandom()
     }
