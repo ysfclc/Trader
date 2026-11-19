@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 3_
+_Last updated: 2026-11-19 by Continuity Engineer — session 4_
 
 ## 1. Product snapshot
 Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU is the first pilot, not the product boundary. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
@@ -20,12 +20,11 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
 | Commercial records / outreach | ⚪ not started | No organizations, people, buyer/supplier records or send adapter |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
-| Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on the PR branch |
+| Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; requires physical-device and user-driven acceptance.
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
-- PR #12 merge — typed capability contracts are CI-verified on the final application-source head; documentation and state-ledger updates are being included before merge.
 
 ## 4. Known gaps & stubs
 - `app/src/main/java/com/yusufculcu/trader/ui/TraderApp.kt` — only Inbox and Activity tabs; Discover/Matches/Contacts navigation is not implemented.
@@ -58,11 +57,10 @@ Trader is an Android-first, local-first workspace for capturing general problems
 ## Session handoff
 
 **Done this session**
-- Closed the previous merge gate: post-merge main CI run #276 passed the Android verification/build, tests, APK signature and package checks.
-- Completed the typed execution-contract baseline for all 16 registered capabilities: input/output field types, required/optional and sensitive flags, side-effect declarations, cost disclosure, limit mode, retry/approval, permissions/consent and required postconditions.
-- Added registry input/output validation for required fields, primitive/container types and unexpected keys, plus promotion invariants for adapter limits and external-action policy.
-- Classified remote model inference as remote data disclosure requiring approval and explicit consent.
-- Added six capability tests (CapabilityRegistryTest now 12); updated T3.0, capability docs, D-018, coverage, risks, README and changelog.
+- Completed T3.0: typed execution contracts for all 16 registered capabilities, with field validation and fail-closed availability gates.
+- Classified remote model inference as remote data disclosure requiring explicit approval and consent.
+- Added six capability tests (CapabilityRegistryTest now 12); updated capability docs, T3.0, D-018, coverage, risks, README, changelog and this ledger.
+- PR #12 merged to main: `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`.
 
 **State changed**
 - `app/src/main/java/com/yusufculcu/trader/domain/CapabilityRegistry.kt`
@@ -71,24 +69,24 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - `README.md`, `CHANGELOG.md`, `docs/STATE.md`
 
 **Verified**
-- PR #12 Android CI run 279 passed on application-source head `9edf8f9b62844caebddd95e9e813733b16fdda46`: 44 tests, 0 failures, 0 errors, 0 skipped (JUnit artifact `14516142308`).
-- The full pipeline passed Gradle unit tests, lint, debug APK assembly, APK signature verification and exact package/version assertions.
-- The PR's final docs/state commit will receive its own CI run before merge. Main post-merge CI #276 from the preceding recovery increment passed.
+- PR #12 final CI run 285: [run](https://github.com/ysfclc/Trader/actions/runs/44499826271), final PR revision `131d6985a140f335d017c35d37dbfa001743b05b`: **44 tests, 0 failures, 0 errors, 0 skipped** (JUnit artifact `14517540622`).
+- Post-merge main CI run 286: [run](https://github.com/ysfclc/Trader/actions/runs/44500309783), merge commit `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`: **44 tests, 0 failures, 0 errors, 0 skipped** (JUnit artifact `14516991778`).
+- Full pipeline passed unit tests, lint, debug APK assembly, signature verification and exact package/version assertions.
 - No physical-device acceptance was performed.
 
 **Not done / next**
-1. Complete physical-device acceptance on the Redmi Note 12 Pro 5G: capture, workspace search/archive/restore, workflow transitions and interrupted-run review, Android share chooser, backup export, wrong-passphrase safety and valid restore.
-2. Only after that acceptance, implement WorkManager execution and recovery.
+1. Complete physical-device acceptance on Redmi Note 12 Pro 5G: capture, workspace search/archive/restore, workflow transitions/interrupted-run review, Android share chooser, backup export, wrong-passphrase safety and valid restore.
+2. Only after acceptance, implement WorkManager execution and recovery.
 3. Add one file/document capture vertical slice with original-byte preservation and evidence provenance.
 
 **Open questions**
 - No new product decision is required. User-led device acceptance is the current gate.
 
 **Risks / landmines**
-- The capability registry is a contract and field validator, not an executor. Adapter-backed capabilities remain NOT_IMPLEMENTED.
-- Generic field validation does not enforce semantic constraints, URI/origin allowlists, source terms, consent freshness, actual quotas, payload hash re-checks or external postconditions; every adapter must enforce these before promotion.
-- Remote model inference transmits selected context to a third party and may incur fees; explicit user consent is mandatory.
-- External send/submit actions require exact approval, prohibit retries and require provider confirmation. An uncertain outcome must go to NEEDS_REVIEW.
+- Capability registry is a contract and field validator, not an executor. Adapter-backed capabilities remain NOT_IMPLEMENTED.
+- Generic validation does not enforce semantic constraints, URI/origin allowlists, source terms, consent freshness, actual quotas, payload hash re-checks or external postconditions; adapters must enforce these before promotion.
+- Remote model inference transmits selected context to a third party and may incur fees; explicit consent is mandatory.
+- External send/submit actions require exact approval, prohibit retries and require provider confirmation. Uncertain outcomes go to NEEDS_REVIEW.
 - A step marked RUNNING may already have acted; it becomes NEEDS_REVIEW, never auto-retried. Runs interrupted between steps become PAUSED.
-- Restore replaces the entire Room workspace; export first. A lost backup passphrase is unrecoverable. Backup snapshot expects Room schema v3.
+- Restore replaces the entire Room workspace; export first. Lost backup passphrase is unrecoverable. Backup snapshot expects Room schema v3.
 - Physical-device acceptance and release signing remain open. Debug signing is not production signing.
