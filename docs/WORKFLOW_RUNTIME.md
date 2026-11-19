@@ -44,6 +44,7 @@ Robolectric tests cover:
 - review-required ambiguous outcomes and retry restrictions;
 - safe retry authorization;
 - cancellation of non-terminal steps;
+- file-backed process close/reopen recovery for in-flight and between-step interruption, stale-approval revocation, event idempotency and explicit human resolution;
 - version 1 to version 2 migration with existing row preservation.
 
 ## Process interruption recovery
