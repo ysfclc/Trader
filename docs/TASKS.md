@@ -19,13 +19,15 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
 - [ ] T1.2 Expand navigation beyond the first Inbox and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workflows.
-- [ ] T1.3 Room v1 entities/DAOs and schema export are implemented; schema snapshot policy remains open.
+- [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
+- [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI run 225).
 - [ ] T1.4 Add encrypted local backup/export and integrity-verified restore.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Quick-note shortcuts and document import remain open.
-- [ ] T1.6 Initial capture preserves original text/URL, input kind, capture timestamps and source URI. Evidence entities, language metadata, parser version and verification states remain open.
+- [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
 - [ ] T1.8 Add durable job/task state, cancellation and process-death recovery tests.
+- [x] T1.9 Make the local workspace practical to manage: edit cases, search active and archived records, reversibly archive/restore, attach and review evidence, add expected results to plan steps, and share a complete context packet to another Android app (CI run 225 passed; device acceptance pending).
 - [x] T1.8a Persist workflow runs, steps and append-only events with idempotent creation, exact-payload approvals, safe retry and cancellation (CI runs 111 and 112 passed).
 
 ## T2 — Commercial records
@@ -45,6 +47,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T3.0b Verify Room-persisted workflow runs/steps, event history, idempotency, exact-payload approvals, cancellation and migration (CI runs 111 and 112 passed).
 - [x] T3.0c Add capability registry enforcement for permission, side-effect, retry-safety, approval and postcondition contracts (PR #4 merged; CI runs 129 and 130 passed).
 - [x] T3.0d Add user-facing capability browser and workflow UI with truthful availability, missing-permission, approval and postcondition states. PR #6 merged; CI runs 202/203 passed. Physical-device acceptance remains pending.
+- [x] T3.0e Generate a source- and verification-aware context packet from a case, plan and evidence records for explicit share-sheet handoff. Unit test passed in CI run 225; this is a handoff, not an embedded AI integration.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
