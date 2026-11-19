@@ -130,4 +130,21 @@
     <string name="event_evidence_added">Evidence added</string>
     <string name="event_evidence_verified">Evidence marked verified</string>
     <string name="event_evidence_unreviewed">Evidence returned to unreviewed</string>
+    <string name="backup_restore">Backup &amp; restore</string>
+    <string name="backup_intro">Create a passphrase-protected copy of all cases, evidence, plans and workflow history, or restore a previous Trader backup.</string>
+    <string name="backup_passphrase">Backup passphrase</string>
+    <string name="backup_confirm_passphrase">Confirm passphrase</string>
+    <string name="backup_passphrase_hint">Use at least 12 characters. Trader never stores or sends this passphrase. Losing it means the backup cannot be unlocked.</string>
+    <string name="backup_export">Create encrypted backup</string>
+    <string name="backup_import">Restore from backup</string>
+    <string name="backup_restore_warning">Restoring replaces every current Trader record with the contents of the selected backup.</string>
+    <string name="backup_restore_ack">I understand this will replace my current workspace.</string>
+    <string name="backup_passphrase_too_short">Use at least 12 characters.</string>
+    <string name="backup_passphrase_mismatch">The passphrases do not match.</string>
+    <string name="backup_ack_required">Confirm that you understand the workspace will be replaced.</string>
+    <string name="backup_export_success">Encrypted backup created.</string>
+    <string name="backup_restore_success">Backup restored. Your workspace has been replaced.</string>
+    <string name="backup_failed">Backup operation failed:</string>
+    <string name="backup_result_title">Backup status</string>
+    <string name="close">Close</string>
 </resources>
