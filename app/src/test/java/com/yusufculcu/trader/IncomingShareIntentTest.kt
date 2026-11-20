@@ -68,4 +68,32 @@ class IncomingShareIntentTest {
         assertTrue(parsed?.content?.contains("CNC turned and milled") == true)
     }
 
+    @Test
+    fun memoBrowserCaptureUsesReviewRouteInsteadOfImmediateGenericIntake() {
+        val payload = """
+            MEMO_BROWSER_CAPTURE_V1
+            Title: Supplier profile
+            Source URL: https://example.test/suppliers/acme
+            Summary: Industrial supplier
+
+            Captured page text:
+            Acme supplies CNC turned and milled components for manufacturers.
+        """.trimIndent()
+        val intent = Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, payload)
+
+        val route = routeIncomingShare(intent)
+
+        assertTrue(route is IncomingShareRoute.ReviewBrowserCapture)
+        assertEquals(payload, (route as IncomingShareRoute.ReviewBrowserCapture).payload)
+    }
+
+    @Test
+    fun ordinaryTextAndUrlsKeepTheExistingIntakeRoute() {
+        val textIntent = Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, "A normal shared note")
+        val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://example.test/catalog"))
+
+        assertEquals(IncomingShareRoute.OrdinaryContent("A normal shared note"), routeIncomingShare(textIntent))
+        assertEquals(IncomingShareRoute.OrdinaryContent("https://example.test/catalog"), routeIncomingShare(urlIntent))
+    }
+
 }
