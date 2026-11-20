@@ -27,11 +27,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 ksp { arg("room.schemaLocation", "${projectDir}/schemas") }
 
 dependencies {
@@ -65,7 +71,6 @@ dependencies {
     androidTestImplementation("androidx.room:room-testing:2.8.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
 }
-
 
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
     // Robolectric's default repo1 endpoint intermittently returns 404 for checksum sidecars.
