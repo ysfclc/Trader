@@ -23,7 +23,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
-- Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. This is an architecture/documentation checkpoint only; no discovery or browser code is claimed yet.
+- Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. The branch now adds a first Trader-owned WebView browser screen (address/search, back/forward, stop/reload, title/current URL, progress, share handoff); CI and device acceptance are pending. No discovery source adapter or evidence capture into dossiers exists yet.
 - The product's next acceptance target is a real ProofAsset → DiscoveryStrategy → permitted public source → candidate dossier → Trader browser research → individualized outreach draft/handoff journey. Do not deliver another APK as if this target were met until it is implemented and CI-verified.
 
 ## 3a. Previously in flight (historical)
