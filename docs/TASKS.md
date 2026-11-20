@@ -18,7 +18,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
-- [ ] T1.2 Expand navigation beyond the Inbox, Opportunity Pipeline and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workspaces.
+- [ ] T1.2 Rebuild the product shell around Discover, Work, Live and Studio while preserving Inbox, Pipeline and Activity as linked views; add per-destination state/back-stack and migration tests.
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
@@ -53,8 +53,12 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T3.0d Add user-facing capability browser and workflow UI with truthful availability, missing-permission, approval and postcondition states. PR #6 merged; CI runs 202/203 passed. Physical-device acceptance remains pending.
 - [x] T3.0e Generate a source- and verification-aware context packet from a case, plan and evidence records for explicit share-sheet handoff. Unit test passed in CI runs 225 and 232; this is a handoff, not an embedded AI integration.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
+- [ ] T3.1a Define versioned ProofAsset and DiscoveryStrategy records: real user capability/proof, problem signatures, target constraints, query plan and disqualifiers.
+- [ ] T3.1b Define durable DiscoveryRun and SourceRun state with bounded execution, cancellation, caching, timestamps, health and explicit failures.
+- [ ] T3.2a Implement one real, documented public-source adapter end-to-end; no fixtures or fake result lists.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
-- [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
+- [ ] T3.3 Implement a Trader-owned in-app browser with address/search, back/forward/reload, progress, tabs, bookmarks/history, find-in-page, downloads and cookie/session controls.
+- [ ] T3.3a Add visible browser task controls, pause/stop/takeover, origin scope, login/CAPTCHA/OTP/consent-wall detection and evidence capture into the active dossier.
 - [ ] T3.4 Investigate Android intents, Custom Tabs, WebView and AccessibilityService limitations; Accessibility must not be the sole automation foundation.
 - [ ] T3.5 Add durable queue, pause/resume, retry, cancellation and failure inspection.
 - [ ] T3.6 Add source-specific access checks, rate limits, caching and backoff.
@@ -69,6 +73,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.5 Implement bounded context packets, redaction, prompt versioning and explicit remote-model consent.
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
+- [ ] T4.8 Add Organization and Person dossiers with aliases/domains, source-linked claims, identity-resolution state and reversible duplicate review.
+- [ ] T4.9 Add explainable ProofAsset-to-Organization fit assessments: supporting/contradicting evidence, unknowns, deterministic components and reviewer override.
 
 ## T5 — Outreach and deal execution
 
@@ -80,6 +86,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T5.5 Track draft, approved, handed-off, confirmed-sent, failed, uncertain and replied states accurately.
 - [ ] T5.6 Add durable follow-up notifications/reminders and the full deal pipeline; the current Pipeline only displays manually entered dates and does not schedule notifications.
 - [ ] T5.7 Create buyer/supplier introduction dossier and written commission/authority checklist.
+- [ ] T5.8 Generate individualized outreach drafts from verified facts and a selected ProofAsset; preserve claim provenance and flag unsupported statements.
+- [ ] T5.9 Add channel capability declarations for discover/read/draft/handoff/send/reply/verify; never present a browser or Android intent handoff as a confirmed send.
 
 ## T6 — Pilot and verification
 
