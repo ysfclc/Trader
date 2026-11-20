@@ -62,6 +62,18 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
         }
     }
 
+    fun captureBrowserPage(
+        problemId: String?,
+        title: String,
+        sourceUrl: String,
+        content: String,
+        onSaved: (String?) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            onSaved(repository.captureBrowserPage(problemId, title, sourceUrl, content))
+        }
+    }
+
     fun updateProblem(
         problemId: String,
         title: String,
