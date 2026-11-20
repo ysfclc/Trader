@@ -48,6 +48,25 @@ class SharedBrowserCaptureParserTest {
     }
 
     @Test
+    fun stripsQueryAndFragmentFromImportedSourceUrl() {
+        val raw = """
+            MEMO_BROWSER_CAPTURE_V1
+            Title: Authenticated supplier page
+            Source URL: https://example.com/private?code=oauth-code&access_token=secret#session=private
+            Summary: Supplier details
+
+            Captured page text:
+            A readable summary of the supplier and its publicly visible production capabilities.
+        """.trimIndent()
+
+        val capture = SharedBrowserCaptureParser.parse(raw)
+
+        assertEquals("https://example.com/private", capture?.sourceUrl)
+        assertTrue(capture?.sourceUrl?.contains("oauth-code") == false)
+        assertTrue(capture?.sourceUrl?.contains("access_token") == false)
+    }
+
+    @Test
     fun rejectsOversizedAndMissingContentPayloads() {
         val oversized = "x".repeat(SharedBrowserCaptureParser.HEADER.length + 30_000)
         val missingContent = """

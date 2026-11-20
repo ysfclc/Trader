@@ -16,7 +16,7 @@ class TraderBrowserCaptureTest {
         val page = JSONObject()
             .put("ok", true)
             .put("title", "Supplier profile")
-            .put("url", "https://example.com/suppliers/acme")
+            .put("url", "https://example.com/suppliers/acme?code=oauth-code&access_token=secret#session=private")
             .put("content", "Company name: Acme Tools\nCapabilities: CNC turning and milling")
             .put("selectedText", "Capabilities: CNC turning and milling")
             .put("summary", "Industrial supplier profile")
@@ -30,6 +30,9 @@ class TraderBrowserCaptureTest {
 
         assertEquals("Supplier profile", decoded?.title)
         assertEquals("https://example.com/suppliers/acme", decoded?.url)
+        assertFalse(decoded?.url?.contains("oauth-code") == true)
+        assertFalse(decoded?.url?.contains("access_token") == true)
+        assertFalse(decoded?.url?.contains("session=private") == true)
         assertTrue(decoded?.content?.contains("Acme Tools") == true)
         assertEquals(
             "Capabilities: CNC turning and milling",

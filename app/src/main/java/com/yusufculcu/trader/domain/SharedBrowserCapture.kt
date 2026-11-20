@@ -37,7 +37,10 @@ object SharedBrowserCaptureParser {
         if (title.isBlank() || scheme !in setOf("http", "https") || uri?.host.isNullOrBlank() || uri?.rawUserInfo != null) {
             return null
         }
-        return SharedBrowserCapture(title, sourceUrl, summary, body)
+        // Query strings and fragments may contain one-time OAuth codes or session tokens.
+        val safeSourceUrl = uri.toASCIIString().substringBefore('?').substringBefore('#').take(2_048)
+        if (safeSourceUrl.isBlank()) return null
+        return SharedBrowserCapture(title, safeSourceUrl, summary, body)
     }
 
     fun toEvidenceContent(capture: SharedBrowserCapture): String = buildString {

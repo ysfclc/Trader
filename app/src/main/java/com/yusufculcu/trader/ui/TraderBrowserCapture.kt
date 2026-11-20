@@ -64,10 +64,13 @@ internal object TraderBrowserCapture {
             val json = JSONObject(decoded)
             if (!json.optBoolean("ok")) return null
 
-            val url = json.optString("url", fallbackUrl).trim().take(2_048).ifBlank { fallbackUrl }
-            val parsed = runCatching { java.net.URI(url) }.getOrNull()
+            val candidateUrl = json.optString("url", fallbackUrl).trim().take(2_048).ifBlank { fallbackUrl }
+            val parsed = runCatching { java.net.URI(candidateUrl) }.getOrNull()
             val scheme = parsed?.scheme?.lowercase()
             if (scheme !in setOf("http", "https") || parsed?.host.isNullOrBlank() || parsed?.rawUserInfo != null) return null
+            // Do not retain query parameters or fragments that may contain temporary credentials.
+            val safeUrl = parsed.toASCIIString().substringBefore('?').substringBefore('#').take(2_048)
+            if (safeUrl.isBlank()) return null
 
             val content = json.optString("content").trim().take(MAX_CONTENT_CHARS)
             val selectedText = json.optString("selectedText").trim().take(MAX_SELECTION_CHARS)
@@ -75,7 +78,7 @@ internal object TraderBrowserCapture {
 
             TraderBrowserPageSnapshot(
                 title = json.optString("title", fallbackTitle).trim().take(240).ifBlank { fallbackTitle },
-                url = url,
+                url = safeUrl,
                 content = content,
                 selectedText = selectedText,
                 summary = json.optString("summary").trim().take(600)

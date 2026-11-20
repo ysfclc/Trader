@@ -29,7 +29,7 @@ class BrowserPageCapturePersistenceTest {
 
     @Test
     fun newBrowserCaptureCreatesResearchCaseAndUnreviewedSourceEvidenceAtomically() = runBlocking {
-        val url = "https://example.com/company/about"
+        val url = "https://example.com/company/about?code=oauth-code&access_token=secret#session=private"
         val content = "Acme manufactures industrial cutting tools and serves customers across Poland."
 
         val problemId = repository.captureBrowserPage(
@@ -45,10 +45,10 @@ class BrowserPageCapturePersistenceTest {
         assertEquals("Acme | Company profile", problem?.title)
         assertEquals("Research", problem?.category)
         assertEquals("browser_capture", problem?.inputKind)
-        assertEquals(url, problem?.sourceUri)
+        assertEquals("https://example.com/company/about", problem?.sourceUri)
         assertEquals(problemId, evidence.problemId)
         assertEquals("BROWSER_PAGE", evidence.sourceKind)
-        assertEquals(url, evidence.sourceUri)
+        assertEquals("https://example.com/company/about", evidence.sourceUri)
         assertEquals(content, evidence.content)
         assertEquals("UNREVIEWED", evidence.verificationState)
         assertTrue(database.activityDao().getAll().any { it.eventType == "browser_page_captured" })

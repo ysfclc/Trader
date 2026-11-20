@@ -91,14 +91,17 @@ class TraderRepository(private val database: TraderDatabase) {
         content: String
     ): String? {
         val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
-        val cleanUrl = sourceUrl.trim().take(2_048)
+        val candidateUrl = sourceUrl.trim().take(2_048)
         val cleanContent = content.trim().take(20_000)
-        val parsedUrl = runCatching { java.net.URI(cleanUrl) }.getOrNull()
+        val parsedUrl = runCatching { java.net.URI(candidateUrl) }.getOrNull()
         val scheme = parsedUrl?.scheme?.lowercase()
         if (cleanTitle.isBlank() || scheme !in setOf("https", "http") ||
             parsedUrl?.host.isNullOrBlank() || parsedUrl?.rawUserInfo != null ||
             cleanContent.length < 20
         ) return null
+        // Persist the canonical page path, not potentially credential-bearing query/fragment data.
+        val cleanUrl = parsedUrl.toASCIIString().substringBefore('?').substringBefore('#').take(2_048)
+        if (cleanUrl.isBlank()) return null
 
         return database.withTransaction {
             val existing = problemId?.let { database.problemDao().getById(it) }
