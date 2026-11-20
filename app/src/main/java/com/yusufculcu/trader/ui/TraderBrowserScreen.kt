@@ -44,7 +44,7 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
     var progress by remember { mutableIntStateOf(0) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
-    DisposableEffect(webViewRef) {
+    DisposableEffect(Unit) {
         onDispose {
             webViewRef?.stopLoading()
             webViewRef?.destroy()
