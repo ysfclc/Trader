@@ -23,12 +23,18 @@ Exit gate: product vision, architecture, data model and operating rules agree.
 
 Exit gate: capture and manage a real non-commercial problem and a commercial opportunity, preserve context/evidence, edit/search/archive/restore cases, share a useful context packet, retrieve it offline, and export/restore an encrypted workspace backup; no account, paid AI or cloud required. Backup/restore is CI-verified (PR #8 and main run 256); physical-device acceptance of the workspace and document-picker backup flow remains open.
 
-## Phase 2 — Context, discovery and qualification
+## Phase 2 — Context, company discovery and qualification
+
+Priority correction: deliver a proof-asset-led company discovery journey before expanding manual pipeline features. The first prospecting method searches for public evidence that a company is already experiencing, discussing, procuring or hiring to solve a problem the user's real product/service/skill can address. Do not start from generic industry lists or bulk outreach.
 - [x] Package a ProblemCase, plan and evidence into an explicit user-shareable context packet for assistant handoff; embedded AI and automatic context-return remain open.
 - [ ] Build a capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; every capability declares limits and postconditions.
 - [ ] Resolve a ProblemCase into a structured context packet, missing-information questions and evidence-backed candidate paths.
-- [ ] Build source adapters for public web search, public company pages, directories and user-authorized browser sessions.
-- [ ] Add Android browser automation and carefully scoped installed-app automation.
+- [ ] Build documented source adapters for public web search, public company pages, directories, public tenders/RFQs and user-authorized browser sessions; enable each only after access, terms, scope, cost and rate limits are explicit.
+- [ ] Create versioned ProofAsset and DiscoveryStrategy records; derive editable problem signatures, target constraints, query plans and disqualifiers.
+- [ ] Persist bounded DiscoveryRun/SourceRun state with caching, cancellation, source health and failure reporting.
+- [ ] Build normalized Organization/Person dossiers with source-linked claims, identity-resolution review and reversible deduplication.
+- [ ] Explain fit against selected proof assets, including supporting/contradicting evidence and unknowns.
+- [ ] Add a Trader-owned in-app browser with normal browsing fundamentals, persistent tabs/session controls, evidence capture and visible automation takeover/pause/stop.
 - [ ] Make every adapter report limits, errors, timestamps and source provenance.
 - [ ] Extract structured requirements and offers using deterministic parsing first.
 - [ ] Add optional local AI adapter for translation, extraction, classification and drafting.
@@ -37,6 +43,9 @@ Exit gate: capture and manage a real non-commercial problem and a commercial opp
 Exit gate: a user can investigate a real ProblemCase, distinguish facts from unknowns, and produce evidence-backed candidate paths. A trade case must also be capable of buyer/supplier qualification with traceable evidence.
 
 ## Phase 3 — Matching and commercial workflow
+
+- [ ] Produce individualized outreach drafts grounded in verified company facts and a selected proof asset; flag every unsupported claim.
+- [ ] Show real channel capabilities (read/draft/handoff/send/reply/verify) and do not conflate app launch with a completed send.
 - [ ] Match buyer requirements to supplier capabilities with explainable scoring.
 - [ ] Surface missing facts, incompatibilities and questions instead of fabricating fit.
 - [ ] Add side-by-side comparison, shortlist and introduction dossier.
