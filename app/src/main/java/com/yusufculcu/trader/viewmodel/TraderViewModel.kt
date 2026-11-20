@@ -11,7 +11,6 @@ import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.WorkflowStepDraft
 import com.yusufculcu.trader.domain.ProblemStatus
-import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.domain.WorkflowRunStatus
 import com.yusufculcu.trader.domain.WorkflowStepStatus
 import kotlinx.coroutines.flow.SharingStarted
@@ -47,18 +46,6 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     }
 
     fun captureSharedContent(content: String) {
-        val browserCapture = SharedBrowserCaptureParser.parse(content)
-        if (browserCapture != null) {
-            viewModelScope.launch {
-                repository.captureBrowserPage(
-                    problemId = null,
-                    title = browserCapture.title,
-                    sourceUrl = browserCapture.sourceUrl,
-                    content = SharedBrowserCaptureParser.toEvidenceContent(browserCapture)
-                )
-            }
-            return
-        }
         val isUrl = content.startsWith("https://") || content.startsWith("http://")
         val title = if (isUrl) content.removePrefix("https://").removePrefix("http://").substringBefore('/').ifBlank { "Shared link" }
         else content.lineSequence().firstOrNull().orEmpty().take(100)
