@@ -177,7 +177,13 @@ fun TraderApp(viewModel: TraderViewModel) {
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
-            tab == AppTab.BROWSER -> TraderBrowserScreen(Modifier.padding(padding))
+            tab == AppTab.BROWSER -> TraderBrowserScreen(
+                modifier = Modifier.padding(padding),
+                problems = problems,
+                onSaveCapture = { problemId, title, url, content, onSaved ->
+                    viewModel.captureBrowserPage(problemId, title, url, content, onSaved)
+                }
+            )
             tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
             tab == AppTab.PIPELINE -> OpportunityPipelineContent(
                 opportunities = opportunities,
