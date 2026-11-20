@@ -1,3 +1,11 @@
+## 2026-11-20 — Trader local AI foundation (in progress)
+
+- Accepted D-021: local AI is the intelligence backbone for discovery, qualification, research and outreach preparation; Memo-2 supplies patterns only.
+- Added Trader-owned pinned LiteRT-LM model catalog profiles for small, analyst and deep model roles.
+- Added real CPU LiteRT-LM inference adapter with bounded prompt/response, background execution and explicit model-path/size validation. No canned responses or silent cloud fallback.
+- Added bounded evidence-aware context packets that label fact verification state, retain source links and timestamps, include unknowns and signal when context is truncated.
+- Added catalog/context foundation tests; CI verification pending. Model download/install/verification UI, context engine, orchestrator and discovery integration remain open.
+
 ## 2026-11-20 — Trader browser baseline (PR #17 in progress)
 
 - Added a Trader-owned WebView browser screen as a bottom navigation destination with address/search, back/forward, stop/reload, title/current URL, loading progress and page-share handoff.
