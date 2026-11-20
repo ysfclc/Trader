@@ -57,7 +57,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T3.1b Define durable DiscoveryRun and SourceRun state with bounded execution, cancellation, caching, timestamps, health and explicit failures.
 - [ ] T3.2a Implement one real, documented public-source adapter end-to-end; no fixtures or fake result lists.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
-- [ ] T3.3 Implement a Trader-owned in-app browser with address/search, back/forward/reload, progress, tabs, bookmarks/history, find-in-page, downloads and cookie/session controls.
+- [x] T3.3a Add first Trader-owned browser screen with address/search, back/forward, stop/reload, title/current URL, progress and share-page handoff. PR #17 CI pending; physical-device acceptance open. Tabs, bookmarks/history, find-in-page, downloads, session/cookie controls and dossier evidence capture remain open.
+- [ ] T3.3 Implement full browser baseline with tabs, bookmarks/history, find-in-page, downloads and cookie/session controls.
 - [ ] T3.3a Add visible browser task controls, pause/stop/takeover, origin scope, login/CAPTCHA/OTP/consent-wall detection and evidence capture into the active dossier.
 - [ ] T3.4 Investigate Android intents, Custom Tabs, WebView and AccessibilityService limitations; Accessibility must not be the sole automation foundation.
 - [ ] T3.5 Add durable queue, pause/resume, retry, cancellation and failure inspection.
