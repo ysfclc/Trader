@@ -216,3 +216,16 @@ Google OAuth is not attempted inside Trader's embedded WebView because Google pr
 **Reason:** A browser that cannot retain authenticated sessions or handle normal identity-provider redirects cannot support the intended research and outreach workflows. Login must work where providers allow it, while respecting provider security policy where they do not.
 
 **Consequences:** CI regression tests cover URL routing and cookie configuration; real-device acceptance must test password login, supported SSO, app process restart and Google fallback on the Redmi. A screen existing or a green CI build is not proof that all providers authenticate successfully.
+
+
+## D-023 — Authenticated browser capture is explicit, source-linked and credential-free
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader may capture rendered visible page text or the user's selected text from its authenticated WebView, but only after an explicit user action and review/edit step. The capture is stored as UNREVIEWED source-linked Evidence on an active case or in a new Research case. It preserves page title, capture time and a sanitized source URL. The browser runtime must never read cookies, WebView storage, password fields, hidden form values or authentication tokens for this feature.
+
+Memo can hand a user-reviewed page to Trader through Android Sharesheet using the versioned MEMO_BROWSER_CAPTURE_V1 text contract. The payload contains title, summary, visible page text and an HTTP(S) base URL. Query strings and fragments are stripped before sharing and independently stripped again by Trader before storage. The handoff transfers research material, not the browser session.
+
+**Reason:** The user researches through authenticated websites in Memo but needs the resulting evidence in Trader's durable discovery and qualification workspace. Sharing content keeps the account session with its owning browser and avoids a cookie/token export mechanism.
+
+**Consequences:** Keep this operation user-triggered and reviewable; treat page content as untrusted until the user verifies it. Support redaction before save/share. A green CI build verifies parsing and persistence contracts, not the actual Android Sharesheet flow or completeness of dynamically rendered pages. Memo sender PR #15 and installed-build acceptance remain separate gates.
