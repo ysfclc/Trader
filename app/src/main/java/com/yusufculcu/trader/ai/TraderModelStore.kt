@@ -2,7 +2,6 @@ package com.yusufculcu.trader.ai
 
 import android.app.ActivityManager
 import android.content.Context
-import android.os.Build
 import android.os.StatFs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
