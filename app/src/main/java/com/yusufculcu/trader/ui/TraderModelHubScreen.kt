@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import com.yusufculcu.trader.TraderApplication
 import com.yusufculcu.trader.ai.TraderModelCatalog
 import com.yusufculcu.trader.ai.TraderModelStore
@@ -39,7 +40,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     val app = context.applicationContext as TraderApplication
     val store = remember(app) { app.modelStore }
     val states by store.states.collectAsState()
-    val activeId = store.activeModelId()
+    var activeId by remember { mutableStateOf(store.activeModelId()) }
     val scope = rememberCoroutineScope()
     var testOutput by remember { mutableStateOf("") }
     var testing by remember { mutableStateOf(false) }
@@ -67,7 +68,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                         when (state.status) {
                             TraderModelStore.Status.INSTALLED -> {
                                 if (activeId == model.id) Text("ACTIVE MODEL", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                                else Button(onClick = { store.setActiveModel(model.id) }) { Text("Use model") }
+                                else Button(onClick = { if (store.setActiveModel(model.id)) activeId = model.id }) { Text("Use model") }
                             }
                             TraderModelStore.Status.DOWNLOADING, TraderModelStore.Status.VERIFYING -> OutlinedButton(onClick = { store.pause(model.id) }) { Text("Pause") }
                             else -> Button(enabled = enoughStorage, onClick = { store.download(model) }) { Text(if (state.status == TraderModelStore.Status.PAUSED) "Resume download" else "Download") }
