@@ -67,7 +67,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER }
+private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,6 +152,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
                 NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
+                NavigationBarItem(tab == AppTab.AI, { tab = AppTab.AI }, icon = { Text("AI") }, label = { Text("Models") })
             }
         },
         floatingActionButton = {
@@ -177,6 +178,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(Modifier.padding(padding))
+            tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
             tab == AppTab.PIPELINE -> OpportunityPipelineContent(
                 opportunities = opportunities,
                 onOpen = { selectedId = it.id },
