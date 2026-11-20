@@ -7,8 +7,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ArrowForward
@@ -44,6 +44,13 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
     var progress by remember { mutableIntStateOf(0) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
 
+    DisposableEffect(webViewRef) {
+        onDispose {
+            webViewRef?.stopLoading()
+            webViewRef?.destroy()
+            webViewRef = null
+        }
+    }
     Column(modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
@@ -54,14 +61,14 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
                 label = { Text("Search or enter address") },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onGo = { webViewRef?.loadUrl(browserTarget(address)); address = browserTarget(address) })
+                keyboardActions = KeyboardActions(onGo = { webViewRef?.loadUrl(browserTarget(address)); address = browserTarget(address) })
             )
             IconButton(onClick = { webViewRef?.loadUrl(browserTarget(address)); address = browserTarget(address) }) { Icon(Icons.Rounded.ArrowForward, "Go") }
         }
         if (loading) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth())
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { webViewRef?.let { if (it.canGoBack()) it.goBack() } }, enabled = webViewRef?.canGoBack() == true) { Icon(Icons.Rounded.ArrowBack, "Back") }
-            IconButton(onClick = { webViewRef?.let { if (it.canGoForward()) it.goForward() } }, enabled = webViewRef?.canGoForward() == true) { Icon(Icons.Rounded.ArrowForward, "Forward") }
+            IconButton(onClick = { webViewRef?.let { if (it.canGoBack()) it.goBack() } }, enabled = true) { Icon(Icons.Rounded.ArrowBack, "Back") }
+            IconButton(onClick = { webViewRef?.let { if (it.canGoForward()) it.goForward() } }, enabled = true) { Icon(Icons.Rounded.ArrowForward, "Forward") }
             IconButton(onClick = { webViewRef?.stopLoading() }, enabled = loading) { Icon(Icons.Rounded.Stop, "Stop") }
             IconButton(onClick = { webViewRef?.reload() }) { Icon(Icons.Rounded.Refresh, "Reload") }
             Spacer(Modifier.weight(1f))
