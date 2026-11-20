@@ -60,6 +60,12 @@ The usable browser baseline includes:
 
 Do not silently navigate to a different origin, submit forms, send messages or execute destructive actions. Detect login, CAPTCHA, OTP, consent walls and unexpected states; pause for the user. Never bypass access controls or hide automation. Browser state and evidence must be owned by Trader, not Memo.
 
+#### Capturing authenticated research
+
+The browser must turn a useful page into durable Trader evidence. The user taps Capture, then sees an editable review sheet showing page title, source and either selected text or readable visible page text. The user can redact/edit content and save it to an existing active case or create a new Research record. Saved evidence retains source URL and capture time and begins UNREVIEWED. Capture reads rendered body text, selected text, visible headings and page description only; it must never inspect cookies, browser storage, passwords, hidden form values or tokens. Page text can still include private information, so the review step is mandatory.
+
+Memo may share a capture through Android Sharesheet using MEMO_BROWSER_CAPTURE_V1. Trader recognizes that versioned payload and stores it as a new Research record with unreviewed source evidence; ordinary text/URL shares remain unchanged. The bridge exports only the sanitized base page URL (no query or fragment), title, summary and bounded visible text. It does not export or transfer Memo's account session.
+
 #### Account and identity sessions
 
 Account login is a core browser requirement, not a later convenience. For providers that permit embedded browsing, Trader must maintain its own persistent WebView profile: accept first-party cookies, explicitly configure third-party cookies per WebView where SSO requires them, retain WebView DOM storage, flush cookie state at lifecycle boundaries, support user-initiated popup/consent windows, Android autofill and website file-upload selection. The same app-local cookie jar is used by Trader's main and popup WebViews; sessions must survive leaving the browser screen and a normal app process restart.
