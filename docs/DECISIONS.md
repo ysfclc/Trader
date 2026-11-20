@@ -192,3 +192,14 @@ The primary experience is organized around Discover, Work, Live and Studio. Inbo
 **Reason:** The current Inbox/Pipeline/Activity experience makes Trader look like a manual tracker and does not expose the user's priority workflow: find companies that already have relevant problems, understand the evidence, approach them through the right channel and verify the outcome. Memo's persistent context, visible execution and takeover patterns are useful references, but Trader owns its own product architecture, runtime and data.
 
 **Consequences:** The first genuinely useful release must complete ProofAsset → DiscoveryStrategy → real permitted source results → deduplicated candidate dossier → evidence-backed fit → Trader browser research → individualized outreach draft → approved handoff/verified outcome. Do not ship seeded results, fake connected channels or browser link-outs as completion.
+
+
+## D-021 — Local AI is Trader's intelligence backbone
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader adopts Memo-2's verified architectural patterns—model roles/lifecycle, local inference, bounded context packets, structured planning, routing, persistent context and checkpointed execution—but implements and owns them independently. Local inference is the default intelligence path for discovery strategy, query planning, evidence extraction, qualification, research and outreach preparation. Models are task-routed; one model may serve multiple roles. Model installation is optional and never forced at first launch. The first runtime targets LiteRT-LM .litertlm models with CPU correctness before accelerator investigation. External AI is explicit escalation only, with preview/redaction of the context packet and no silent fallback. Model output is untrusted and cannot grant capabilities or bypass exact approval gates.
+
+**Reason:** Trader needs to automate the actual opportunity-finding and research loop. A chatbot or AI decoration would not solve this. Local-first inference keeps private workspace context on-device and avoids mandatory cloud credits.
+
+**Consequences:** model catalog/runtime, Context Engine, memory, structured orchestrator and AI-backed discovery become ordered implementation milestones with real inference and device acceptance. See `docs/LOCAL_AI_ARCHITECTURE.md`. Memo remains a reference, not a dependency.
