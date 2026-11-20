@@ -79,6 +79,80 @@ class TraderRepository(private val database: TraderDatabase) {
         return id
     }
 
+    /**
+     * Saves a user-reviewed capture from the currently visible browser page.
+     * A null problemId creates a new research case; otherwise evidence is attached
+     * to the selected active case. Page content and its source link are committed atomically.
+     */
+    suspend fun captureBrowserPage(
+        problemId: String?,
+        title: String,
+        sourceUrl: String,
+        content: String
+    ): String? {
+        val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
+        val cleanUrl = sourceUrl.trim().take(2_048)
+        val cleanContent = content.trim().take(20_000)
+        val parsedUrl = runCatching { java.net.URI(cleanUrl) }.getOrNull()
+        val scheme = parsedUrl?.scheme?.lowercase()
+        if (cleanTitle.isBlank() || scheme !in setOf("https", "http") ||
+            parsedUrl?.host.isNullOrBlank() || parsedUrl?.rawUserInfo != null ||
+            cleanContent.length < 20
+        ) return null
+
+        return database.withTransaction {
+            val existing = problemId?.let { database.problemDao().getById(it) }
+            if (problemId != null && (existing == null || existing.archivedAt != null)) {
+                return@withTransaction null
+            }
+
+            val now = System.currentTimeMillis()
+            val targetProblemId = existing?.id ?: UUID.randomUUID().toString()
+            if (existing == null) {
+                database.problemDao().insert(
+                    ProblemEntity(
+                        id = targetProblemId,
+                        title = cleanTitle,
+                        description = "Captured from Trader's signed-in browser. Review the source-linked evidence before relying on it.",
+                        desiredOutcome = "Review the captured page and identify any relevant signal or next action.",
+                        constraintsText = "",
+                        category = "Research",
+                        status = ProblemStatus.OPEN.name,
+                        inputKind = "browser_capture",
+                        originalContent = cleanUrl,
+                        sourceUri = cleanUrl,
+                        outcomeNote = "",
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
+                addEvent(targetProblemId, "created", "Research record created", "Created from a user-reviewed browser page capture", now)
+            }
+
+            database.evidenceDao().insert(
+                EvidenceEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = targetProblemId,
+                    title = cleanTitle,
+                    content = cleanContent,
+                    sourceUri = cleanUrl,
+                    sourceKind = "BROWSER_PAGE",
+                    verificationState = "UNREVIEWED",
+                    capturedAt = now
+                )
+            )
+            database.problemDao().touch(targetProblemId, now)
+            addEvent(
+                targetProblemId,
+                "browser_page_captured",
+                "Browser page captured",
+                "Visible page content saved from ${parsedUrl.host}. Evidence remains unreviewed.",
+                now
+            )
+            targetProblemId
+        }
+    }
+
     suspend fun updateProblemDetails(
         id: String,
         title: String,
