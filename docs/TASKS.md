@@ -90,6 +90,19 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T5.8 Generate individualized outreach drafts from verified facts and a selected ProofAsset; preserve claim provenance and flag unsupported statements.
 - [ ] T5.9 Add channel capability declarations for discover/read/draft/handoff/send/reply/verify; never present a browser or Android intent handoff as a confirmed send.
 
+## T7 — Local AI foundation (Memo-2 inspired, Trader-owned)
+
+- [x] T7.0 Accept architecture: local AI is Trader's intelligence backbone, not a chatbot; Memo-2 is pattern reference only. See `docs/LOCAL_AI_ARCHITECTURE.md`.
+- [x] T7.0a Add Trader-owned pinned model catalog (small orchestrator, analyst, deep model profiles) and role metadata.
+- [x] T7.0b Add real LiteRT-LM inference adapter with CPU execution, off-main-thread operation, bounded input/output and clear missing/unverified-model errors. Model downloading, install verification and UI remain open.
+- [x] T7.0c Add bounded ContextPacket with explicit fact status, provenance links, unknowns and truncation notice.
+- [ ] T7.1 Model Hub: scan/import/download/resume, SHA-256 verification, storage/RAM preflight, role assignment and diagnostics.
+- [ ] T7.2 Context Engine: assemble relevant proof assets, strategies, evidence, organizations, memory and unknowns; redact before external routing.
+- [ ] T7.3 Structured-output validation and plan parser; reject malformed output and unregistered capabilities.
+- [ ] T7.4 Local orchestrator: task routing, run persistence, cancellation, budgets and process-death recovery.
+- [ ] T7.5 Connect local AI to genuine public-source discovery, evidence extraction, company qualification and browser research; acceptance requires a real model on-device.
+- [ ] T7.6 Optional frontier escalation with packet preview, explicit consent and no silent fallback.
+
 ## T6 — Pilot and verification
 
 - [ ] T6.0 Verify one non-commercial ProblemCase end-to-end: capture → context/evidence → plan → supported actions → postcondition verification → user-confirmed closure.
