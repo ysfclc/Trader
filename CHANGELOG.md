@@ -13,7 +13,7 @@
 - Saved captures retain title, sanitized base URL and capture time; evidence is UNREVIEWED until the user verifies it. Database creation/attachment is atomic and rejects invalid URLs, short payloads and archived destinations.
 - Added the MEMO_BROWSER_CAPTURE_V1 Android share-sheet contract to Trader's receiver. Versioned Memo captures become new source-linked research records; normal shared text/URLs preserve their prior intake path.
 - Strip URL query strings and fragments in Memo before sharing and independently in Trader before persistence; this prevents temporary OAuth codes/session values from being propagated in source URLs. No cookies, browser storage, passwords, hidden fields or authentication tokens are read or transferred.
-- Trader CI run 358 passed 76 tests (0 failures/errors/skipped), lint, debug APK assembly, signature and package identity. Memo sender is in PR #15; its independent CI and installed-build acceptance remain open.
+- Trader CI run 358 passed 76 tests (0 failures/errors/skipped), lint, debug APK assembly, signature and package identity. Memo sender PR #15 passed CI run 1009 (Android tests, lint, build/signature and install-over-existing data-preservation); it remains draft/unmerged and the source-only run published no APK artifact. Trader's final import-review dialog and Activity-recreation guard await a clean CI rerun.
 
 ## 2026-11-20 — Trader authenticated browser sessions (PR #17 in progress)
 
