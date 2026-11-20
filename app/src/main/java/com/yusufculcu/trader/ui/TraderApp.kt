@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -66,7 +67,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY }
+private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,6 +151,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
+                NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
             }
         },
         floatingActionButton = {
@@ -174,6 +176,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
+            tab == AppTab.BROWSER -> TraderBrowserScreen(Modifier.padding(padding))
             tab == AppTab.PIPELINE -> OpportunityPipelineContent(
                 opportunities = opportunities,
                 onOpen = { selectedId = it.id },
