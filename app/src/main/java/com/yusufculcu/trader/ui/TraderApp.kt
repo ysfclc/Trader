@@ -58,6 +58,8 @@ import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.domain.ContextPacketBuilder
+import com.yusufculcu.trader.domain.SharedBrowserCapture
+import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.domain.OpportunityLane
 import com.yusufculcu.trader.domain.OpportunityStage
@@ -71,7 +73,11 @@ private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TraderApp(viewModel: TraderViewModel) {
+fun TraderApp(
+    viewModel: TraderViewModel,
+    incomingBrowserCapture: SharedBrowserCapture? = null,
+    onBrowserCaptureHandled: () -> Unit = {}
+) {
     val problems by viewModel.problems.collectAsState()
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
@@ -194,6 +200,23 @@ fun TraderApp(viewModel: TraderViewModel) {
         }
     }
 
+    incomingBrowserCapture?.let { capture ->
+        SharedBrowserCaptureReviewDialog(
+            capture = capture,
+            onDismiss = onBrowserCaptureHandled,
+            onSave = { title, content ->
+                viewModel.captureBrowserPage(
+                    problemId = null,
+                    title = title,
+                    sourceUrl = capture.sourceUrl,
+                    content = content
+                ) { savedId ->
+                    if (savedId != null) onBrowserCaptureHandled()
+                }
+            }
+        )
+    }
+
     if (showCreate) CreateProblemDialog(
         onDismiss = { showCreate = false },
         onCreate = { title, description, outcome, constraints ->
@@ -225,6 +248,80 @@ fun TraderApp(viewModel: TraderViewModel) {
     }
 }
  
+
+@Composable
+private fun SharedBrowserCaptureReviewDialog(
+    capture: SharedBrowserCapture,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var title by remember(capture) { mutableStateOf(capture.title.take(180)) }
+    var content by remember(capture) {
+        mutableStateOf(SharedBrowserCaptureParser.toEvidenceContent(capture).take(18_000))
+    }
+    var saving by remember(capture) { mutableStateOf(false) }
+    var error by remember(capture) { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text("Review imported page") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Memo browser capture · Review before saving",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    capture.sourceUrl,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    "This page text came from a signed-in browser. It may contain private details. Remove anything you do not want stored. Account credentials and browser cookies are not included.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it.take(180); error = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Evidence title") },
+                    maxLines = 2
+                )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it.take(18_000); error = null },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 300.dp),
+                    label = { Text("Captured page text") },
+                    minLines = 6,
+                    maxLines = 14
+                )
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank() || content.trim().length < 20) {
+                        error = "Add a title and at least 20 characters of evidence."
+                    } else {
+                        saving = true
+                        onSave(title.trim(), content.trim())
+                    }
+                },
+                enabled = !saving && title.isNotBlank() && content.trim().length >= 20
+            ) { Text(if (saving) "Saving…" else "Save to Trader") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) { Text("Discard") }
+        }
+    )
+}
+
 @Composable
 private fun BackupDialog(
     onDismiss: () -> Unit,
