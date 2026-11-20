@@ -120,10 +120,7 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
 
     lateinit var configureWebView: (WebView, Boolean) -> Unit
     configureWebView = { view, supportsPopups ->
-        cookieManager.setAcceptCookie(true)
-        // Apps targeting Lollipop+ default to blocking third-party cookies. Many SSO providers
-        // and embedded identity widgets still need them; this is scoped to Trader's WebViews.
-        cookieManager.setAcceptThirdPartyCookies(view, true)
+        TraderBrowserCookiePolicy.configure(view, cookieManager)
 
         view.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_YES
         view.settings.apply {
