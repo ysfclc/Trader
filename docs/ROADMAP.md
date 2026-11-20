@@ -42,6 +42,18 @@ Priority correction: deliver a proof-asset-led company discovery journey before 
 
 Exit gate: a user can investigate a real ProblemCase, distinguish facts from unknowns, and produce evidence-backed candidate paths. A trade case must also be capable of buyer/supplier qualification with traceable evidence.
 
+## Phase 2a — Local intelligence foundation
+- [x] Accept Trader-owned local AI architecture based on Memo-2 patterns: model roles, context packets, routing, memory and bounded structured planning.
+- [x] Add initial pinned model catalog, LiteRT-LM inference adapter and bounded evidence-aware context packet code (runtime/build verification pending).
+- [ ] Model Hub with verified install/import/download, resume, storage/RAM preflight and diagnostics.
+- [ ] Context Engine and provenance-aware local memory.
+- [ ] Structured plan validation, capability routing and persisted orchestrator runs.
+- [ ] Connect inference to real source discovery and company dossier qualification.
+- [ ] Connect research agent to Trader browser with visible state, capture, pause/takeover and postcondition verification.
+- [ ] Optional external model escalation with user-visible context boundary.
+
+Exit gate: a compatible model is installed and verified on-device; Trader performs actual local inference; generated structured plans are validated; one real discovery and dossier workflow is powered by local AI; errors and resource limits are surfaced.
+
 ## Phase 3 — Matching and commercial workflow
 
 - [ ] Produce individualized outreach drafts grounded in verified company facts and a selected proof asset; flag every unsupported claim.
