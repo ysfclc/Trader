@@ -203,10 +203,11 @@ fun TraderApp(
     incomingBrowserCapture?.let { capture ->
         SharedBrowserCaptureReviewDialog(
             capture = capture,
+            problems = problems,
             onDismiss = onBrowserCaptureHandled,
-            onSave = { title, content, onSaved ->
+            onSave = { problemId, title, content, onSaved ->
                 viewModel.captureBrowserPage(
-                    problemId = null,
+                    problemId = problemId,
                     title = title,
                     sourceUrl = capture.sourceUrl,
                     content = content,
@@ -251,10 +252,13 @@ fun TraderApp(
 @Composable
 private fun SharedBrowserCaptureReviewDialog(
     capture: SharedBrowserCapture,
+    problems: List<ProblemEntity>,
     onDismiss: () -> Unit,
-    onSave: (String, String, (String?) -> Unit) -> Unit,
+    onSave: (String?, String, String, (String?) -> Unit) -> Unit,
 ) {
     var title by remember(capture) { mutableStateOf(capture.title.take(180)) }
+    var selectedProblemId by remember(capture) { mutableStateOf<String?>(null) }
+    var destinationExpanded by remember(capture) { mutableStateOf(false) }
     var content by remember(capture) {
         mutableStateOf(SharedBrowserCaptureParser.toEvidenceContent(capture).take(18_000))
     }
@@ -299,6 +303,39 @@ private fun SharedBrowserCaptureReviewDialog(
                     minLines = 6,
                     maxLines = 14
                 )
+                Text("Save to", style = MaterialTheme.typography.labelMedium)
+                Box {
+                    OutlinedButton(
+                        onClick = { destinationExpanded = true },
+                        enabled = !saving
+                    ) {
+                        val destinationTitle = selectedProblemId?.let { id ->
+                            problems.firstOrNull { it.id == id }?.title
+                        } ?: "New research record"
+                        Text(destinationTitle, maxLines = 1)
+                    }
+                    DropdownMenu(
+                        expanded = destinationExpanded,
+                        onDismissRequest = { destinationExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("New research record") },
+                            onClick = {
+                                selectedProblemId = null
+                                destinationExpanded = false
+                            }
+                        )
+                        problems.take(40).forEach { problem ->
+                            DropdownMenuItem(
+                                text = { Text(problem.title, maxLines = 1) },
+                                onClick = {
+                                    selectedProblemId = problem.id
+                                    destinationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
@@ -309,7 +346,7 @@ private fun SharedBrowserCaptureReviewDialog(
                         error = "Add a title and at least 20 characters of evidence."
                     } else {
                         saving = true
-                        onSave(title.trim(), content.trim()) { savedId ->
+                        onSave(selectedProblemId, title.trim(), content.trim()) { savedId ->
                             saving = false
                             if (savedId != null) {
                                 onDismiss()
