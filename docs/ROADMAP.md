@@ -44,7 +44,7 @@ Exit gate: a user can investigate a real ProblemCase, distinguish facts from unk
 
 ## Phase 2a — Local intelligence foundation
 - [x] Accept Trader-owned local AI architecture based on Memo-2 patterns: model roles, context packets, routing, memory and bounded structured planning.
-- [x] Add initial pinned model catalog, LiteRT-LM inference adapter and bounded evidence-aware context packet code (runtime/build verification pending).
+- [x] Add initial pinned model catalog, LiteRT-LM CPU inference adapter with SHA verification, bounded evidence-aware context packet, resumable verified downloads, storage/RAM preflight, Model Hub screen and real inference smoke-test action (build/device verification pending).
 - [ ] Model Hub with verified install/import/download, resume, storage/RAM preflight and diagnostics.
 - [ ] Context Engine and provenance-aware local memory.
 - [ ] Structured plan validation, capability routing and persisted orchestrator runs.
