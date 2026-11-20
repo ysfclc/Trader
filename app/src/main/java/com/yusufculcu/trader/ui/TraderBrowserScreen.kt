@@ -23,6 +23,8 @@ import android.widget.FrameLayout
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -44,10 +46,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.yusufculcu.trader.data.ProblemEntity
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun TraderBrowserScreen(modifier: Modifier = Modifier) {
+fun TraderBrowserScreen(
+    modifier: Modifier = Modifier,
+    problems: List<ProblemEntity>,
+    onSaveCapture: (String?, String, String, String, (String?) -> Unit) -> Unit
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cookieManager = remember { CookieManager.getInstance() }
@@ -61,6 +68,8 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
     var progress by remember { mutableIntStateOf(0) }
     var browserMessage by remember { mutableStateOf("Sign in to websites here. Compatible sites keep their browser session on this device.") }
     var requiresExternalAuth by remember { mutableStateOf(false) }
+    var captureSnapshot by remember { mutableStateOf<TraderBrowserPageSnapshot?>(null) }
+    var capturing by remember { mutableStateOf(false) }
 
     var browserContainer by remember { mutableStateOf<FrameLayout?>(null) }
     var mainWebView by remember { mutableStateOf<WebView?>(null) }
@@ -319,6 +328,38 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
     }
 
     val activeWebView = popupWebView ?: mainWebView
+
+    fun captureVisiblePage() {
+        val webView = activeWebView
+        if (webView == null) {
+            browserMessage = "Open a website before capturing page evidence."
+            return
+        }
+        if (loading || capturing) {
+            browserMessage = "Wait for the page to finish loading before capturing it."
+            return
+        }
+        val expectedUrl = webView.url ?: currentUrl
+        if (!TraderBrowserRouting.isWebUrl(expectedUrl)) {
+            browserMessage = "Only a loaded HTTP(S) page can be captured."
+            return
+        }
+        capturing = true
+        browserMessage = "Reading visible page text…"
+        webView.evaluateJavascript(TraderBrowserCapture.script) { raw ->
+            capturing = false
+            val snapshot = TraderBrowserCapture.decodeJavascriptResult(raw, pageTitle, expectedUrl)
+            when {
+                snapshot == null -> browserMessage = "This page did not expose enough readable text. Select the relevant text on the page or try another section."
+                webView.url != snapshot.url -> browserMessage = "The page changed during capture. Wait for it to settle and try again."
+                else -> {
+                    captureSnapshot = snapshot
+                    browserMessage = ""
+                }
+            }
+        }
+    }
+
     Column(modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
@@ -372,8 +413,12 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
                 }
             }
             Spacer(Modifier.weight(1f))
+            TextButton(
+                onClick = { captureVisiblePage() },
+                enabled = activeWebView != null && !loading && !capturing && !requiresExternalAuth
+            ) { Text(if (capturing) "Reading…" else "Capture") }
             TextButton(onClick = { openInSystemBrowser(currentUrl) }, enabled = TraderBrowserRouting.isWebUrl(currentUrl)) {
-                Text("Open in browser")
+                Text("Open")
             }
             IconButton(onClick = {
                 val share = Intent(Intent.ACTION_SEND).apply {
@@ -440,4 +485,156 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
             update = { browserContainer = it }
         )
     }
+
+    captureSnapshot?.let { snapshot ->
+        BrowserPageCaptureDialog(
+            snapshot = snapshot,
+            problems = problems,
+            onDismiss = { captureSnapshot = null },
+            onSave = onSaveCapture,
+            onSaved = { _, attachedToExisting ->
+                captureSnapshot = null
+                browserMessage = if (attachedToExisting) {
+                    "Page evidence added to the selected case. It remains unreviewed."
+                } else {
+                    "Created a research record with source-linked page evidence. It remains unreviewed."
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun BrowserPageCaptureDialog(
+    snapshot: TraderBrowserPageSnapshot,
+    problems: List<ProblemEntity>,
+    onDismiss: () -> Unit,
+    onSave: (String?, String, String, String, (String?) -> Unit) -> Unit,
+    onSaved: (String?, Boolean) -> Unit
+) {
+    var title by remember(snapshot.url) { mutableStateOf(snapshot.title) }
+    var useSelection by remember(snapshot.url) { mutableStateOf(snapshot.selectedText.length >= 20) }
+    var content by remember(snapshot.url) {
+        mutableStateOf(TraderBrowserCapture.contentForSelection(snapshot, snapshot.selectedText.length >= 20))
+    }
+    var selectedProblemId by remember(snapshot.url) { mutableStateOf<String?>(null) }
+    var destinationExpanded by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
+
+    val destinationLabel = selectedProblemId?.let { id ->
+        problems.firstOrNull { it.id == id }?.title
+    } ?: "New research record"
+
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text("Capture page evidence") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(snapshot.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Text(
+                    "Review the readable page text before saving. Passwords, cookies, browser storage and hidden form values are not collected. Visible page text can still contain private information, so remove anything you do not want to retain.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (snapshot.selectedText.length >= 20) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = useSelection,
+                            onClick = {
+                                if (!saving) {
+                                    useSelection = true
+                                    content = snapshot.selectedText
+                                }
+                            },
+                            label = { Text("Selected text") }
+                        )
+                        FilterChip(
+                            selected = !useSelection,
+                            onClick = {
+                                if (!saving) {
+                                    useSelection = false
+                                    content = snapshot.content
+                                }
+                            },
+                            label = { Text("Visible page") }
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it.take(180); saveError = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Evidence title") },
+                    maxLines = 2
+                )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it.take(20_000); saveError = null },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 280.dp),
+                    label = { Text(if (useSelection) "Selected text" else "Visible page text") },
+                    minLines = 6,
+                    maxLines = 12
+                )
+                Text("Save to", style = MaterialTheme.typography.labelMedium)
+                Box {
+                    OutlinedButton(onClick = { destinationExpanded = true }, enabled = !saving) {
+                        Text(destinationLabel, maxLines = 1)
+                    }
+                    DropdownMenu(
+                        expanded = destinationExpanded,
+                        onDismissRequest = { destinationExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("New research record") },
+                            onClick = {
+                                selectedProblemId = null
+                                destinationExpanded = false
+                            }
+                        )
+                        problems.take(40).forEach { problem ->
+                            DropdownMenuItem(
+                                text = { Text(problem.title, maxLines = 1) },
+                                onClick = {
+                                    selectedProblemId = problem.id
+                                    destinationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                saveError?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank() || content.trim().length < 20) {
+                        saveError = "Add a title and at least 20 characters of page text."
+                    } else {
+                        saving = true
+                        saveError = null
+                        onSave(selectedProblemId, title.trim(), snapshot.url, content.trim()) { savedId ->
+                            saving = false
+                            if (savedId == null) {
+                                saveError = "Trader could not save this capture. The destination may have been archived; try again."
+                            } else {
+                                onSaved(savedId, selectedProblemId != null)
+                                onDismiss()
+                            }
+                        }
+                    }
+                },
+                enabled = !saving && title.isNotBlank() && content.trim().length >= 20
+            ) { Text(if (saving) "Saving…" else "Save evidence") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) { Text("Cancel") }
+        }
+    )
 }
