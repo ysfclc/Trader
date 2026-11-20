@@ -5,6 +5,7 @@ import android.net.Uri
 import android.text.SpannableString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -45,4 +46,26 @@ class IncomingShareIntentTest {
         assertNull(extractIncomingContent(null))
         assertNull(extractIncomingContent(Intent(Intent.ACTION_SEND)))
     }
+    @Test
+    fun sendIntentPreservesVersionedMemoBrowserCapturePayload() {
+        val pagePayload = """
+            MEMO_BROWSER_CAPTURE_V1
+            Title: Acme supplier profile
+            Source URL: https://example.test/suppliers/acme
+            Summary: CNC manufacturing
+
+            Captured page text:
+            Acme supplies CNC turned and milled components to industrial manufacturers.
+        """.trimIndent()
+        val intent = Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_TEXT, pagePayload)
+
+        val extracted = extractIncomingContent(intent)
+        val parsed = extracted?.let(com.yusufculcu.trader.domain.SharedBrowserCaptureParser::parse)
+
+        assertEquals(pagePayload, extracted)
+        assertEquals("Acme supplier profile", parsed?.title)
+        assertEquals("https://example.test/suppliers/acme", parsed?.sourceUrl)
+        assertTrue(parsed?.content?.contains("CNC turned and milled") == true)
+    }
+
 }
