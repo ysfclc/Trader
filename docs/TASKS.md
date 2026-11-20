@@ -94,9 +94,10 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 - [x] T7.0 Accept architecture: local AI is Trader's intelligence backbone, not a chatbot; Memo-2 is pattern reference only. See `docs/LOCAL_AI_ARCHITECTURE.md`.
 - [x] T7.0a Add Trader-owned pinned model catalog (small orchestrator, analyst, deep model profiles) and role metadata.
-- [x] T7.0b Add real LiteRT-LM inference adapter with CPU execution, off-main-thread operation, bounded input/output and clear missing/unverified-model errors. Model downloading, install verification and UI remain open.
+- [x] T7.0b Add real LiteRT-LM inference adapter with CPU execution, off-main-thread operation, bounded input/output and pinned SHA-256 verification; CI/device inference verification remains open.
+- [~] T7.0d Add resumable pinned model download, SHA-256 verified install, private storage, storage/RAM preflight, active model selection and Model Hub UI with an actual inference smoke test. Code exists; build verification and device acceptance remain open.
 - [x] T7.0c Add bounded ContextPacket with explicit fact status, provenance links, unknowns and truncation notice.
-- [ ] T7.1 Model Hub: scan/import/download/resume, SHA-256 verification, storage/RAM preflight, role assignment and diagnostics.
+- [ ] T7.1 Complete Model Hub: model scan/import, richer compatibility diagnostics, accelerator capability and runtime error details.
 - [ ] T7.2 Context Engine: assemble relevant proof assets, strategies, evidence, organizations, memory and unknowns; redact before external routing.
 - [ ] T7.3 Structured-output validation and plan parser; reject malformed output and unregistered capabilities.
 - [ ] T7.4 Local orchestrator: task routing, run persistence, cancellation, budgets and process-death recovery.
