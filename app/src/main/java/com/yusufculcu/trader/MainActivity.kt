@@ -5,12 +5,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.mutableStateOf
 import com.yusufculcu.trader.ui.TraderApp
+import com.yusufculcu.trader.domain.SharedBrowserCapture
+import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.ui.theme.TraderTheme
 import com.yusufculcu.trader.viewmodel.TraderViewModel
 import com.yusufculcu.trader.viewmodel.TraderViewModelFactory
 
 class MainActivity : ComponentActivity() {
+    private val pendingBrowserCapture = mutableStateOf<SharedBrowserCapture?>(null)
+
     private val viewModel: TraderViewModel by viewModels {
         TraderViewModelFactory((application as TraderApplication).repository)
     }
@@ -18,7 +23,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleIncomingIntent(intent)
-        setContent { TraderTheme { TraderApp(viewModel) } }
+        setContent {
+            TraderTheme {
+                TraderApp(
+                    viewModel = viewModel,
+                    incomingBrowserCapture = pendingBrowserCapture.value,
+                    onBrowserCaptureHandled = { pendingBrowserCapture.value = null }
+                )
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -28,7 +41,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIncomingIntent(intent: Intent?) {
-        extractIncomingContent(intent)?.let(viewModel::captureSharedContent)
+        val content = extractIncomingContent(intent) ?: return
+        val browserCapture = SharedBrowserCaptureParser.parse(content)
+        if (browserCapture != null) {
+            // Memo page captures require an explicit in-app review before persistence.
+            pendingBrowserCapture.value = browserCapture
+        } else {
+            viewModel.captureSharedContent(content)
+        }
     }
 }
 
