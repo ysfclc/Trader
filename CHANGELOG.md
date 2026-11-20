@@ -7,6 +7,14 @@
 - Added resumable pinned model downloads, SHA-256 verification before install, storage and RAM preflight, active-model selection and Model Hub UI with a real local inference smoke-test action. Model import/scan, Context Engine, orchestrator and discovery integration remain open.
 - Catalog/context tests and the full CI pipeline passed in run 349 (65 tests, lint, debug APK assembly, signature and package identity); physical inference on the Redmi remains unverified.
 
+## 2026-11-20 — Authenticated browser research capture (PR #17 in progress)
+
+- Added a Capture action in Trader's browser. It extracts only readable visible page text/selected text, shows an editable review sheet, and saves to a selected active case or a new Research record.
+- Saved captures retain title, sanitized base URL and capture time; evidence is UNREVIEWED until the user verifies it. Database creation/attachment is atomic and rejects invalid URLs, short payloads and archived destinations.
+- Added the MEMO_BROWSER_CAPTURE_V1 Android share-sheet contract to Trader's receiver. Versioned Memo captures become new source-linked research records; normal shared text/URLs preserve their prior intake path.
+- Strip URL query strings and fragments in Memo before sharing and independently in Trader before persistence; this prevents temporary OAuth codes/session values from being propagated in source URLs. No cookies, browser storage, passwords, hidden fields or authentication tokens are read or transferred.
+- Trader CI run 358 passed 76 tests (0 failures/errors/skipped), lint, debug APK assembly, signature and package identity. Memo sender is in PR #15; its independent CI and installed-build acceptance remain open.
+
 ## 2026-11-20 — Trader authenticated browser sessions (PR #17 in progress)
 
 - Fixed the missing login foundations: Trader now configures an app-local persistent WebView cookie store, enables per-WebView third-party cookies for SSO, flushes cookies on navigation/lifecycle/disposal, and supports user-initiated authentication popup windows.
