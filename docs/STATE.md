@@ -40,7 +40,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
-- Browser/app automation, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters are absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
+- Browser and app-local login-session foundations are now implemented on PR #17; browser workflow automation, page evidence capture, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters remain absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
 - Search has no dedicated UI test; incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test; no physical-device test has been recorded.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
 - No release signing configuration; do not present the debug build as production.
@@ -54,7 +54,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 
 ## 6. Next three increments
 1. Build the first real discovery source vertical slice: ProofAsset + editable DiscoveryStrategy + bounded public-source search + source health/provenance + deduplicated candidates. No seeded or mock results.
-2. Build the Trader-owned in-app browser and connect page capture/evidence to the active company dossier and visible Live execution controls.
+2. Complete the Trader browser baseline: device-verify account login and cookie persistence, then add tabs, bookmarks/history, downloads, page capture/evidence and visible Live takeover controls.
 3. Add company/person dossiers, explainable fit and individualized outreach drafts with exact approval and verified handoff semantics. Only then deliver the next APK as a meaningful discovery-to-outreach pilot; device acceptance remains separate. No automatic send or ambiguous retry.
 
 ## 7. Open questions for the human

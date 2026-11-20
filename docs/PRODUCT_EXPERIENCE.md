@@ -66,7 +66,7 @@ Account login is a core browser requirement, not a later convenience. For provid
 
 Identity providers may prohibit embedded user agents. Google explicitly blocks Google sign-in inside Android WebViews. When Trader detects Google's OAuth endpoint, it must reopen the original relying-party website in the default system browser so that the full authentication flow starts there. A system browser has its own cookie store; Trader must never claim that Chrome sign-in authenticates its embedded WebView, and must not scrape, copy or inject browser cookies. Other provider restrictions, MFA, passkeys, CAPTCHA and device permission requests must be surfaced and handled through a supported user path rather than spoofing a browser or bypassing access controls.
 
-CI tests must cover URL/provider routing and cookie-policy configuration. Device acceptance must separately verify password login, a supported SSO flow, session persistence after process restart and the external Google OAuth fallback on the target Android device.
+CI tests cover URL/provider routing and compile the Android cookie configuration. Actual CookieManager behavior cannot be established by the current JVM/Robolectric test environment. Device acceptance must separately verify password login, a supported SSO flow, session persistence after process restart and the external Google OAuth fallback on the target Android device.
 
 ### Company and contact workspace
 

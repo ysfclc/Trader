@@ -12,7 +12,7 @@
 - Fixed the missing login foundations: Trader now configures an app-local persistent WebView cookie store, enables per-WebView third-party cookies for SSO, flushes cookies on navigation/lifecycle/disposal, and supports user-initiated authentication popup windows.
 - Added Android autofill and website file-upload chooser support. Camera/microphone website permissions remain denied until a dedicated user-consent flow exists.
 - Detects Google's OAuth identity endpoint and reopens the original relying-party website in the system browser. Google prohibits embedded WebView sign-in; Chrome cookies are not copied into Trader. Other identity providers may have their own restrictions.
-- Added URL-routing tests and Robolectric coverage for the third-party cookie policy. CI for this revision and physical-device login/process-restart acceptance are still pending.
+- Added URL/provider-routing regression tests. The app calls Android CookieManager directly to enable third-party cookies; the Robolectric shadow did not accurately report this platform setting, so cookie behavior remains a real-device acceptance check. CI for this revision and physical-device login/process-restart acceptance are still pending.
 
 ## 2026-11-20 — Trader browser baseline (PR #17 in progress)
 
