@@ -54,14 +54,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIncomingIntent(intent: Intent?) {
-        val content = extractIncomingContent(intent) ?: return
+        val route = routeIncomingShare(intent) ?: return
         // Consume the incoming share intent so rotation cannot create duplicate records.
         setIntent(Intent())
-        if (SharedBrowserCaptureParser.parse(content) != null) {
-            // Memo page captures require an explicit in-app review before persistence.
-            pendingBrowserCapturePayload.value = content
-        } else {
-            viewModel.captureSharedContent(content)
+        when (route) {
+            is IncomingShareRoute.ReviewBrowserCapture -> {
+                // Memo page captures require an explicit in-app review before persistence.
+                pendingBrowserCapturePayload.value = route.payload
+            }
+            is IncomingShareRoute.OrdinaryContent -> viewModel.captureSharedContent(route.content)
         }
     }
 }
@@ -77,4 +78,19 @@ internal fun extractIncomingContent(intent: Intent?): String? {
         else -> null
     }
     return raw?.trim()?.takeIf(String::isNotEmpty)
+}
+
+internal sealed interface IncomingShareRoute {
+    data class ReviewBrowserCapture(val payload: String) : IncomingShareRoute
+    data class OrdinaryContent(val content: String) : IncomingShareRoute
+}
+
+/** Memo page payloads take the explicit review route; ordinary shares retain normal intake. */
+internal fun routeIncomingShare(intent: Intent?): IncomingShareRoute? {
+    val content = extractIncomingContent(intent) ?: return null
+    return if (SharedBrowserCaptureParser.parse(content) != null) {
+        IncomingShareRoute.ReviewBrowserCapture(content)
+    } else {
+        IncomingShareRoute.OrdinaryContent(content)
+    }
 }
