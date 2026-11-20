@@ -204,15 +204,14 @@ fun TraderApp(
         SharedBrowserCaptureReviewDialog(
             capture = capture,
             onDismiss = onBrowserCaptureHandled,
-            onSave = { title, content ->
+            onSave = { title, content, onSaved ->
                 viewModel.captureBrowserPage(
                     problemId = null,
                     title = title,
                     sourceUrl = capture.sourceUrl,
-                    content = content
-                ) { savedId ->
-                    if (savedId != null) onBrowserCaptureHandled()
-                }
+                    content = content,
+                    onSaved = onSaved
+                )
             }
         )
     }
@@ -253,7 +252,7 @@ fun TraderApp(
 private fun SharedBrowserCaptureReviewDialog(
     capture: SharedBrowserCapture,
     onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
+    onSave: (String, String, (String?) -> Unit) -> Unit,
 ) {
     var title by remember(capture) { mutableStateOf(capture.title.take(180)) }
     var content by remember(capture) {
@@ -310,7 +309,14 @@ private fun SharedBrowserCaptureReviewDialog(
                         error = "Add a title and at least 20 characters of evidence."
                     } else {
                         saving = true
-                        onSave(title.trim(), content.trim())
+                        onSave(title.trim(), content.trim()) { savedId ->
+                            saving = false
+                            if (savedId != null) {
+                                onDismiss()
+                            } else {
+                                error = "Trader could not save this capture. Review the source and try again."
+                            }
+                        }
                     }
                 },
                 enabled = !saving && title.isNotBlank() && content.trim().length >= 20
