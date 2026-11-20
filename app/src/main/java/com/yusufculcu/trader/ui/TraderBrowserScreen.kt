@@ -230,10 +230,11 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
                 // windows without allowing arbitrary background windows from page scripts.
                 if (!supportsPopups || !isUserGesture || popupWebView != null) return false
                 val container = browserContainer ?: return false
-                val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
+                val message = resultMsg ?: return false
+                val transport = message.obj as? WebView.WebViewTransport ?: return false
                 val popup = WebView(context)
                 configureWebView(popup, false)
-                browserContainer?.addView(
+                container.addView(
                     popup,
                     FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
@@ -242,7 +243,7 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
                 )
                 popupWebView = popup
                 transport.webView = popup
-                resultMsg.sendToTarget()
+                message.sendToTarget()
                 mainWebView?.onPause()
                 browserMessage = "A sign-in or verification window opened. Complete it, then close this window to return to the website."
                 return true
@@ -418,7 +419,7 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
         HorizontalDivider()
 
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth().weight(1f),
             factory = { ctx ->
                 FrameLayout(ctx).apply {
                     browserContainer = this
