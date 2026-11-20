@@ -1,3 +1,11 @@
+## 2026-11-20 — Trader browser baseline (PR #17 in progress)
+
+- Added a Trader-owned WebView browser screen as a bottom navigation destination with address/search, back/forward, stop/reload, title/current URL, loading progress and page-share handoff.
+- Added Internet permission. This initial browser is not multi-tab, does not persist session state/bookmarks/history, does not capture page evidence into dossiers, and does not automate form submissions or outreach.
+- Documented the discovery-first product direction, company evidence/provenance, visible browser runtime and exact approval model in `docs/PRODUCT_EXPERIENCE.md`.
+- CI and physical-device acceptance pending; do not claim a verified APK until CI completes.
+
+
 ## 2026-11-19 — Evidence-backed opportunity pipeline (PR #16 in progress)
 
 - Added optional one-to-one opportunity profile linked to a universal ProblemCase: trade/service/career/other lane, organization and contact labels, fit notes, lifecycle stage, next action and local follow-up date.
