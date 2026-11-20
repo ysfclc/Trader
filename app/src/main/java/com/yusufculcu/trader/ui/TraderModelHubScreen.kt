@@ -21,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +40,9 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     val store = remember(app) { app.modelStore }
     val states by store.states.collectAsState()
     val activeId = store.activeModelId()
+    val scope = rememberCoroutineScope()
+    var testOutput by remember { mutableStateOf("") }
+    var testing by remember { mutableStateOf(false) }
     LazyColumn(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -67,6 +73,33 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                             else -> Button(enabled = enoughStorage, onClick = { store.download(model) }) { Text(if (state.status == TraderModelStore.Status.PAUSED) "Resume download" else "Download") }
                         }
                     }
+                }
+            }
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Inference smoke test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Run a real prompt on the active model. This confirms local inference, not discovery automation.", style = MaterialTheme.typography.bodyMedium)
+                    Button(enabled = activeId != null && !testing, onClick = {
+                        val id = store.activeModelId()
+                        val model = id?.let { TraderModelCatalog.find(it) }
+                        val file = store.activeModelFile()
+                        if (model == null || file == null) { testOutput = "No verified model is active. Download and select one above."; return@Button }
+                        testing = true
+                        testOutput = "Loading local model…"
+                        scope.launch {
+                            testOutput = runCatching {
+                                com.yusufculcu.trader.ai.TraderLocalInference().generate(
+                                    model, file,
+                                    "You are Trader, a private on-device assistant. Answer briefly and truthfully.",
+                                    "In one sentence, confirm that local inference is running and name one task you can help Trader with."
+                                )
+                            }.fold({ "Local inference succeeded:\\n\\n$it" }, { "Local inference failed: ${it.message ?: it.javaClass.simpleName}" })
+                            testing = false
+                        }
+                    }) { Text(if (testing) "Running…" else "Run local AI test") }
+                    if (testOutput.isNotBlank()) Text(testOutput, style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
