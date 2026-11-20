@@ -17,12 +17,13 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
 | Browser / installed-app automation | ⚪ not started | No Trader-owned browser session yet; no execution adapter |
-| AI / live discovery / matching | ⚪ not started | No real public-source adapter, ProofAsset/DiscoveryStrategy runtime, company dossier or explainable fit engine |
+| AI / live discovery / matching | 🟡 foundation in progress | PR #17 adds pinned local model catalog, LiteRT-LM inference adapter, and bounded evidence-aware context packets; no model manager UI/download, orchestration, real source adapter or AI-backed qualification yet |
 | Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
+- Local AI milestone is accepted and code started on the discovery/browser branch. `docs/LOCAL_AI_ARCHITECTURE.md` is the canonical design. Current implementation includes Trader-owned model metadata, a real LiteRT-LM CPU inference adapter, and bounded evidence context packets. Build/CI verification and model installation/lifecycle are pending; do not claim device inference until a verified model has actually run on the Redmi.
 - Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. The branch now adds a first Trader-owned WebView browser screen (address/search, back/forward, stop/reload, title/current URL, progress, share handoff); CI and device acceptance are pending. No discovery source adapter or evidence capture into dossiers exists yet.
 - The product's next acceptance target is a real ProofAsset → DiscoveryStrategy → permitted public source → candidate dossier → Trader browser research → individualized outreach draft/handoff journey. Do not deliver another APK as if this target were met until it is implemented and CI-verified.
 
