@@ -1,13 +1,13 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 8 (evidence-backed opportunity workflow)_
+_Last updated: 2026-11-20 — session 9 (discovery-first experience direction)_
 
 ## 1. Product snapshot
-Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU remains the first commercial pilot, not the product boundary. The feature branch adds an optional evidence-backed opportunity pipeline for manually tracking one real role, service need or commercial lead per ProblemCase. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
+Trader is an Android-first, local-first problem-solving and opportunity-execution workspace. Its next priority is proof-asset-led company discovery, evidence-backed company dossiers, a Trader-owned in-app browser and controlled outreach preparation. Trade/services/careers remain initial specialist workflows, not the product boundary. The current Inbox/Pipeline/Activity shell is a foundation only; it is not the intended user experience. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
 
 ## 2. Status board
 | Area | State | Notes |
 |---|---|---|
-| Android shell / EN-TR-PL | 🟡 partial | Builds in CI; visual/device acceptance open |
+| Android shell / EN-TR-PL | 🟡 partial | Builds in CI; current Inbox/Pipeline/Activity shell is being redesigned around Discover/Work/Live/Studio; visual/device acceptance open |
 | ProblemCase capture | 🟡 partial | Manual + shared text/URL; incoming intent extraction CI-tested; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
@@ -16,13 +16,17 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | Context packet | 🟡 partial | Builder tested; Android share chooser not device-accepted |
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
-| Browser / installed-app automation | ⚪ not started | No execution adapter |
-| AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
-| Opportunity tracking | 🟡 branch implementation | Optional one-to-one profile, stages, fit notes, next action, date and safe user handoff implemented on feature branch; CI run 306 verified (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open. No normalized organizations/people, buyer/supplier graph, consent tracking, discovery or send adapter |
+| Browser / installed-app automation | ⚪ not started | No Trader-owned browser session yet; no execution adapter |
+| AI / live discovery / matching | ⚪ not started | No real public-source adapter, ProofAsset/DiscoveryStrategy runtime, company dossier or explainable fit engine |
+| Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
+- Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. This is an architecture/documentation checkpoint only; no discovery or browser code is claimed yet.
+- The product's next acceptance target is a real ProofAsset → DiscoveryStrategy → permitted public source → candidate dossier → Trader browser research → individualized outreach draft/handoff journey. Do not deliver another APK as if this target were met until it is implemented and CI-verified.
+
+## 3a. Previously in flight (historical)
 - Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; requires physical-device and user-driven acceptance.
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
@@ -47,9 +51,9 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.
 
 ## 6. Next three increments
-1. Merge the CI-verified PR #16, then deliver the debug APK as a pilot build for the manually curated career/service/trade opportunity loop. Physical install/upgrade and real-use acceptance remain separate. Confirm install/upgrade safety and that capture → source/evidence → qualification → next action → contact handoff → follow-up works.
-2. Complete Redmi Note 12 Pro 5G acceptance of the Opportunity Pipeline, existing workspace and encrypted backup/restore. Record actual device results separately from CI.
-3. Add durable local follow-up notifications and/or WorkManager execution only with exact permission, recovery and postcondition semantics; add selected-file/document capture as a separate source-preserving slice. No automatic send or ambiguous retry.
+1. Build the first real discovery source vertical slice: ProofAsset + editable DiscoveryStrategy + bounded public-source search + source health/provenance + deduplicated candidates. No seeded or mock results.
+2. Build the Trader-owned in-app browser and connect page capture/evidence to the active company dossier and visible Live execution controls.
+3. Add company/person dossiers, explainable fit and individualized outreach drafts with exact approval and verified handoff semantics. Only then deliver the next APK as a meaningful discovery-to-outreach pilot; device acceptance remains separate. No automatic send or ambiguous retry.
 
 ## 7. Open questions for the human
 - [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
