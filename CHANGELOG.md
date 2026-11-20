@@ -4,7 +4,8 @@
 - Added Trader-owned pinned LiteRT-LM model catalog profiles for small, analyst and deep model roles.
 - Added real CPU LiteRT-LM inference adapter with bounded prompt/response, background execution and explicit model-path/size validation. No canned responses or silent cloud fallback.
 - Added bounded evidence-aware context packets that label fact verification state, retain source links and timestamps, include unknowns and signal when context is truncated.
-- Added catalog/context foundation tests; CI verification pending. Model download/install/verification UI, context engine, orchestrator and discovery integration remain open.
+- Added resumable pinned model downloads, SHA-256 verification before install, storage and RAM preflight, active-model selection and Model Hub UI with a real local inference smoke-test action. Model import/scan, Context Engine, orchestrator and discovery integration remain open.
+- Catalog/context tests and CI verification pending; physical inference on the Redmi remains unverified.
 
 ## 2026-11-20 — Trader browser baseline (PR #17 in progress)
 
