@@ -8,6 +8,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
@@ -60,7 +62,7 @@ fun TraderBrowserScreen(modifier: Modifier = Modifier) {
                 singleLine = true,
                 label = { Text("Search or enter address") },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
+                keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { webViewRef?.loadUrl(browserTarget(address)); address = browserTarget(address) })
             )
             IconButton(onClick = { webViewRef?.loadUrl(browserTarget(address)); address = browserTarget(address) }) { Icon(Icons.Rounded.ArrowForward, "Go") }
