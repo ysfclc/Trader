@@ -177,3 +177,18 @@ The initial mobile opportunity workflow uses one optional OpportunityRecord per 
 **Reason:** The first practical use case needs one compact place to move a captured real-world lead from discovery to qualification, contact and follow-up while preserving its source context. Forcing every ProblemCase to become an opportunity would violate the universal problem model; building the complete commercial graph before validating the workflow would overbuild the first slice.
 
 **Consequences:** User explicitly opts into opportunity tracking. Create/update/stage changes are recorded in ProblemCase activity. Contact route opens only a browser, email composer or dialer after explicit user action; Trader does not send/place calls. Follow-up dates are displayed but do not trigger notifications. Room v3→v4 adds the optional profile, and schema-v3 encrypted backups remain restorable with no opportunity records. Normalize organizations/people and move to multiple opportunities per case only when a validated use case justifies the schema change.
+
+
+## D-020 — Discovery-first experience and Trader-owned browser
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader's next product phase prioritizes an automated, evidence-backed company discovery and outreach-preparation experience. Discovery starts from a user-selected real ProofAsset (product, working project, service capability, domain skill or documented result), derives editable problem signatures, and searches permitted public sources for companies showing relevant intent or need. Results become source-linked company dossiers with explainable fit, unknowns and an individualized outreach path. Generic industry lists, ungrounded AI scoring and bulk outreach are not acceptable substitutes.
+
+Trader will provide its own visible in-app browser. It is a runtime surface that can be opened from discovery, a company dossier or a workflow; it is not a link-out masquerading as a browser and not a Memo dependency. Browser interaction must be observable, interruptible, origin-aware and capable of preserving evidence. Consequential external submissions remain separate, exact-payload-approved actions with observable postconditions.
+
+The primary experience is organized around Discover, Work, Live and Studio. Inbox, Pipeline and Activity become useful views within that workspace rather than defining the whole product. Browser and app sessions appear contextually in Live and may expand to a full-screen runtime. Existing local records, package identity, database and backup compatibility must be preserved through navigation and schema changes.
+
+**Reason:** The current Inbox/Pipeline/Activity experience makes Trader look like a manual tracker and does not expose the user's priority workflow: find companies that already have relevant problems, understand the evidence, approach them through the right channel and verify the outcome. Memo's persistent context, visible execution and takeover patterns are useful references, but Trader owns its own product architecture, runtime and data.
+
+**Consequences:** The first genuinely useful release must complete ProofAsset → DiscoveryStrategy → real permitted source results → deduplicated candidate dossier → evidence-backed fit → Trader browser research → individualized outreach draft → approved handoff/verified outcome. Do not ship seeded results, fake connected channels or browser link-outs as completion.
