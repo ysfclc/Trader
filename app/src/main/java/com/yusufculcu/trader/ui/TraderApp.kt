@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,6 +58,8 @@ import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.domain.ContextPacketBuilder
+import com.yusufculcu.trader.domain.SharedBrowserCapture
+import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.domain.OpportunityLane
 import com.yusufculcu.trader.domain.OpportunityStage
@@ -66,11 +69,15 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY }
+private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TraderApp(viewModel: TraderViewModel) {
+fun TraderApp(
+    viewModel: TraderViewModel,
+    incomingBrowserCapture: SharedBrowserCapture? = null,
+    onBrowserCaptureHandled: () -> Unit = {}
+) {
     val problems by viewModel.problems.collectAsState()
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
@@ -150,6 +157,8 @@ fun TraderApp(viewModel: TraderViewModel) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
+                NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
+                NavigationBarItem(tab == AppTab.AI, { tab = AppTab.AI }, icon = { Text("AI") }, label = { Text("Models") })
             }
         },
         floatingActionButton = {
@@ -174,6 +183,14 @@ fun TraderApp(viewModel: TraderViewModel) {
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
+            tab == AppTab.BROWSER -> TraderBrowserScreen(
+                modifier = Modifier.padding(padding),
+                problems = problems,
+                onSaveCapture = { problemId, title, url, content, onSaved ->
+                    viewModel.captureBrowserPage(problemId, title, url, content, onSaved)
+                }
+            )
+            tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
             tab == AppTab.PIPELINE -> OpportunityPipelineContent(
                 opportunities = opportunities,
                 onOpen = { selectedId = it.id },
@@ -181,6 +198,23 @@ fun TraderApp(viewModel: TraderViewModel) {
             )
             else -> ActivityContent(events, Modifier.padding(padding))
         }
+    }
+
+    incomingBrowserCapture?.let { capture ->
+        SharedBrowserCaptureReviewDialog(
+            capture = capture,
+            problems = problems,
+            onDismiss = onBrowserCaptureHandled,
+            onSave = { problemId, title, content, onSaved ->
+                viewModel.captureBrowserPage(
+                    problemId = problemId,
+                    title = title,
+                    sourceUrl = capture.sourceUrl,
+                    content = content,
+                    onSaved = onSaved
+                )
+            }
+        )
     }
 
     if (showCreate) CreateProblemDialog(
@@ -214,6 +248,123 @@ fun TraderApp(viewModel: TraderViewModel) {
     }
 }
  
+
+@Composable
+private fun SharedBrowserCaptureReviewDialog(
+    capture: SharedBrowserCapture,
+    problems: List<ProblemEntity>,
+    onDismiss: () -> Unit,
+    onSave: (String?, String, String, (String?) -> Unit) -> Unit,
+) {
+    var title by remember(capture) { mutableStateOf(capture.title.take(180)) }
+    var selectedProblemId by remember(capture) { mutableStateOf<String?>(null) }
+    var destinationExpanded by remember(capture) { mutableStateOf(false) }
+    var content by remember(capture) {
+        mutableStateOf(SharedBrowserCaptureParser.toEvidenceContent(capture).take(18_000))
+    }
+    var saving by remember(capture) { mutableStateOf(false) }
+    var error by remember(capture) { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text("Review imported page") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Memo browser capture · Review before saving",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    capture.sourceUrl,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    "This page text came from a signed-in browser. It may contain private details. Remove anything you do not want stored. Account credentials and browser cookies are not included.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it.take(180); error = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Evidence title") },
+                    maxLines = 2
+                )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it.take(18_000); error = null },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 300.dp),
+                    label = { Text("Captured page text") },
+                    minLines = 6,
+                    maxLines = 14
+                )
+                Text("Save to", style = MaterialTheme.typography.labelMedium)
+                Box {
+                    OutlinedButton(
+                        onClick = { destinationExpanded = true },
+                        enabled = !saving
+                    ) {
+                        val destinationTitle = selectedProblemId?.let { id ->
+                            problems.firstOrNull { it.id == id }?.title
+                        } ?: "New research record"
+                        Text(destinationTitle, maxLines = 1)
+                    }
+                    DropdownMenu(
+                        expanded = destinationExpanded,
+                        onDismissRequest = { destinationExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("New research record") },
+                            onClick = {
+                                selectedProblemId = null
+                                destinationExpanded = false
+                            }
+                        )
+                        problems.take(40).forEach { problem ->
+                            DropdownMenuItem(
+                                text = { Text(problem.title, maxLines = 1) },
+                                onClick = {
+                                    selectedProblemId = problem.id
+                                    destinationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank() || content.trim().length < 20) {
+                        error = "Add a title and at least 20 characters of evidence."
+                    } else {
+                        saving = true
+                        onSave(selectedProblemId, title.trim(), content.trim()) { savedId ->
+                            saving = false
+                            if (savedId != null) {
+                                onDismiss()
+                            } else {
+                                error = "Trader could not save this capture. Review the source and try again."
+                            }
+                        }
+                    }
+                },
+                enabled = !saving && title.isNotBlank() && content.trim().length >= 20
+            ) { Text(if (saving) "Saving…" else "Save to Trader") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) { Text("Discard") }
+        }
+    )
+}
+
 @Composable
 private fun BackupDialog(
     onDismiss: () -> Unit,

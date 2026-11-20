@@ -1,13 +1,13 @@
 # State Ledger
-_Last updated: 2026-11-19 by Continuity Engineer — session 8 (evidence-backed opportunity workflow)_
+_Last updated: 2026-11-20 — session 11 (authenticated research capture bridge)_
 
 ## 1. Product snapshot
-Trader is an Android-first, local-first workspace for capturing general problems/opportunities, preserving context and evidence, planning work, using explicitly supported capabilities and verifying outcomes. Trade/services/careers are initial specialist workflows; industrial tooling and machining between Türkiye and Poland/EU remains the first commercial pilot, not the product boundary. The feature branch adds an optional evidence-backed opportunity pipeline for manually tracking one real role, service need or commercial lead per ProblemCase. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
+Trader is an Android-first, local-first problem-solving and opportunity-execution workspace. Its next priority is proof-asset-led company discovery, evidence-backed company dossiers, a Trader-owned in-app browser and controlled outreach preparation. Trade/services/careers remain initial specialist workflows, not the product boundary. The current Inbox/Pipeline/Activity shell is a foundation only; it is not the intended user experience. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
 
 ## 2. Status board
 | Area | State | Notes |
 |---|---|---|
-| Android shell / EN-TR-PL | 🟡 partial | Builds in CI; visual/device acceptance open |
+| Android shell / EN-TR-PL | 🟡 partial | Builds in CI; current Inbox/Pipeline/Activity shell is being redesigned around Discover/Work/Live/Studio; visual/device acceptance open |
 | ProblemCase capture | 🟡 partial | Manual + shared text/URL; incoming intent extraction CI-tested; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
@@ -16,13 +16,18 @@ Trader is an Android-first, local-first workspace for capturing general problems
 | Context packet | 🟡 partial | Builder tested; Android share chooser not device-accepted |
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
-| Browser / installed-app automation | ⚪ not started | No execution adapter |
-| AI / live discovery / matching | ⚪ not started | No model, web-source or buyer/supplier match runtime |
-| Opportunity tracking | 🟡 branch implementation | Optional one-to-one profile, stages, fit notes, next action, date and safe user handoff implemented on feature branch; CI run 306 verified (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open. No normalized organizations/people, buyer/supplier graph, consent tracking, discovery or send adapter |
+| Browser / installed-app automation | 🟡 partial | Trader WebView supports app-local sessions, third-party SSO cookies, popup windows, autofill, file chooser and Google OAuth fallback. User confirmed login works on Redmi. Trader now captures visible page/selection to reviewable source-linked evidence or imports Memo's versioned share payload. CI run 358 passed 76 tests, lint, APK build, signature and package checks. Memo sender CI run 1009 passed Android tests, lint, build/signature and app-private-data preservation; PR #15 is still draft/unmerged and its source-only run produced no installable APK artifact. Trader's final explicit import-review flow is awaiting a clean CI retry after a KSP plugin-resolution failure in run 371; tabs/history/downloads and workflow automation remain open |
+| AI / live discovery / matching | 🟡 foundation in progress | PR #17 adds pinned local model catalog, LiteRT-LM inference adapter with SHA verification, resumable model store, Model Hub UI and bounded evidence-aware context packets; orchestration, real source adapter and AI-backed qualification are still absent |
+| Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
+- Local AI milestone is accepted and code started on the discovery/browser branch. `docs/LOCAL_AI_ARCHITECTURE.md` is the canonical design. Current implementation includes Trader-owned model metadata, a real LiteRT-LM CPU inference adapter with pinned hash verification, resumable download/install logic, storage/RAM preflight, Model Hub UI and bounded evidence context packets. CI run 349 passed the full test/lint/debug-build/signature/package pipeline; do not claim device inference until a verified model has actually run on the Redmi.
+- Discovery-first product direction is documented in docs/PRODUCT_EXPERIENCE.md and D-020. Trader's browser now has persistent app-local sessions, SSO cookies, popup windows, autofill, file upload and explicit Google OAuth fallback. User confirmed login works on Redmi. Trader Capture reads visible page text/selection, allows review/edit and saves to an active case or creates a Research case with source-linked UNREVIEWED evidence. URLs are persisted without query/fragment. CI run 358 passed 76 tests, lint, debug build, signature/package checks. Memo sender PR #15 passed its full CI checks in run 1009 but remains draft/unmerged; do not expect the button in the installed Memo app yet. The source-only run did not publish an installable APK. Trader's latest explicit import review dialog and state-restoration changes need a clean CI re-run after transient KSP plugin resolution failure in run 371.
+- The browser capture increment adds a reviewed Capture workflow and a versioned cross-app Memo payload. Only visible content and sanitized page URL are transferred; browser credentials and cookies stay in their owning app. Next is the real discovery slice: select a ProofAsset, define DiscoveryStrategy/query plan, run one permitted public source and create evidence-backed candidate dossiers. Then connect local AI to source-grounded extraction/fit and prepare individualized outreach; no auto-send.
+
+## 3a. Previously in flight (historical)
 - Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
 - Device acceptance (T6.0/T6.0a) — install and exercise the current debug APK on the Redmi Note 12 Pro 5G; requires physical-device and user-driven acceptance.
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
@@ -31,25 +36,26 @@ Trader is an Android-first, local-first workspace for capturing general problems
 - TraderApp.kt — main currently has Inbox and Activity; the feature branch adds Opportunity Pipeline. Discover/Matches/Contacts are not implemented.
 - TraderBackupManager.kt — feature branch reads schema-v3 and v4 snapshots; older v1/v2 snapshots remain unsupported. Future schema changes need explicit backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
+- Browser remains single-tab; bookmarks/history, find-in-page, download manager, site-specific cookie/session controls, browser page evidence capture is now implemented; visible workflow takeover is still not implemented. Provider restrictions (including Google embedded OAuth, passkeys, MFA and camera/microphone permissions) require explicit fallback or user handling. Real account login and session persistence across a process restart have not been verified on the Redmi.
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
-- Browser/app automation, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters are absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
+- Browser and app-local login-session foundations are now implemented on PR #17; browser workflow automation, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters remain absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
 - Search has no dedicated UI test; incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test; no physical-device test has been recorded.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
 - No release signing configuration; do not present the debug build as production.
 
 ## 5. Environment & how to run
 - Repository: `ysfclc/Trader`; primary branch: `main`.
-- Toolchain: JDK 17, Gradle Wrapper 8.13, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4, compile SDK 36, min SDK 26, target SDK 35.
+- Toolchain: JDK 17, Gradle Wrapper 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, compile SDK 36, min SDK 26, target SDK 35.
 - Build/test/lint: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`.
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.
 
 ## 6. Next three increments
-1. Merge the CI-verified PR #16, then deliver the debug APK as a pilot build for the manually curated career/service/trade opportunity loop. Physical install/upgrade and real-use acceptance remain separate. Confirm install/upgrade safety and that capture → source/evidence → qualification → next action → contact handoff → follow-up works.
-2. Complete Redmi Note 12 Pro 5G acceptance of the Opportunity Pipeline, existing workspace and encrypted backup/restore. Record actual device results separately from CI.
-3. Add durable local follow-up notifications and/or WorkManager execution only with exact permission, recovery and postcondition semantics; add selected-file/document capture as a separate source-preserving slice. No automatic send or ambiguous retry.
+1. Build the first real discovery source vertical slice: ProofAsset + editable DiscoveryStrategy + bounded public-source search + source health/provenance + deduplicated candidates. No seeded or mock results.
+2. Complete the Trader browser baseline: device-verify account login and cookie persistence, then add tabs, bookmarks/history, downloads, page capture/evidence and visible Live takeover controls.
+3. Connect local AI to source-grounded evidence extraction, Organization/Person dossiers and explainable fit; then create individualized outreach drafts with exact approval and verified handoff semantics. Only then deliver the next APK as a meaningful discovery-to-outreach pilot; device acceptance remains separate. No automatic send or ambiguous retry.
 
 ## 7. Open questions for the human
 - [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.

@@ -177,3 +177,55 @@ The initial mobile opportunity workflow uses one optional OpportunityRecord per 
 **Reason:** The first practical use case needs one compact place to move a captured real-world lead from discovery to qualification, contact and follow-up while preserving its source context. Forcing every ProblemCase to become an opportunity would violate the universal problem model; building the complete commercial graph before validating the workflow would overbuild the first slice.
 
 **Consequences:** User explicitly opts into opportunity tracking. Create/update/stage changes are recorded in ProblemCase activity. Contact route opens only a browser, email composer or dialer after explicit user action; Trader does not send/place calls. Follow-up dates are displayed but do not trigger notifications. Room v3→v4 adds the optional profile, and schema-v3 encrypted backups remain restorable with no opportunity records. Normalize organizations/people and move to multiple opportunities per case only when a validated use case justifies the schema change.
+
+
+## D-020 — Discovery-first experience and Trader-owned browser
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader's next product phase prioritizes an automated, evidence-backed company discovery and outreach-preparation experience. Discovery starts from a user-selected real ProofAsset (product, working project, service capability, domain skill or documented result), derives editable problem signatures, and searches permitted public sources for companies showing relevant intent or need. Results become source-linked company dossiers with explainable fit, unknowns and an individualized outreach path. Generic industry lists, ungrounded AI scoring and bulk outreach are not acceptable substitutes.
+
+Trader will provide its own visible in-app browser. It is a runtime surface that can be opened from discovery, a company dossier or a workflow; it is not a link-out masquerading as a browser and not a Memo dependency. Browser interaction must be observable, interruptible, origin-aware and capable of preserving evidence. Consequential external submissions remain separate, exact-payload-approved actions with observable postconditions.
+
+The primary experience is organized around Discover, Work, Live and Studio. Inbox, Pipeline and Activity become useful views within that workspace rather than defining the whole product. Browser and app sessions appear contextually in Live and may expand to a full-screen runtime. Existing local records, package identity, database and backup compatibility must be preserved through navigation and schema changes.
+
+**Reason:** The current Inbox/Pipeline/Activity experience makes Trader look like a manual tracker and does not expose the user's priority workflow: find companies that already have relevant problems, understand the evidence, approach them through the right channel and verify the outcome. Memo's persistent context, visible execution and takeover patterns are useful references, but Trader owns its own product architecture, runtime and data.
+
+**Consequences:** The first genuinely useful release must complete ProofAsset → DiscoveryStrategy → real permitted source results → deduplicated candidate dossier → evidence-backed fit → Trader browser research → individualized outreach draft → approved handoff/verified outcome. Do not ship seeded results, fake connected channels or browser link-outs as completion.
+
+
+## D-021 — Local AI is Trader's intelligence backbone
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader adopts Memo-2's verified architectural patterns—model roles/lifecycle, local inference, bounded context packets, structured planning, routing, persistent context and checkpointed execution—but implements and owns them independently. Local inference is the default intelligence path for discovery strategy, query planning, evidence extraction, qualification, research and outreach preparation. Models are task-routed; one model may serve multiple roles. Model installation is optional and never forced at first launch. The first runtime targets LiteRT-LM .litertlm models with CPU correctness before accelerator investigation. External AI is explicit escalation only, with preview/redaction of the context packet and no silent fallback. Model output is untrusted and cannot grant capabilities or bypass exact approval gates.
+
+**Reason:** Trader needs to automate the actual opportunity-finding and research loop. A chatbot or AI decoration would not solve this. Local-first inference keeps private workspace context on-device and avoids mandatory cloud credits.
+
+**Consequences:** model catalog/runtime, Context Engine, memory, structured orchestrator and AI-backed discovery become ordered implementation milestones with real inference and device acceptance. See `docs/LOCAL_AI_ARCHITECTURE.md`. Memo remains a reference, not a dependency.
+
+
+## D-022 — Account sessions are a first-class browser capability
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader's embedded browser must support ordinary website login for providers that permit embedded browsing. It owns an app-local WebView session with accepted cookies, explicitly configured per-WebView third-party cookie behavior for SSO, persistent DOM storage, cookie flush at page/lifecycle boundaries, user-gesture popup windows, Android autofill and file-upload selection. Main and authentication popup WebViews use the same Trader app-local cookie store.
+
+Google OAuth is not attempted inside Trader's embedded WebView because Google prohibits embedded WebView sign-in. When the Google identity endpoint is detected, Trader must reopen the original relying-party URL in the default system browser so the whole OAuth flow begins in a supported browser. System-browser cookies are a separate profile and must never be extracted, copied or injected into Trader. Other provider restrictions, passkeys, MFA, CAPTCHA and device-permission prompts must remain visible and user-controlled.
+
+**Reason:** A browser that cannot retain authenticated sessions or handle normal identity-provider redirects cannot support the intended research and outreach workflows. Login must work where providers allow it, while respecting provider security policy where they do not.
+
+**Consequences:** CI regression tests cover URL routing and cookie configuration; real-device acceptance must test password login, supported SSO, app process restart and Google fallback on the Redmi. A screen existing or a green CI build is not proof that all providers authenticate successfully.
+
+
+## D-023 — Authenticated browser capture is explicit, source-linked and credential-free
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader may capture rendered visible page text or the user's selected text from its authenticated WebView, but only after an explicit user action and review/edit step. The capture is stored as UNREVIEWED source-linked Evidence on an active case or in a new Research case. It preserves page title, capture time and a sanitized source URL. The browser runtime must never read cookies, WebView storage, password fields, hidden form values or authentication tokens for this feature.
+
+Memo can hand a user-reviewed page to Trader through Android Sharesheet using the versioned MEMO_BROWSER_CAPTURE_V1 text contract. The payload contains title, summary, visible page text and an HTTP(S) base URL. Query strings and fragments are stripped before sharing and independently stripped again by Trader before storage. The handoff transfers research material, not the browser session.
+
+**Reason:** The user researches through authenticated websites in Memo but needs the resulting evidence in Trader's durable discovery and qualification workspace. Sharing content keeps the account session with its owning browser and avoids a cookie/token export mechanism.
+
+**Consequences:** Keep this operation user-triggered and reviewable; treat page content as untrusted until the user verifies it. Support redaction before save/share. A green CI build verifies parsing and persistence contracts, not the actual Android Sharesheet flow or completeness of dynamically rendered pages. Memo sender PR #15 and installed-build acceptance remain separate gates.

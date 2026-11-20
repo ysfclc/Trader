@@ -8,7 +8,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
 - [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.
 - [x] T0.7 Complete source-level audit of QRKey variants and remaining mobile/automation prototypes; record exact findings and no-reuse boundaries in `docs/QRKEY_REUSE_AUDIT.md`.
-- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed.
+- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed at CI run 341. LiteRT-LM 0.18.0 requires Kotlin metadata 2.4; keep compiler/plugin and KSP versions aligned.
 - [x] T0.4 Add Gradle wrapper, reproducible CI build and signing-boundary instructions. Production release signing via GitHub secrets remains open.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
 
@@ -18,7 +18,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
-- [ ] T1.2 Expand navigation beyond the Inbox, Opportunity Pipeline and Activity surfaces to Discover, Matches, Contacts and specialized trade/service/career workspaces.
+- [ ] T1.2 Rebuild the product shell around Discover, Work, Live and Studio while preserving Inbox, Pipeline and Activity as linked views; add per-destination state/back-stack and migration tests.
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
@@ -53,8 +53,17 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T3.0d Add user-facing capability browser and workflow UI with truthful availability, missing-permission, approval and postcondition states. PR #6 merged; CI runs 202/203 passed. Physical-device acceptance remains pending.
 - [x] T3.0e Generate a source- and verification-aware context packet from a case, plan and evidence records for explicit share-sheet handoff. Unit test passed in CI runs 225 and 232; this is a handoff, not an embedded AI integration.
 - [ ] T3.1 Define a source-adapter contract including access mode, terms/policy URL, scope, rate limits, required credentials and source health.
+- [ ] T3.1a Define versioned ProofAsset and DiscoveryStrategy records: real user capability/proof, problem signatures, target constraints, query plan and disqualifiers.
+- [ ] T3.1b Define durable DiscoveryRun and SourceRun state with bounded execution, cancellation, caching, timestamps, health and explicit failures.
+- [ ] T3.2a Implement one real, documented public-source adapter end-to-end; no fixtures or fake result lists.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
-- [ ] T3.3 Implement a visible browser session with current URL, pause, stop, takeover and postcondition checks.
+- [x] T3.3a Add first Trader-owned browser screen with address/search, back/forward, stop/reload, title/current URL, progress and share-page handoff. Browser code is in PR #17; physical-device acceptance remains open. Tabs, bookmarks/history, find-in-page, downloads, site-specific session controls and dossier evidence capture remain open.
+- [x] T3.3b Add account-login foundations: persistent app-local WebView cookie storage and flush, explicit third-party cookie policy for SSO, user-gesture popup windows, Android autofill and web file chooser; detect Google OAuth and restart the relying-party site in the system browser without attempting embedded Google sign-in or copying Chrome cookies. CI run 349 passed 65 tests; run 358 passed the full build/test/lint/signature/package pipeline. User confirmed embedded account login works on Redmi; provider-by-provider and process-restart coverage remains open.
+- [x] T3.3c Connect authenticated Trader browser to source-linked evidence capture: extract only visible page text/selection, review/edit before saving, attach to an active case or create a research record, retain title/base URL/capture time and mark evidence UNREVIEWED. Strip URL query and fragment on capture and again at persistence. Parser, persistence, unsafe-URL, size-bound, URL sanitization and no-cookie/storage-read tests passed in CI run 358 (76 tests, 0 failures/errors/skipped); full device acceptance remains open.
+- [x] T3.3d Add a versioned MEMO_BROWSER_CAPTURE_V1 Android share-sheet contract and Trader receiver. Memo exports only user-requested visible page text, summary, title and sanitized base URL; Trader recognizes the payload as research evidence. Ordinary shared links/text retain their existing intake behavior. Trader share parsing tests passed in CI run 358; Memo PR #15 sender passed Android tests, lint, build/signature and install-over-existing data-preservation checks in run 1009. The PR remains draft/unmerged and the source-only verification run did not publish an installable APK artifact.
+- [x] T3.3e Route Memo payloads through an explicit editable review/redaction dialog before evidence persistence; preserve pending review state across Activity recreation and consume the incoming share intent to prevent duplicate imports. Added route tests; final CI run 371 reached a transient KSP plugin resolution error before Kotlin compilation, so the latest head awaits a clean re-run.
+- [ ] T3.3 Implement full browser baseline with tabs, bookmarks/history, find-in-page, downloads and cookie/session controls.
+- [ ] T3.3a Add visible browser task controls, pause/stop/takeover, origin scope, login/CAPTCHA/OTP/consent-wall detection and evidence capture into the active dossier.
 - [ ] T3.4 Investigate Android intents, Custom Tabs, WebView and AccessibilityService limitations; Accessibility must not be the sole automation foundation.
 - [ ] T3.5 Add durable queue, pause/resume, retry, cancellation and failure inspection.
 - [ ] T3.6 Add source-specific access checks, rate limits, caching and backoff.
@@ -69,6 +78,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.5 Implement bounded context packets, redaction, prompt versioning and explicit remote-model consent.
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
+- [ ] T4.8 Add Organization and Person dossiers with aliases/domains, source-linked claims, identity-resolution state and reversible duplicate review.
+- [ ] T4.9 Add explainable ProofAsset-to-Organization fit assessments: supporting/contradicting evidence, unknowns, deterministic components and reviewer override.
 
 ## T5 — Outreach and deal execution
 
@@ -80,6 +91,22 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T5.5 Track draft, approved, handed-off, confirmed-sent, failed, uncertain and replied states accurately.
 - [ ] T5.6 Add durable follow-up notifications/reminders and the full deal pipeline; the current Pipeline only displays manually entered dates and does not schedule notifications.
 - [ ] T5.7 Create buyer/supplier introduction dossier and written commission/authority checklist.
+- [ ] T5.8 Generate individualized outreach drafts from verified facts and a selected ProofAsset; preserve claim provenance and flag unsupported statements.
+- [ ] T5.9 Add channel capability declarations for discover/read/draft/handoff/send/reply/verify; never present a browser or Android intent handoff as a confirmed send.
+
+## T7 — Local AI foundation (Memo-2 inspired, Trader-owned)
+
+- [x] T7.0 Accept architecture: local AI is Trader's intelligence backbone, not a chatbot; Memo-2 is pattern reference only. See `docs/LOCAL_AI_ARCHITECTURE.md`.
+- [x] T7.0a Add Trader-owned pinned model catalog (small orchestrator, analyst, deep model profiles) and role metadata.
+- [x] T7.0b Add real LiteRT-LM inference adapter with CPU execution, off-main-thread operation, bounded input/output and pinned SHA-256 verification; CI build/test/lint verification passed in run 349; on-device LiteRT-LM inference remains open.
+- [~] T7.0d Add resumable pinned model download, SHA-256 verified install, private storage, storage/RAM preflight, active model selection and Model Hub UI with an actual inference smoke test. Code exists; CI build verification passed in run 349; model installation/inference on the target device remains unverified.
+- [x] T7.0c Add bounded ContextPacket with explicit fact status, provenance links, unknowns and truncation notice.
+- [ ] T7.1 Complete Model Hub: model scan/import, richer compatibility diagnostics, accelerator capability and runtime error details.
+- [ ] T7.2 Context Engine: assemble relevant proof assets, strategies, evidence, organizations, memory and unknowns; redact before external routing.
+- [ ] T7.3 Structured-output validation and plan parser; reject malformed output and unregistered capabilities.
+- [ ] T7.4 Local orchestrator: task routing, run persistence, cancellation, budgets and process-death recovery.
+- [ ] T7.5 Connect local AI to genuine public-source discovery, evidence extraction, company qualification and browser research; acceptance requires a real model on-device.
+- [ ] T7.6 Optional frontier escalation with packet preview, explicit consent and no silent fallback.
 
 ## T6 — Pilot and verification
 

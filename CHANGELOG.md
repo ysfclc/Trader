@@ -1,3 +1,35 @@
+## 2026-11-20 — Trader local AI foundation (in progress)
+
+- Accepted D-021: local AI is the intelligence backbone for discovery, qualification, research and outreach preparation; Memo-2 supplies patterns only.
+- Added Trader-owned pinned LiteRT-LM model catalog profiles for small, analyst and deep model roles.
+- Added real CPU LiteRT-LM inference adapter with bounded prompt/response, background execution and explicit model-path/size validation. No canned responses or silent cloud fallback.
+- Added bounded evidence-aware context packets that label fact verification state, retain source links and timestamps, include unknowns and signal when context is truncated.
+- Added resumable pinned model downloads, SHA-256 verification before install, storage and RAM preflight, active-model selection and Model Hub UI with a real local inference smoke-test action. Model import/scan, Context Engine, orchestrator and discovery integration remain open.
+- Catalog/context tests and the full CI pipeline passed in run 349 (65 tests, lint, debug APK assembly, signature and package identity); physical inference on the Redmi remains unverified.
+
+## 2026-11-20 — Authenticated browser research capture (PR #17 in progress)
+
+- Added a Capture action in Trader's browser. It extracts only readable visible page text/selected text, shows an editable review sheet, and saves to a selected active case or a new Research record.
+- Saved captures retain title, sanitized base URL and capture time; evidence is UNREVIEWED until the user verifies it. Database creation/attachment is atomic and rejects invalid URLs, short payloads and archived destinations.
+- Added the MEMO_BROWSER_CAPTURE_V1 Android share-sheet contract to Trader's receiver. Versioned Memo captures become new source-linked research records; normal shared text/URLs preserve their prior intake path.
+- Strip URL query strings and fragments in Memo before sharing and independently in Trader before persistence; this prevents temporary OAuth codes/session values from being propagated in source URLs. No cookies, browser storage, passwords, hidden fields or authentication tokens are read or transferred.
+- Trader CI run 358 passed 76 tests (0 failures/errors/skipped), lint, debug APK assembly, signature and package identity. Memo sender PR #15 passed CI run 1009 (Android tests, lint, build/signature and install-over-existing data-preservation); it remains draft/unmerged and the source-only run published no APK artifact. Trader's final import-review dialog and Activity-recreation guard await a clean CI rerun.
+
+## 2026-11-20 — Trader authenticated browser sessions (PR #17 in progress)
+
+- Fixed the missing login foundations: Trader now configures an app-local persistent WebView cookie store, enables per-WebView third-party cookies for SSO, flushes cookies on navigation/lifecycle/disposal, and supports user-initiated authentication popup windows.
+- Added Android autofill and website file-upload chooser support. Camera/microphone website permissions remain denied until a dedicated user-consent flow exists.
+- Detects Google's OAuth identity endpoint and reopens the original relying-party website in the system browser. Google prohibits embedded WebView sign-in; Chrome cookies are not copied into Trader. Other identity providers may have their own restrictions.
+- Added URL/provider-routing regression tests. The app calls Android CookieManager directly to enable third-party cookies; the Robolectric shadow did not accurately report this platform setting, so cookie behavior remains a real-device acceptance check. CI run 349 passed 65 tests, lint, debug APK assembly, signature and package identity. Physical-device login/process-restart acceptance is still pending.
+
+## 2026-11-20 — Trader browser baseline (PR #17 in progress)
+
+- Added a Trader-owned WebView browser screen as a bottom navigation destination with address/search, back/forward, stop/reload, title/current URL, loading progress and page-share handoff.
+- Added Internet permission. This initial browser is not multi-tab, does not persist session state/bookmarks/history, does not capture page evidence into dossiers, and does not automate form submissions or outreach.
+- Documented the discovery-first product direction, company evidence/provenance, visible browser runtime and exact approval model in `docs/PRODUCT_EXPERIENCE.md`.
+- CI and physical-device acceptance pending; do not claim a verified APK until CI completes.
+
+
 ## 2026-11-19 — Evidence-backed opportunity pipeline (PR #16 in progress)
 
 - Added optional one-to-one opportunity profile linked to a universal ProblemCase: trade/service/career/other lane, organization and contact labels, fit notes, lifecycle stage, next action and local follow-up date.

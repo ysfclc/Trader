@@ -5,20 +5,41 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.mutableStateOf
 import com.yusufculcu.trader.ui.TraderApp
+import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.ui.theme.TraderTheme
 import com.yusufculcu.trader.viewmodel.TraderViewModel
 import com.yusufculcu.trader.viewmodel.TraderViewModelFactory
 
 class MainActivity : ComponentActivity() {
+    private val pendingBrowserCapturePayload = mutableStateOf<String?>(null)
+
+    companion object {
+        private const val STATE_PENDING_BROWSER_CAPTURE = "pending_browser_capture_v1"
+    }
+
     private val viewModel: TraderViewModel by viewModels {
         TraderViewModelFactory((application as TraderApplication).repository)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        handleIncomingIntent(intent)
-        setContent { TraderTheme { TraderApp(viewModel) } }
+        val restoredCapture = savedInstanceState?.getString(STATE_PENDING_BROWSER_CAPTURE)
+        if (!restoredCapture.isNullOrBlank()) {
+            pendingBrowserCapturePayload.value = restoredCapture
+        } else {
+            handleIncomingIntent(intent)
+        }
+        setContent {
+            TraderTheme {
+                TraderApp(
+                    viewModel = viewModel,
+                    incomingBrowserCapture = pendingBrowserCapturePayload.value?.let(SharedBrowserCaptureParser::parse),
+                    onBrowserCaptureHandled = { pendingBrowserCapturePayload.value = null }
+                )
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -27,8 +48,22 @@ class MainActivity : ComponentActivity() {
         handleIncomingIntent(intent)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(STATE_PENDING_BROWSER_CAPTURE, pendingBrowserCapturePayload.value)
+        super.onSaveInstanceState(outState)
+    }
+
     private fun handleIncomingIntent(intent: Intent?) {
-        extractIncomingContent(intent)?.let(viewModel::captureSharedContent)
+        val route = routeIncomingShare(intent) ?: return
+        // Consume the incoming share intent so rotation cannot create duplicate records.
+        setIntent(Intent())
+        when (route) {
+            is IncomingShareRoute.ReviewBrowserCapture -> {
+                // Memo page captures require an explicit in-app review before persistence.
+                pendingBrowserCapturePayload.value = route.payload
+            }
+            is IncomingShareRoute.OrdinaryContent -> viewModel.captureSharedContent(route.content)
+        }
     }
 }
 
@@ -43,4 +78,19 @@ internal fun extractIncomingContent(intent: Intent?): String? {
         else -> null
     }
     return raw?.trim()?.takeIf(String::isNotEmpty)
+}
+
+internal sealed interface IncomingShareRoute {
+    data class ReviewBrowserCapture(val payload: String) : IncomingShareRoute
+    data class OrdinaryContent(val content: String) : IncomingShareRoute
+}
+
+/** Memo page payloads take the explicit review route; ordinary shares retain normal intake. */
+internal fun routeIncomingShare(intent: Intent?): IncomingShareRoute? {
+    val content = extractIncomingContent(intent) ?: return null
+    return if (SharedBrowserCaptureParser.parse(content) != null) {
+        IncomingShareRoute.ReviewBrowserCapture(content)
+    } else {
+        IncomingShareRoute.OrdinaryContent(content)
+    }
 }
