@@ -7,6 +7,13 @@
 - Added resumable pinned model downloads, SHA-256 verification before install, storage and RAM preflight, active-model selection and Model Hub UI with a real local inference smoke-test action. Model import/scan, Context Engine, orchestrator and discovery integration remain open.
 - Catalog/context tests and CI verification pending; physical inference on the Redmi remains unverified.
 
+## 2026-11-20 — Trader authenticated browser sessions (PR #17 in progress)
+
+- Fixed the missing login foundations: Trader now configures an app-local persistent WebView cookie store, enables per-WebView third-party cookies for SSO, flushes cookies on navigation/lifecycle/disposal, and supports user-initiated authentication popup windows.
+- Added Android autofill and website file-upload chooser support. Camera/microphone website permissions remain denied until a dedicated user-consent flow exists.
+- Detects Google's OAuth identity endpoint and reopens the original relying-party website in the system browser. Google prohibits embedded WebView sign-in; Chrome cookies are not copied into Trader. Other identity providers may have their own restrictions.
+- Added URL-routing tests and Robolectric coverage for the third-party cookie policy. CI for this revision and physical-device login/process-restart acceptance are still pending.
+
 ## 2026-11-20 — Trader browser baseline (PR #17 in progress)
 
 - Added a Trader-owned WebView browser screen as a bottom navigation destination with address/search, back/forward, stop/reload, title/current URL, loading progress and page-share handoff.

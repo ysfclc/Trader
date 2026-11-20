@@ -60,6 +60,14 @@ The usable browser baseline includes:
 
 Do not silently navigate to a different origin, submit forms, send messages or execute destructive actions. Detect login, CAPTCHA, OTP, consent walls and unexpected states; pause for the user. Never bypass access controls or hide automation. Browser state and evidence must be owned by Trader, not Memo.
 
+#### Account and identity sessions
+
+Account login is a core browser requirement, not a later convenience. For providers that permit embedded browsing, Trader must maintain its own persistent WebView profile: accept first-party cookies, explicitly configure third-party cookies per WebView where SSO requires them, retain WebView DOM storage, flush cookie state at lifecycle boundaries, support user-initiated popup/consent windows, Android autofill and website file-upload selection. The same app-local cookie jar is used by Trader's main and popup WebViews; sessions must survive leaving the browser screen and a normal app process restart.
+
+Identity providers may prohibit embedded user agents. Google explicitly blocks Google sign-in inside Android WebViews. When Trader detects Google's OAuth endpoint, it must reopen the original relying-party website in the default system browser so that the full authentication flow starts there. A system browser has its own cookie store; Trader must never claim that Chrome sign-in authenticates its embedded WebView, and must not scrape, copy or inject browser cookies. Other provider restrictions, MFA, passkeys, CAPTCHA and device permission requests must be surfaced and handled through a supported user path rather than spoofing a browser or bypassing access controls.
+
+CI tests must cover URL/provider routing and cookie-policy configuration. Device acceptance must separately verify password login, a supported SSO flow, session persistence after process restart and the external Google OAuth fallback on the target Android device.
+
 ### Company and contact workspace
 
 A company is a durable entity, not just a text label on an opportunity. Its dossier should connect:

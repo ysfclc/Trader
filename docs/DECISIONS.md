@@ -203,3 +203,16 @@ Trader adopts Memo-2's verified architectural patterns—model roles/lifecycle, 
 **Reason:** Trader needs to automate the actual opportunity-finding and research loop. A chatbot or AI decoration would not solve this. Local-first inference keeps private workspace context on-device and avoids mandatory cloud credits.
 
 **Consequences:** model catalog/runtime, Context Engine, memory, structured orchestrator and AI-backed discovery become ordered implementation milestones with real inference and device acceptance. See `docs/LOCAL_AI_ARCHITECTURE.md`. Memo remains a reference, not a dependency.
+
+
+## D-022 — Account sessions are a first-class browser capability
+**Date:** 2026-11-20  
+**Status:** Accepted
+
+Trader's embedded browser must support ordinary website login for providers that permit embedded browsing. It owns an app-local WebView session with accepted cookies, explicitly configured per-WebView third-party cookie behavior for SSO, persistent DOM storage, cookie flush at page/lifecycle boundaries, user-gesture popup windows, Android autofill and file-upload selection. Main and authentication popup WebViews use the same Trader app-local cookie store.
+
+Google OAuth is not attempted inside Trader's embedded WebView because Google prohibits embedded WebView sign-in. When the Google identity endpoint is detected, Trader must reopen the original relying-party URL in the default system browser so the whole OAuth flow begins in a supported browser. System-browser cookies are a separate profile and must never be extracted, copied or injected into Trader. Other provider restrictions, passkeys, MFA, CAPTCHA and device-permission prompts must remain visible and user-controlled.
+
+**Reason:** A browser that cannot retain authenticated sessions or handle normal identity-provider redirects cannot support the intended research and outreach workflows. Login must work where providers allow it, while respecting provider security policy where they do not.
+
+**Consequences:** CI regression tests cover URL routing and cookie configuration; real-device acceptance must test password login, supported SSO, app process restart and Google fallback on the Redmi. A screen existing or a green CI build is not proof that all providers authenticate successfully.

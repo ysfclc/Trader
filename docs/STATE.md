@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-20 — session 9 (discovery-first experience direction)_
+_Last updated: 2026-11-20 — session 10 (browser account-session repair)_
 
 ## 1. Product snapshot
 Trader is an Android-first, local-first problem-solving and opportunity-execution workspace. Its next priority is proof-asset-led company discovery, evidence-backed company dossiers, a Trader-owned in-app browser and controlled outreach preparation. Trade/services/careers remain initial specialist workflows, not the product boundary. The current Inbox/Pipeline/Activity shell is a foundation only; it is not the intended user experience. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
@@ -16,7 +16,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 | Context packet | 🟡 partial | Builder tested; Android share chooser not device-accepted |
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
-| Browser / installed-app automation | ⚪ not started | No Trader-owned browser session yet; no execution adapter |
+| Browser / installed-app automation | 🟡 partial | Trader-owned WebView now supports app-local persistent cookies, third-party SSO cookies, user-gesture popup windows, Android autofill, web file chooser and explicit Google OAuth system-browser fallback. Browser regression CI and physical Redmi login/process-restart acceptance are still open; automation adapter and evidence capture are not implemented |
 | AI / live discovery / matching | 🟡 foundation in progress | PR #17 adds pinned local model catalog, LiteRT-LM inference adapter with SHA verification, resumable model store, Model Hub UI and bounded evidence-aware context packets; orchestration, real source adapter and AI-backed qualification are still absent |
 | Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
@@ -24,8 +24,8 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 
 ## 3. Currently in flight
 - Local AI milestone is accepted and code started on the discovery/browser branch. `docs/LOCAL_AI_ARCHITECTURE.md` is the canonical design. Current implementation includes Trader-owned model metadata, a real LiteRT-LM CPU inference adapter with pinned hash verification, resumable download/install logic, storage/RAM preflight, Model Hub UI and bounded evidence context packets. Build/CI verification is pending; do not claim device inference until a verified model has actually run on the Redmi.
-- Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. The branch now adds a first Trader-owned WebView browser screen (address/search, back/forward, stop/reload, title/current URL, progress, share handoff); CI and device acceptance are pending. No discovery source adapter or evidence capture into dossiers exists yet.
-- The product's next acceptance target is a real ProofAsset → DiscoveryStrategy → permitted public source → candidate dossier → Trader browser research → individualized outreach draft/handoff journey. Do not deliver another APK as if this target were met until it is implemented and CI-verified.
+- Discovery-first product direction is documented on `feature/discovery-browser-workspace` in `docs/PRODUCT_EXPERIENCE.md` and D-020. The branch now adds a Trader-owned WebView browser and account-login foundations: persistent app-local cookies with flush, third-party SSO cookies, user-gesture popup windows, autofill and file upload chooser. Google OAuth is detected and routed back to the relying-party URL in the system browser because embedded Google login is prohibited; system-browser cookies are not imported into Trader. Browser-auth regression CI and real Redmi login/process-restart acceptance remain open. No discovery source adapter or evidence capture into dossiers exists yet.
+- The browser-auth increment adds persistent WebView login sessions for providers that permit embedded browsing, SSO cookies, popup windows, autofill and uploads; Google OAuth must use the system browser and its session cannot be transferred into Trader. The next browser acceptance gate is a real Redmi sign-in on representative non-Google sites, closing/restarting Trader and confirming the session is retained, then exercising the Google system-browser fallback. The broader product acceptance target remains ProofAsset → DiscoveryStrategy → permitted public source → candidate dossier → Trader browser research → individualized outreach draft/handoff. Do not deliver another APK as if that full journey were complete.
 
 ## 3a. Previously in flight (historical)
 - Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
@@ -36,6 +36,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - TraderApp.kt — main currently has Inbox and Activity; the feature branch adds Opportunity Pipeline. Discover/Matches/Contacts are not implemented.
 - TraderBackupManager.kt — feature branch reads schema-v3 and v4 snapshots; older v1/v2 snapshots remain unsupported. Future schema changes need explicit backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
+- Browser remains single-tab; bookmarks/history, find-in-page, download manager, site-specific cookie/session controls, page evidence capture and workflow takeover are not implemented. Provider restrictions (including Google embedded OAuth, passkeys, MFA and camera/microphone permissions) require explicit fallback or user handling. Real account login and session persistence across a process restart have not been verified on the Redmi.
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
@@ -46,7 +47,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 
 ## 5. Environment & how to run
 - Repository: `ysfclc/Trader`; primary branch: `main`.
-- Toolchain: JDK 17, Gradle Wrapper 8.13, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4, compile SDK 36, min SDK 26, target SDK 35.
+- Toolchain: JDK 17, Gradle Wrapper 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, compile SDK 36, min SDK 26, target SDK 35.
 - Build/test/lint: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 - Debug APK: `app/build/outputs/apk/debug/app-debug.apk`.
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.

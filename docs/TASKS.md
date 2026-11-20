@@ -8,7 +8,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
 - [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.
 - [x] T0.7 Complete source-level audit of QRKey variants and remaining mobile/automation prototypes; record exact findings and no-reuse boundaries in `docs/QRKEY_REUSE_AUDIT.md`.
-- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin 2.2.20, KSP 2.2.20-2.0.4 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed.
+- [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed at CI run 341. LiteRT-LM 0.18.0 requires Kotlin metadata 2.4; keep compiler/plugin and KSP versions aligned.
 - [x] T0.4 Add Gradle wrapper, reproducible CI build and signing-boundary instructions. Production release signing via GitHub secrets remains open.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
 
@@ -57,7 +57,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T3.1b Define durable DiscoveryRun and SourceRun state with bounded execution, cancellation, caching, timestamps, health and explicit failures.
 - [ ] T3.2a Implement one real, documented public-source adapter end-to-end; no fixtures or fake result lists.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
-- [x] T3.3a Add first Trader-owned browser screen with address/search, back/forward, stop/reload, title/current URL, progress and share-page handoff. PR #17 CI pending; physical-device acceptance open. Tabs, bookmarks/history, find-in-page, downloads, session/cookie controls and dossier evidence capture remain open.
+- [x] T3.3a Add first Trader-owned browser screen with address/search, back/forward, stop/reload, title/current URL, progress and share-page handoff. Browser code is in PR #17; physical-device acceptance remains open. Tabs, bookmarks/history, find-in-page, downloads, site-specific session controls and dossier evidence capture remain open.
+- [x] T3.3b Add account-login foundations: persistent app-local WebView cookie storage and flush, explicit third-party cookie policy for SSO, user-gesture popup windows, Android autofill and web file chooser; detect Google OAuth and restart the relying-party site in the system browser without attempting embedded Google sign-in or copying Chrome cookies. Routing and cookie-policy regression tests added. CI for this increment and real Redmi account-login/process-restart acceptance remain open.
 - [ ] T3.3 Implement full browser baseline with tabs, bookmarks/history, find-in-page, downloads and cookie/session controls.
 - [ ] T3.3a Add visible browser task controls, pause/stop/takeover, origin scope, login/CAPTCHA/OTP/consent-wall detection and evidence capture into the active dossier.
 - [ ] T3.4 Investigate Android intents, Custom Tabs, WebView and AccessibilityService limitations; Accessibility must not be the sole automation foundation.
