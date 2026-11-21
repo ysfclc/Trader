@@ -60,3 +60,6 @@ A row is not marked complete merely because a screen or class exists. The status
 - Debug APK artifact `14507787890`; 19,046,757 bytes; package `com.yusufculcu.trader.debug`; version `0.1.0-debug`; SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`.
 - CI proves compilation, test execution, lint and APK signature/package checks. It does not prove install, UI behavior, document-picker access, process-death recovery or production signing.
 
+
+
+| R-021 | Model the user's real capabilities as evidence-backed proof assets and derive editable, bounded discovery strategies with explicit problem signatures, target constraints, query plans and disqualifiers. | `app/src/main/java/com/yusufculcu/trader/domain/DiscoveryStrategy.kt`: versioned ProofAsset/ProofClaim/ProblemSignature/DiscoveryTarget/DiscoveryQuery/DiscoveryStrategy plus fail-closed validation. | `DiscoveryStrategyRulesTest` (5 tests): valid strategy, supported-claim evidence requirement, unknown asset, bounded query, duplicate signatures and schema version checks. CI pending on `build/proofasset-discovery-strategy`; no Room persistence or UI yet. | D-020; D-021; docs/TASKS.md T3.1a; docs/SOURCE_ECOSYSTEM.md | 🟡 Domain foundation implemented; persistence, backup, UI and CI verification open |
