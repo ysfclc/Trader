@@ -400,7 +400,7 @@ class WorkflowPersistenceTest {
         old.close()
 
         val migrated = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .allowMainThreadQueries()
             .build()
         try {
@@ -438,6 +438,14 @@ class WorkflowPersistenceTest {
             } finally {
                 opportunityTable.close()
             }
+            val proofAssetTable = migrated.openHelper.readableDatabase.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='proof_assets'"
+            )
+            try { assertTrue(proofAssetTable.moveToFirst()) } finally { proofAssetTable.close() }
+            val discoveryStrategyTable = migrated.openHelper.readableDatabase.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_strategies'"
+            )
+            try { assertTrue(discoveryStrategyTable.moveToFirst()) } finally { discoveryStrategyTable.close() }
             val archiveColumn = migrated.openHelper.readableDatabase.query("PRAGMA table_info(problem_cases)")
             try {
                 var found = false
