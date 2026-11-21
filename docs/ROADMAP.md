@@ -27,15 +27,16 @@ Exit gate: capture and manage a real non-commercial problem and a commercial opp
 
 Priority correction: deliver a proof-asset-led company discovery journey before expanding manual pipeline features. The first prospecting method searches for public evidence that a company is already experiencing, discussing, procuring or hiring to solve a problem the user's real product/service/skill can address. Do not start from generic industry lists or bulk outreach.
 - [x] Package a ProblemCase, plan and evidence into an explicit user-shareable context packet for assistant handoff; embedded AI and automatic context-return remain open.
-- [ ] Build a capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; every capability declares limits and postconditions.
+- [x] Build a typed capability registry for discovery, parsing, browser, app handoff, repository and analysis operations; adapter-specific policy limits/postconditions remain a promotion gate.
 - [ ] Resolve a ProblemCase into a structured context packet, missing-information questions and evidence-backed candidate paths.
-- [ ] Build documented source adapters for public web search, public company pages, directories, public tenders/RFQs and user-authorized browser sessions; enable each only after access, terms, scope, cost and rate limits are explicit.
+- [x] Deliver first working public-source input: user-triggered RSS/Atom refresh and one-shot DuckDuckGo search, with Discover UI, source health and source-linked UNREVIEWED save (CI run 385 passed; device acceptance open).
+- [x] Lock a configurable source manager and adapter registry. Source instances are user data, not a hardcoded provider list; initial adapters are one-shot DuckDuckGo search and user-configured public RSS/Atom feeds.
 - [ ] Create versioned ProofAsset and DiscoveryStrategy records; derive editable problem signatures, target constraints, query plans and disqualifiers.
 - [ ] Persist bounded DiscoveryRun/SourceRun state with caching, cancellation, source health and failure reporting.
 - [ ] Build normalized Organization/Person dossiers with source-linked claims, identity-resolution review and reversible deduplication.
 - [ ] Explain fit against selected proof assets, including supporting/contradicting evidence and unknowns.
 - [ ] Add a Trader-owned in-app browser with normal browsing fundamentals, persistent tabs/session controls, evidence capture and visible automation takeover/pause/stop.
-- [ ] Make every adapter report limits, errors, timestamps and source provenance.
+- [x] Make the first public-search and RSS/Atom adapters report bounds, errors, timestamps and source provenance. Other providers remain gated on their own contracts.
 - [ ] Extract structured requirements and offers using deterministic parsing first.
 - [ ] Add optional local AI adapter for translation, extraction, classification and drafting.
 - [ ] Build qualification checklists and evidence-backed buyer/supplier profiles.
