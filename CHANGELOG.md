@@ -147,3 +147,12 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Added a one-tap real Hacker News front-page RSS example; other targets remain user-configurable.
 - CI validation run 385 passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and exact package/version assertions. APK artifact 14698585569: 69,441,948 bytes, SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210.
 - Limitations: feed checks are manual only; source configurations are not yet in encrypted backups; no device/live-feed test, normalized company dossiers, AI qualification or social-platform adapters are claimed.
+
+
+## 2026-11-21 — Persistent Android identity and launcher icon (candidate 0.2.0)
+
+- Added adaptive launcher and round icons and wired them into the Android manifest.
+- Kept `com.yusufculcu.trader.debug` unchanged; incremented versionCode 1 → 2 and versionName 0.1.0 → 0.2.0.
+- Added optional stable development signing through a dedicated Trader keystore supplied only via GitHub Actions secrets. CI labels the no-secret APK as CI-only and does not call it installable.
+- Generated the development keystore outside the repository; fingerprint and secret setup are documented in `docs/ANDROID_BUILD.md`. User configuration and CI verification remain pending.
+- No Room schema or application data location changed. In-place updates with the same package and certificate preserve app-private data; uninstall/clear-storage does not.
