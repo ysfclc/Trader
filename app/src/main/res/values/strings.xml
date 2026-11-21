@@ -242,4 +242,6 @@
     <string name="discover_feed_complete">%1$d items received from %2$s.</string>
 
     <string name="discover_open_source">Open in Trader browser</string>
+    <string name="discover_hn_example_name">Hacker News — front page</string>
+    <string name="discover_add_hn_example">Add real example feed · Hacker News</string>
 </resources>
