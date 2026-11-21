@@ -10,6 +10,7 @@ import com.yusufculcu.trader.data.MIGRATION_5_6
 import com.yusufculcu.trader.data.TraderDatabase
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 
