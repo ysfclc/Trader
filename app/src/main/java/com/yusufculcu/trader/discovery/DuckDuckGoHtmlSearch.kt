@@ -165,11 +165,11 @@ class DuckDuckGoHtmlSearch(
         }
 
         private val RESULT_LINK = Regex(
-            """(?is)<a\\b([^>]*class="[^"]*\\bresult__a[^"]*"[^>]*)>(.*?)</a>"""
+            """(?is)<a\b([^>]*class="[^"]*\bresult__a[^"]*"[^>]*)>(.*?)</a>"""
         )
         private val ATTRIBUTE_HREF = Regex("""(?is)href=["']([^"']+)["']""")
         private val RESULT_SNIPPET = Regex(
-            """(?is)<(?:a|div)[^>]*class=["'][^"']*\\bresult__snippet[^"']*["'][^>]*>(.*?)</(?:a|div)>"""
+            """(?is)<(?:a|div)[^>]*class=["'][^"']*\bresult__snippet[^"']*["'][^>]*>(.*?)</(?:a|div)>"""
         )
     }
 }
