@@ -136,3 +136,14 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Locked the adapter / configured source instance / watch rule separation and expanded the source taxonomy across feeds, company sites, registers, procurement, job/project markets, communities, federated social, developer ecosystems, reviews, authorized group workspaces and webhooks.
 - Recorded Reddit, Meta/Facebook, Bluesky, Mastodon, Telegram and YouTube access constraints in docs/SOURCE_ECOSYSTEM.md.
 - First working delivery is public RSS/Atom configuration and manual refresh plus one-shot search. No continuous monitoring or social API connection is claimed.
+
+
+## 2026-11-21 — Discover and first public-source ingestion (PR #18)
+
+- Added a user-configurable local source list for public RSS/Atom feeds with enable/pause/remove and last-check/error health; no API secrets are stored.
+- Added bounded RSS 2.0/Atom fetching, DocDecl-disabled XML parsing, public-host checks, native item IDs, publication/retrieval timestamps and URL deduplication.
+- Added an explicit built-in adapter registry, one-shot DuckDuckGo search and the Discover landing screen in English, Polish and Turkish.
+- Users can manually check a feed, open a result inside Trader's WebView, and save it to Work as source-linked UNREVIEWED research evidence. Repeated source URLs resolve to existing research records.
+- Added a one-tap real Hacker News front-page RSS example; other targets remain user-configurable.
+- CI validation run 385 passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and exact package/version assertions. APK artifact 14698585569: 69,441,948 bytes, SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210.
+- Limitations: feed checks are manual only; source configurations are not yet in encrypted backups; no device/live-feed test, normalized company dossiers, AI qualification or social-platform adapters are claimed.
