@@ -27,6 +27,9 @@ _Last reviewed: 2026-11-21 against the PR #18 source-ingestion branch; CI valida
 
 | R-13 | Experimental HTML search adapter may break when search markup or source access policy changes; search snippets are incomplete and unverified. | Medium | Bounded adapter is integrated into Discover; parser tests and full CI run 385 passed (97 tests, lint/build/signature/package). No live-source or device acceptance. | Keep the adapter experimental. Re-check provider terms/markup health; preserve result provenance and never score a snippet as verified evidence. |
 
+
+| R-22 | CI debug APK signing may not be stable between hosted runner executions, so a new sideload APK may not update an older debug install. | Medium | Run 385 signature and package checks passed, but no stable signing key continuity is configured. | Never instruct the user to uninstall an existing install to force an update. Configure a dedicated stable development/release keystore through protected CI secrets and verify certificate continuity before promising updates; protect local data first. |
+
 ## Operating rule
 
 A risk is not closed because a related screen or safeguard exists. Close it only with the mitigation evidence and update this file and `docs/STATE.md` in the same increment.
@@ -35,5 +38,3 @@ A risk is not closed because a related screen or safeguard exists. Close it only
 | R-19 | The initial source watchlist is stored in app-private preferences and is not included in encrypted Trader backups. | Medium | Only public HTTPS feed URLs and labels are stored; no API credentials are accepted. | Add source configuration backup/restore and migration tests before treating the source watchlist as portable. |
 | R-20 | Community/social content may include personal information and provider-specific deletion/retention duties. | High | Community adapters remain disabled in the feed-first slice; provider access and retention constraints are documented in docs/SOURCE_ECOSYSTEM.md. | Before enabling each provider, implement its permission/scopes, deletion reconciliation, expiry, data minimization and policy checks. |
 | R-21 | A manual feed check may be mistaken for continuous monitoring. | Medium | Initial Discover feed refresh is user-triggered only; no polling worker is wired. | Use the label “Check now”; add scheduled monitoring only after durable jobs, cancellation, cursor/backoff and recovery are implemented. |
-
-| R-22 | CI debug APK signing may not be stable between hosted runner executions, so a new sideload APK may not update an older debug install. | Medium | Run 385 signature and package checks passed, but no stable signing key continuity is configured. | Never instruct the user to uninstall an existing install to force an update. Configure a dedicated stable development/release keystore through protected CI secrets and verify certificate continuity before promising updates; protect local data first. |
