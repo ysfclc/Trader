@@ -203,4 +203,42 @@
     <string name="event_opportunity_stage_changed">Zmieniono etap szansy</string>
     <string name="event_opportunity_updated">Zaktualizowano dane szansy</string>
 
+
+    <string name="discover_nav">Odkrywaj</string>
+    <string name="discover_title">Odkrywaj przydatne sygnały</string>
+    <string name="discover_subtitle">Przeszukuj publiczne źródła i zapisuj konkretne dowody w swojej przestrzeni.</string>
+    <string name="discover_web_search">Jednorazowe wyszukiwanie w sieci</string>
+    <string name="discover_search_hint">Czego szukasz?</string>
+    <string name="discover_query_too_short">Wpisz co najmniej dwa znaki.</string>
+    <string name="discover_public_web">Publiczne wyszukiwanie</string>
+    <string name="discover_search_now">Szukaj teraz</string>
+    <string name="discover_search_disclaimer">Wyniki to tropy, nie zweryfikowane fakty. Otwórz źródło przed podjęciem działania.</string>
+    <string name="discover_add_feed">Dodaj publiczny kanał RSS / Atom</string>
+    <string name="discover_source_name">Nazwa źródła</string>
+    <string name="discover_feed_url">Publiczny adres kanału HTTPS</string>
+    <string name="discover_add_source">Dodaj źródło</string>
+    <string name="discover_feed_security">Obsługiwane są tylko publiczne kanały HTTPS. Adresy sieci lokalnych i przekierowania są blokowane. Lista źródeł jest zapisana na tym urządzeniu, nie w zaszyfrowanej kopii zapasowej.</string>
+    <string name="discover_sources">Twoje źródła</string>
+    <string name="discover_reload">Odśwież listę</string>
+    <string name="discover_no_sources">Nie dodano jeszcze kanałów. Dodaj publiczny RSS lub Atom.</string>
+    <string name="discover_enabled">Aktywne</string>
+    <string name="discover_paused">Wstrzymane</string>
+    <string name="discover_last_error">Ostatnie sprawdzenie nie powiodło się: %1$s</string>
+    <string name="discover_last_checked">Ostatnio sprawdzono: %1$s</string>
+    <string name="discover_never_checked">Jeszcze nie sprawdzono · tylko ręczne odświeżanie</string>
+    <string name="discover_check_now">Sprawdź teraz</string>
+    <string name="discover_remove">Usuń</string>
+    <string name="discover_results">Zebrane wyniki</string>
+    <string name="discover_result_count">%1$d elementów</string>
+    <string name="discover_no_results">Wyszukaj w sieci lub sprawdź kanał, aby zobaczyć wyniki ze źródeł.</string>
+    <string name="discover_unverified_note">Treść źródła · nie została jeszcze sprawdzona</string>
+    <string name="discover_save">Zapisz w Work</string>
+    <string name="discover_saved_button">Zapisano w Work</string>
+    <string name="discover_saved">Zapisano jako niezweryfikowany materiał badawczy.</string>
+    <string name="discover_save_failed">Nie udało się zapisać elementu źródłowego.</string>
+    <string name="discover_source_failed">Nie udało się sprawdzić źródła.</string>
+    <string name="discover_source_added">Dodano źródło: %1$s</string>
+    <string name="discover_search_complete">Wyszukiwanie zwróciło %1$d elementów.</string>
+    <string name="discover_feed_complete">%1$d elementów z kanału %2$s.</string>
+
 </resources>

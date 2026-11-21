@@ -69,7 +69,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER, AI }
+private enum class AppTab { INBOX, DISCOVER, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,6 +155,7 @@ fun TraderApp(
         bottomBar = {
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.DISCOVER, { tab = AppTab.DISCOVER }, icon = { Icon(Icons.Rounded.Search, null) }, label = { Text(stringResource(R.string.discover_nav)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
                 NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
@@ -181,6 +182,11 @@ fun TraderApp(
                 showArchived = showArchived,
                 onShowArchived = { showArchived = it },
                 onOpen = { selectedId = it.id },
+                modifier = Modifier.padding(padding)
+            )
+            tab == AppTab.DISCOVER -> DiscoveryScreen(
+                repository = (context.applicationContext as TraderApplication).repository,
+                sourceStore = (context.applicationContext as TraderApplication).discoverySourceStore,
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(

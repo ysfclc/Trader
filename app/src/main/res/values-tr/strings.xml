@@ -203,4 +203,42 @@
     <string name="event_opportunity_stage_changed">Fırsat aşaması değiştirildi</string>
     <string name="event_opportunity_updated">Fırsat bilgileri güncellendi</string>
 
+
+    <string name="discover_nav">Keşfet</string>
+    <string name="discover_title">İşe yarar sinyalleri keşfet</string>
+    <string name="discover_subtitle">Herkese açık kaynakları ara ve gerçek kanıtları çalışma alanına getir.</string>
+    <string name="discover_web_search">Tek seferlik web araması</string>
+    <string name="discover_search_hint">Ne arıyorsun?</string>
+    <string name="discover_query_too_short">En az iki karakter gir.</string>
+    <string name="discover_public_web">Herkese açık web araması</string>
+    <string name="discover_search_now">Şimdi ara</string>
+    <string name="discover_search_disclaimer">Sonuçlar doğrulanmış gerçekler değil, araştırma ipuçlarıdır. Harekete geçmeden önce asıl kaynağı aç.</string>
+    <string name="discover_add_feed">Herkese açık RSS / Atom kaynağı ekle</string>
+    <string name="discover_source_name">Kaynak adı</string>
+    <string name="discover_feed_url">Herkese açık HTTPS akış adresi</string>
+    <string name="discover_add_source">Kaynak ekle</string>
+    <string name="discover_feed_security">Yalnızca herkese açık HTTPS akışları kabul edilir. Yerel/özel ağ adresleri ve yönlendirmeler engellenir. Kaynak listesi cihazda saklanır; henüz şifreli yedeklere dahil değildir.</string>
+    <string name="discover_sources">Kaynakların</string>
+    <string name="discover_reload">Yenile</string>
+    <string name="discover_no_sources">Henüz kaynak yok. Başlamak için herkese açık RSS veya Atom akışı ekle.</string>
+    <string name="discover_enabled">Açık</string>
+    <string name="discover_paused">Duraklatıldı</string>
+    <string name="discover_last_error">Son kontrol başarısız: %1$s</string>
+    <string name="discover_last_checked">Son kontrol: %1$s</string>
+    <string name="discover_never_checked">Henüz kontrol edilmedi · yalnızca elle yenileme</string>
+    <string name="discover_check_now">Şimdi kontrol et</string>
+    <string name="discover_remove">Kaldır</string>
+    <string name="discover_results">Toplanan sonuçlar</string>
+    <string name="discover_result_count">%1$d öğe</string>
+    <string name="discover_no_results">Gerçek kaynak sonuçlarını görmek için web'de ara veya eklediğin bir akışı kontrol et.</string>
+    <string name="discover_unverified_note">Kaynak içeriği · henüz incelenmedi veya doğrulanmadı</string>
+    <string name="discover_save">Work alanına kaydet</string>
+    <string name="discover_saved_button">Work alanına kaydedildi</string>
+    <string name="discover_saved">Çalışma alanına incelenmemiş araştırma kanıtı olarak kaydedildi.</string>
+    <string name="discover_save_failed">Kaynak öğesi kaydedilemedi.</string>
+    <string name="discover_source_failed">Kaynak kontrolü başarısız.</string>
+    <string name="discover_source_added">Kaynak eklendi: %1$s</string>
+    <string name="discover_search_complete">Arama %1$d sonuç döndürdü.</string>
+    <string name="discover_feed_complete">%2$s kaynağından %1$d öğe alındı.</string>
+
 </resources>
