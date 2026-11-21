@@ -127,6 +127,8 @@ Project history is recorded as dated milestones. Detailed current status belongs
 
 ## 2026-11-21 — Experimental public search adapter (prototype)
 
+- CI validation branch `build/public-search-adapter` created to run the Android workflow for this prototype.
+
 - Added a bounded user-triggered DuckDuckGo HTML search adapter: query length and result limits, HTTPS-only external result validation, request timeouts, response byte cap, URL deduplication and retrieval timestamps.
 - Added parser/query unit tests for encoding, result extraction, redirect handling, unsafe URLs, duplicates and field truncation.
 - Not wired to Discover UI, persistent candidate dossiers, or AI qualification; CI and live-source/device validation pending.
