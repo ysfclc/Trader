@@ -143,7 +143,7 @@ object DiscoveryStrategyRules {
         if (targetGroups.any { it.size > MAX_LIST_ITEMS || it.any { value -> value.clean(MAX_LABEL).isBlank() } }) {
             add("Target constraints contain blank or excessive values.")
         }
-        if (strategy.target.companySize?.length ?: 0 > MAX_LABEL) add("Company-size constraint is too long.")
+        if ((strategy.target.companySize?.length ?: 0) > MAX_LABEL) add("Company-size constraint is too long.")
         if (strategy.createdAt < 0 || strategy.updatedAt < strategy.createdAt) add("Discovery strategy timestamps are invalid.")
     }
 
