@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 fun DiscoveryScreen(
     repository: TraderRepository,
     sourceStore: DiscoverySourceStore,
+    onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -265,7 +266,11 @@ fun DiscoveryScreen(
                         if (item.summary.isNotBlank()) Text(item.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(item.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                         Text(stringResource(R.string.discover_unverified_note), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        OutlinedButton(
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = { onOpenSource(item.url) }) {
+                                Text(stringResource(R.string.discover_open_source))
+                            }
+                            OutlinedButton(
                             onClick = {
                                 scope.launch {
                                     val saved = repository.captureDiscoveryItem(
@@ -285,6 +290,7 @@ fun DiscoveryScreen(
                             },
                             enabled = item.id !in savedIds
                         ) { Text(stringResource(if (item.id in savedIds) R.string.discover_saved_button else R.string.discover_save)) }
+                        }
                     }
                 }
             }

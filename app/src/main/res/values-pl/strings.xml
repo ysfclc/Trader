@@ -241,4 +241,5 @@
     <string name="discover_search_complete">Wyszukiwanie zwróciło %1$d elementów.</string>
     <string name="discover_feed_complete">%1$d elementów z kanału %2$s.</string>
 
+    <string name="discover_open_source">Otwórz w przeglądarce Trader</string>
 </resources>

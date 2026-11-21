@@ -241,4 +241,5 @@
     <string name="discover_search_complete">Arama %1$d sonuç döndürdü.</string>
     <string name="discover_feed_complete">%2$s kaynağından %1$d öğe alındı.</string>
 
+    <string name="discover_open_source">Trader tarayıcısında aç</string>
 </resources>

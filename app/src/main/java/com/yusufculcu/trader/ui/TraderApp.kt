@@ -83,6 +83,7 @@ fun TraderApp(
     val events by viewModel.activity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
+    var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showArchived by rememberSaveable { mutableStateOf(false) }
@@ -187,10 +188,13 @@ fun TraderApp(
             tab == AppTab.DISCOVER -> DiscoveryScreen(
                 repository = (context.applicationContext as TraderApplication).repository,
                 sourceStore = (context.applicationContext as TraderApplication).discoverySourceStore,
+                onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
                 modifier = Modifier.padding(padding),
+                initialUrl = requestedBrowserUrl,
+                onInitialUrlHandled = { requestedBrowserUrl = null },
                 problems = problems,
                 onSaveCapture = { problemId, title, url, content, onSaved ->
                     viewModel.captureBrowserPage(problemId, title, url, content, onSaved)
