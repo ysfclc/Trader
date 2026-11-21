@@ -176,6 +176,30 @@ data class WorkflowEventEntity(
     val occurredAt: Long
 )
 
+@Entity(tableName = "proof_assets", indices = [Index(value = ["updatedAt"])])
+data class ProofAssetEntity(
+    @PrimaryKey val id: String,
+    val schemaVersion: Int,
+    val kind: String,
+    val payloadJson: String,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
+@Entity(
+    tableName = "discovery_strategies",
+    foreignKeys = [ForeignKey(entity = ProofAssetEntity::class, parentColumns = ["id"], childColumns = ["proofAssetId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["proofAssetId"]), Index(value = ["updatedAt"])]
+)
+data class DiscoveryStrategyEntity(
+    @PrimaryKey val id: String,
+    val proofAssetId: String,
+    val schemaVersion: Int,
+    val payloadJson: String,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
 @Dao
 interface ProblemDao {
     @Query("SELECT * FROM problem_cases")
@@ -378,6 +402,40 @@ interface WorkflowEventDao {
     suspend fun insert(event: WorkflowEventEntity)
 }
 
+@Dao
+interface ProofAssetDao {
+    @Query("SELECT * FROM proof_assets ORDER BY updatedAt DESC")
+    fun observeAll(): Flow<List<ProofAssetEntity>>
+    @Query("SELECT * FROM proof_assets")
+    suspend fun getAll(): List<ProofAssetEntity>
+    @Query("SELECT * FROM proof_assets WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): ProofAssetEntity?
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(asset: ProofAssetEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<ProofAssetEntity>)
+    @Query("DELETE FROM proof_assets")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface DiscoveryStrategyDao {
+    @Query("SELECT * FROM discovery_strategies ORDER BY updatedAt DESC")
+    fun observeAll(): Flow<List<DiscoveryStrategyEntity>>
+    @Query("SELECT * FROM discovery_strategies")
+    suspend fun getAll(): List<DiscoveryStrategyEntity>
+    @Query("SELECT * FROM discovery_strategies WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): DiscoveryStrategyEntity?
+    @Query("SELECT * FROM discovery_strategies WHERE proofAssetId = :proofAssetId ORDER BY updatedAt DESC")
+    fun observeForProofAsset(proofAssetId: String): Flow<List<DiscoveryStrategyEntity>>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(strategy: DiscoveryStrategyEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<DiscoveryStrategyEntity>)
+    @Query("DELETE FROM discovery_strategies")
+    suspend fun deleteAll()
+}
+
 @Database(
     entities = [
         ProblemEntity::class,
@@ -387,9 +445,11 @@ interface WorkflowEventDao {
         OpportunityEntity::class,
         WorkflowRunEntity::class,
         WorkflowStepEntity::class,
-        WorkflowEventEntity::class
+        WorkflowEventEntity::class,
+        ProofAssetEntity::class,
+        DiscoveryStrategyEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -401,6 +461,8 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun workflowRunDao(): WorkflowRunDao
     abstract fun workflowStepDao(): WorkflowStepDao
     abstract fun workflowEventDao(): WorkflowEventDao
+    abstract fun proofAssetDao(): ProofAssetDao
+    abstract fun discoveryStrategyDao(): DiscoveryStrategyDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -532,5 +594,38 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_opportunity_records_problemId ON opportunity_records (problemId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_opportunity_records_stage ON opportunity_records (stage)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_opportunity_records_followUpAt ON opportunity_records (followUpAt)")
+    }
+}
+
+
+/** Adds durable, versioned proof assets and strategies without rewriting existing records. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS proof_assets (
+                id TEXT NOT NULL,
+                schemaVersion INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                payloadJson TEXT NOT NULL,
+                createdAt INTEGER NOT NULL,
+                updatedAt INTEGER NOT NULL,
+                PRIMARY KEY(id)
+            )
+        """.trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_proof_assets_updatedAt ON proof_assets (updatedAt)")
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS discovery_strategies (
+                id TEXT NOT NULL,
+                proofAssetId TEXT NOT NULL,
+                schemaVersion INTEGER NOT NULL,
+                payloadJson TEXT NOT NULL,
+                createdAt INTEGER NOT NULL,
+                updatedAt INTEGER NOT NULL,
+                PRIMARY KEY(id),
+                FOREIGN KEY(proofAssetId) REFERENCES proof_assets(id) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_strategies_proofAssetId ON discovery_strategies (proofAssetId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_strategies_updatedAt ON discovery_strategies (updatedAt)")
     }
 }
