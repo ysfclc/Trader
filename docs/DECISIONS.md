@@ -236,3 +236,24 @@ Memo can hand a user-reviewed page to Trader through Android Sharesheet using th
 **Status:** Accepted for prototype only  
 
 Trader may prototype a user-triggered DuckDuckGo HTML search adapter as a single public source. It performs one bounded request and returns source-linked search-result metadata only. It must not crawl result pages, bypass access controls, solve challenges, authenticate or imply that snippets are verified evidence. Adapter remains experimental until source policy, health, device and failure behavior are reviewed.
+
+
+## D-024 — Extensible source ecosystem, not a hardcoded source list
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+Trader separates adapter implementations, configured source instances and watch rules. Source IDs and provider access methods are code; source instances are user-owned data. A single adapter supports many feed URLs, websites, subreddits or instance hosts. New source instances do not require code changes or schema migrations; a genuinely new protocol may require an explicit built-in adapter and tests. Arbitrary third-party scripts/JARs are never downloaded and executed as plugins.
+
+**Reason:** Opportunities and real-world information appear across an open-ended and changing set of websites, registries, marketplaces, communities and apps. Hardcoding every target makes Trader brittle and turns every source addition into a product release.
+
+**Consequences:** A common source-document/evidence contract and source health model are mandatory. Each adapter declares access mode, permissions, origin scope, terms, quotas, time/byte/rate limits, retention/deletion, freshness, operations and failure semantics. See docs/SOURCE_ECOSYSTEM.md.
+
+## D-025 — Feed-first working discovery, manual before scheduled monitoring
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+The first configurable collection source is public HTTPS RSS/Atom. Discover supports user-added feed URLs, explicit manual refresh, source status and save-to-workspace. Public web search is a separate one-shot query source. The initial slice does not schedule polling, stream, crawl arbitrary pages or monitor private groups in the background.
+
+**Reason:** Feeds are a widely supported cross-site protocol with no per-instance provider API credentials, and manual refresh allows a real source-to-evidence outcome without pretending the durable background executor is ready.
+
+**Consequences:** Source configurations initially contain only public feed endpoints and no credentials. They are stored locally but are not yet part of encrypted workspace backup; backup integration is a tracked follow-up. Add scheduled polling only after durable bounded jobs, cancellation, cursor/backoff and recovery are verified.
