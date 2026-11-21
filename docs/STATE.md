@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-21 — session 16 (proof asset and discovery strategy domain foundation; CI pending)_
+_Last updated: 2026-11-21 — session 17 (proof assets and discovery strategies persisted; CI pending)_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -9,12 +9,12 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 |---|---|---|
 | Android identity | 🟡 implementation pending CI | Package stays `com.yusufculcu.trader.debug`; candidate version `0.2.0-debug`, versionCode 2. Adaptive launcher/round icon wired. Stable signing support implemented; Actions secrets not yet configured. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
-| Local data | 🟡 partial | Room-backed cases, plans, evidence, opportunities, workflow records; encrypted backup snapshot v2 now includes public discovery feed settings and preserves legacy v1 import. Physical-device restore acceptance open. |
-| Continuity / backup | 🟡 partial | Same package + signing certificate + in-place update preserves app-private data. Uninstall/clear-storage destroys it. Public discovery feed settings in preferences are included in encrypted backup snapshot v2; credentials/cookies are excluded. Restore uses validated preference replacement with compensating rollback if Room restore fails. |
+| Local data | 🟡 partial | Room-backed cases, plans, evidence, opportunities, workflow records, proof assets and discovery strategies (schema v5); encrypted backup snapshot v3 includes public discovery feed settings and proof/strategy records, while legacy v1/v2 snapshots remain readable. Physical-device restore acceptance open. |
+| Continuity / backup | 🟡 partial | Same package + signing certificate + in-place update preserves app-private data. Uninstall/clear-storage destroys it. Public discovery feed settings and proof/strategy records are included in encrypted backup snapshot v3; legacy v1/v2 snapshots restore with empty new record groups. Credentials/cookies are excluded. Restore uses validated preference replacement with compensating rollback if Room restore fails. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first slice CI-verified | One-shot DuckDuckGo search; user-configurable RSS/Atom feeds; manual checks, source health, browser handoff and source-linked UNREVIEWED evidence. CI run 405: 98 tests passed (0 failures/errors/skips), lint/build/signature/package checks. No live-feed or physical-device acceptance. |
-| Company / people graph | 🟡 domain foundation | Versioned ProofAsset/DiscoveryStrategy domain models and validation are added on `build/proofasset-discovery-strategy`; Room persistence, backup integration, company dossiers and explainable fit remain open. |
+| Company / people graph | 🟡 persistence foundation | ProofAsset/DiscoveryStrategy domain models, validation, Room v4→v5 migration, repository, codec and encrypted backup v3 are implemented; company dossiers and explainable fit remain open; CI pending. |
 | Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub foundations. No verified on-device model inference or durable WorkManager executor. |
 | Social/community sources | ⚪ not implemented | Reddit OAuth, Bluesky/Mastodon APIs, authorized groups and Facebook browser-assisted research remain future provider-specific adapters. |
 | Outreach | ⚪ not implemented | Drafting/approval/handoff contracts remain planned; no autonomous send. |
@@ -29,9 +29,9 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Immediate next increments
 1. Configure the two signing secrets; run CI; verify stable certificate fingerprint and build an installable candidate. Never uninstall/clear data as routine update procedure.
-2. Verify source-settings backup snapshot v2 and restore/rollback on Redmi; keep credentials/cookies/signing material excluded.
+2. Verify encrypted backup snapshot v3 round-trip and legacy v1/v2 restore compatibility; verify Room v4→v5 migration on device; keep credentials/cookies/signing material excluded.
 3. Verify in-place update and backup/restore on Redmi Note 12 Pro 5G, including Room data, feed settings and WebView session.
-4. Persist ProofAsset/DiscoveryStrategy with a Room migration and encrypted-backup schema migration; then add durable DiscoveryRun/SourceRun, source-grounded Organization/Person dossiers and explainable matching.
+4. Add durable DiscoveryRun/SourceRun, source-grounded Organization/Person dossiers and explainable matching.
 5. Add scheduled polling only after durable WorkManager cancellation, backoff, cursor and process-death recovery are proven. Then add community adapters with explicit permissions and retention/deletion controls.
 6. Complete Work/Live/Studio UX, browser tabs/history/downloads and the end-to-end problem → plan → action → verified outcome loop.
 
@@ -83,15 +83,18 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - No physical-device acceptance has been performed for this icon/update candidate.
 
 
-## Session 16 handoff — proof assets and discovery strategy foundation
+## Session 17 handoff — proof asset and discovery strategy persistence
 
-**Implemented on branch** `build/proofasset-discovery-strategy`, based on PR #18 head `ec03edf10e76c309b5291fda568af65206b95aa1`.
+**Implemented on branch** `feature/public-search-adapter`, extending PR #18.
 
 - Added versioned `ProofAsset`, evidence-linked `ProofClaim`, `ProblemSignature`, `DiscoveryTarget`, `DiscoveryQuery` and editable `DiscoveryStrategy` domain records.
 - Added fail-closed validation for schema versions, IDs, duplicate claims/signatures, evidence requirements for SUPPORTED claims, bounded lists/text/query counts/result limits and timestamps.
-- Added 5 unit tests covering valid strategy, evidence-backed claims, missing asset, bounded query, duplicate signature IDs and unsupported schema versions.
+- Added Room v4→v5 migration and dedicated tables/DAOs for proof assets and discovery strategies.
+- Added a stable JSON codec and repository validation that refuses missing evidence references and orphan strategies.
+- Extended encrypted backup snapshot v2→v3; restore validates row/payload identity, strategy→asset links and claim→evidence links, while older snapshots remain readable with empty new groups.
+- Added persistence, invalid-reference and encrypted backup/restore tests.
 
 **Not yet done / verification pending**
-- Room persistence, migrations and encrypted backup compatibility are not implemented; these domain models are not yet user-editable in the app.
-- CI has not yet completed for this branch. No APK or device acceptance is claimed.
-- Next: persist these records without losing existing v4 data; bump encrypted backup snapshot schema and test legacy v1/v2 compatibility; add DiscoveryRun/SourceRun persistence and cancellation semantics.
+- CI has not yet verified the new Room migration, persistence and encrypted backup integration. No APK or device acceptance is claimed.
+- No UI for editing proof assets or strategies exists yet.
+- Next: verify Room migration and backup compatibility; then add DiscoveryRun/SourceRun persistence and cancellation semantics.
