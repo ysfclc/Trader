@@ -1,13 +1,13 @@
 # State Ledger
-_Last updated: 2026-11-21 — session 12 (experimental public-search adapter)_
+_Last updated: 2026-11-21 — session 14 (Discover source-ingestion slice; CI run 385 passed)_
 
 ## 1. Product snapshot
-Trader is an Android-first, local-first problem-solving and opportunity-execution workspace. Its next priority is proof-asset-led company discovery, evidence-backed company dossiers, a Trader-owned in-app browser and controlled outreach preparation. Trade/services/careers remain initial specialist workflows, not the product boundary. The current Inbox/Pipeline/Activity shell is a foundation only; it is not the intended user experience. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
+Trader is an Android-first, local-first problem-solving and opportunity-execution workspace. Open PR #18 adds the first usable Discover/source-ingestion slice on top of the Trader browser: one-shot public search, configurable RSS/Atom sources, manual checks, source-linked evidence and visible browser research. The next priority remains proof-asset-led company discovery, evidence-backed dossiers, explainable fit and controlled outreach preparation. Trade/services/careers remain initial specialist workflows, not the product boundary. The current Discover/Inbox/Pipeline/Activity/Browser shell is a foundation, not the final Work/Live/Studio experience. “Complete” means an end-to-end user outcome is demonstrated, not just that a screen or class exists.
 
 ## 2. Status board
 | Area | State | Notes |
 |---|---|---|
-| Android shell / EN-TR-PL | 🟡 partial | Builds in CI; current Inbox/Pipeline/Activity shell is being redesigned around Discover/Work/Live/Studio; visual/device acceptance open |
+| Android shell / EN-TR-PL | 🟡 partial | Discover is the fresh-install landing page; Inbox/Pipeline/Activity/Browser/AI remain available. Work/Live/Studio redesign and visual/device acceptance remain open |
 | ProblemCase capture | 🟡 partial | Manual + shared text/URL; incoming intent extraction CI-tested; no file/screenshot/voice |
 | Local case workspace | 🟡 partial | Edit/search/archive/restore; direct search/share UI tests and device acceptance open |
 | Evidence | 🟡 partial | User-attached, source-linked, user-verified state; no automatic extraction |
@@ -17,15 +17,15 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 | Encrypted backup/restore | 🟡 partial | PR #8 and main CI verified; physical document-picker/export/restore acceptance open |
 | WorkManager executor / recovery | 🟡 partial | Startup recovery flags ambiguous in-flight steps and pauses between-step runs; no WorkManager executor or automatic resume |
 | Browser / installed-app automation | 🟡 partial | Trader WebView supports app-local sessions, third-party SSO cookies, popup windows, autofill, file chooser and Google OAuth fallback. User confirmed login works on Redmi. Trader now captures visible page/selection to reviewable source-linked evidence or imports Memo's versioned share payload. CI run 358 passed 76 tests, lint, APK build, signature and package checks. Memo sender CI run 1009 passed Android tests, lint, build/signature and app-private-data preservation; PR #15 is still draft/unmerged and its source-only run produced no installable APK artifact. Trader's final explicit import-review flow is awaiting a clean CI retry after a KSP plugin-resolution failure in run 371; tabs/history/downloads and workflow automation remain open |
-| AI / live discovery / matching | 🟡 active implementation | Local model/browser foundations exist. DuckDuckGo prototype failed Kotlin compilation in CI run 379. Provider-neutral source ecosystem is locked; configurable feeds, manual refresh and Discover UI are the current vertical slice |
+| AI / live discovery / matching | 🟡 first source slice CI-verified | One-shot DuckDuckGo search, configurable public RSS/Atom sources, manual refresh, per-source health, open-in-Trader-browser and save-to-Work as UNREVIEWED evidence. CI run 385 passed 97 tests plus lint/build/signature/package. No live-feed/device, scheduled polling, social adapters, company dossiers or AI fit verification yet |
 | Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
 | Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
 
 ## 3. Currently in flight
 - Local AI milestone is accepted and code started on the discovery/browser branch. `docs/LOCAL_AI_ARCHITECTURE.md` is the canonical design. Current implementation includes Trader-owned model metadata, a real LiteRT-LM CPU inference adapter with pinned hash verification, resumable download/install logic, storage/RAM preflight, Model Hub UI and bounded evidence context packets. CI run 349 passed the full test/lint/debug-build/signature/package pipeline; do not claim device inference until a verified model has actually run on the Redmi.
-- Discovery-first product direction is documented in docs/PRODUCT_EXPERIENCE.md and D-020. Trader's browser now has persistent app-local sessions, SSO cookies, popup windows, autofill, file upload and explicit Google OAuth fallback. User confirmed login works on Redmi. Trader Capture reads visible page text/selection, allows review/edit and saves to an active case or creates a Research case with source-linked UNREVIEWED evidence. URLs are persisted without query/fragment. CI run 358 passed 76 tests, lint, debug build, signature/package checks. Memo sender PR #15 passed its full CI checks in run 1009 but remains draft/unmerged; do not expect the button in the installed Memo app yet. The source-only run did not publish an installable APK. Trader's latest explicit import review dialog and state-restoration changes need a clean CI re-run after transient KSP plugin resolution failure in run 371.
-- The browser capture increment adds a reviewed Capture workflow and a versioned cross-app Memo payload. Only visible content and sanitized page URL are transferred; browser credentials and cookies stay in their owning app. Next is the real discovery slice: select a ProofAsset, define DiscoveryStrategy/query plan, run one permitted public source and create evidence-backed candidate dossiers. The DuckDuckGo adapter exists but run 379 failed Kotlin compilation; it is not verified. The expanded provider-neutral ecosystem is locked in docs/SOURCE_ECOSYSTEM.md. Next ship user-configured RSS/Atom feeds, manual refresh, one-shot search and source-linked research saves. Scheduled monitoring and social API adapters remain later work with provider-specific access and retention controls. No auto-send.
+- Discovery-first product direction is documented in docs/PRODUCT_EXPERIENCE.md and D-020. Trader's browser now has persistent app-local sessions, SSO cookies, popup windows, autofill, file upload and explicit Google OAuth fallback. User confirmed login works on Redmi. Trader Capture reads visible page text/selection, allows review/edit and saves to an active case or creates a Research case with source-linked UNREVIEWED evidence. URLs are persisted without query/fragment. CI run 358 passed 76 tests, lint, debug build, signature/package checks. Memo sender PR #15 passed its full CI checks in run 1009 but remains draft/unmerged; do not expect the button in the installed Memo app yet. The source-only run did not publish an installable APK. Trader's explicit import review dialog and state-restoration changes passed the clean CI run 385.
+- The provider-neutral source model is locked in docs/SOURCE_ECOSYSTEM.md: adapters, configured source instances and watch rules are separate. Current working sources are one-shot DuckDuckGo search and user-configurable RSS/Atom feeds (manual check only). Results can be opened in Trader's WebView and saved into Work as deduplicated source-linked UNREVIEWED evidence. The first-use example is Hacker News front-page RSS. This is not company qualification: ProofAsset/DiscoveryStrategy records, normalized Organization/Person dossiers, AI extraction/fit, source configuration backup, scheduled polling and community API adapters remain open. No auto-send.
 
 ## 3a. Previously in flight (historical)
 - Opportunity workflow PR #16 — code and test suite are on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed. APK assembly and signature/package checks passed; physical-device acceptance is still open.
@@ -33,7 +33,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - Backup acceptance (T1.4) — verify document-picker export/import, wrong-passphrase non-destructive behavior and valid full restore on device.
 
 ## 4. Known gaps & stubs
-- TraderApp.kt — main currently has Inbox and Activity; the feature branch adds Opportunity Pipeline. Discover/Matches/Contacts are not implemented.
+- TraderApp.kt — this branch has Inbox, Discover, Pipeline, Activity, Browser and AI tabs. The intended Work/Live/Studio workspace and normalized Matches/Contacts views are not implemented.
 - TraderBackupManager.kt — feature branch reads schema-v3 and v4 snapshots; older v1/v2 snapshots remain unsupported. Future schema changes need explicit backup migrations.
 - `app/src/main/java/com/yusufculcu/trader/data/TraderRepository.kt` — no deterministic deduplication or reversible entity-merge workflow.
 - Source configurations initially live in app-private preferences and are not included in encrypted backups; only public feed URLs/labels are accepted, not credentials.
@@ -41,8 +41,8 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - No selected-file, screenshot or voice capture; document/attachment storage is not implemented.
 - Workflow surface is manual; startup reconciliation handles persisted RUNNING states conservatively, and active-step cancellation routes to NEEDS_REVIEW rather than falsely declaring cancellation. WorkManager execution, automatic resume and worker-level postcondition checks are not implemented.
 - Capability contracts are declarative. Generic validation checks required fields, primitive/container types and unknown keys, but concrete adapters must still enforce cross-field rules, URI/origin scope, source access policy, permission/consent freshness, payload binding and actual numeric ceilings before execution.
-- Browser and app-local login-session foundations are now implemented on PR #17; browser workflow automation, AI providers, public-source discovery, buyer/supplier matching, normalized Organization/Person records, consent tracking and communication send adapters remain absent. Safe HTTP(S)/mailto/tel contact-route handoff only opens another app.
-- Search has no dedicated UI test; incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test; no physical-device test has been recorded.
+- Browser/app-local login foundations and the first public-source Discover slice are implemented on PR #17/#18. Still absent: normalized Organization/Person records, company qualification and source-backed fit, AI discovery orchestration, scheduled/streaming source execution, Reddit/Facebook/Bluesky/Mastodon/authorized community adapters, consent tracking and communication send adapters. Safe HTTP(S)/mailto/tel handoff only opens another app.
+- Discover parser/registry/persistence paths are unit/Robolectric tested (run 385), but there is no Compose UI/instrumentation test or physical-device acceptance. Incoming ACTION_SEND/ACTION_VIEW extraction has Robolectric coverage but no Activity-to-database integration test. CI tests do not establish live feed connectivity.
 - Live Room storage has no dedicated app-level database encryption; encrypted backup protects exported files only.
 - No release signing configuration; do not present the debug build as production.
 
@@ -54,12 +54,12 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - Package/version: `com.yusufculcu.trader.debug` / `0.1.0-debug`. See `docs/ANDROID_BUILD.md` for signing boundaries.
 
 ## 6. Next three increments
-1. Build the first real discovery source vertical slice: ProofAsset + editable DiscoveryStrategy + bounded public-source search + source health/provenance + deduplicated candidates. No seeded or mock results.
-2. Complete the Trader browser baseline: device-verify account login and cookie persistence, then add tabs, bookmarks/history, downloads, page capture/evidence and visible Live takeover controls.
-3. Connect local AI to source-grounded evidence extraction, Organization/Person dossiers and explainable fit; then create individualized outreach drafts with exact approval and verified handoff semantics. Only then deliver the next APK as a meaningful discovery-to-outreach pilot; device acceptance remains separate. No automatic send or ambiguous retry.
+1. Include configured source instances in encrypted workspace backup/restore; add editable watch rules (keywords, languages, geography, signal classes) and durable DiscoveryRun/SourceRun records.
+2. Build the proof-asset → source evidence → normalized Organization/Person dossier → explainable fit vertical slice; distinguish company signals from community-author identity and unknowns.
+3. Add scheduled polling only after WorkManager execution/recovery is real; then implement provider-specific public/community adapters (Bluesky/Mastodon, Reddit OAuth with deletion/retention, Telegram/Discord/Slack). Keep Facebook groups as visible user-initiated browser capture unless formal API access is approved. No automatic send or ambiguous retry.
 
 ## 7. Open questions for the human
-- [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
+- [ ] Include non-secret configured public source instances in encrypted workspace backup; default assumption is yes. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
 - [ ] Before public distribution, configure a dedicated Trader release keystore via protected GitHub Actions secrets; never reuse another app's signing identity.
 
 
@@ -217,3 +217,41 @@ First intended practical use
 - Meta Content Library is a restricted research route, not a general Facebook Groups API.
 - Feed check is manual only; do not label it background monitoring.
 - Run 379 failed at Kotlin compilation; existing DuckDuckGo code must be repaired and verified before promotion.
+
+
+## Session 14 handoff — Discover and public-source ingestion (PR #18)
+
+**Done this session**
+- Locked the provider-neutral source ecosystem: adapter code, configured source instances and watch rules are separate; documented search, feeds, company properties, registers/procurement, marketplaces, communities, federated networks, developer ecosystems, reviews, authorized workspaces, imports and webhooks.
+- Added bounded RSS 2.0/Atom reader, local public-feed source manager, explicit adapter registry and one-shot DuckDuckGo search.
+- Added Discover as the fresh-install landing page in EN/PL/TR; configure, enable/pause/remove and manually check feeds; open results in Trader browser; save results into Work as deduplicated source-linked UNREVIEWED evidence.
+- Added a one-tap real Hacker News front-page RSS example. No seeded/mock content is used.
+- CI validation run 385 passed the full suite and build pipeline on a tree identical to PR #18 head.
+
+**State changed**
+- Source code: DiscoverySourceAdapter.kt, DiscoverySourceStore.kt, RssAtomFeedAdapter.kt, DuckDuckGoHtmlSearch.kt, DiscoveryScreen.kt, TraderApp.kt, TraderBrowserScreen.kt, TraderApplication.kt, TraderRepository.kt, TraderDatabase.kt.
+- Tests: RssAtomFeedAdapterTest.kt, DiscoverySourceStoreTest.kt, DiscoveryAdapterRegistryTest.kt, DuckDuckGoHtmlSearchTest.kt, DiscoveryPersistenceTest.kt.
+- Docs/resources: source ecosystem, architecture, roadmap, tasks, coverage, risks, decisions, product experience, README, changelog, state and EN/PL/TR strings.
+
+**Verified**
+- Build: PASS — ./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug, CI run 385.
+- Tests: 97 passed, 0 failed, 0 errors, 0 skipped (JUnit artifact 14698665260).
+- APK: package com.yusufculcu.trader.debug, version 0.1.0-debug; 69,441,948 bytes; SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210 (artifact 14698585569). Signature and exact package/version checks passed.
+- Validation branch tree d276e05bc23c3536d5a95410ca59e91ab1249603 is identical to PR #18 head tree. No physical-device or real-feed network smoke test was performed.
+
+**Not done / next**
+1. Include source configurations in encrypted backup/restore; source list currently lives in app-private preferences.
+2. Add editable watch rules and durable DiscoveryRun/SourceRun state, then implement scheduled checks only after WorkManager recovery/cancellation is verified.
+3. Build source-grounded company/person dossiers and explainable proof-asset fit; then add provider-specific community APIs with retention/authorization controls.
+4. Verify APK on Redmi and establish signing continuity before update installation; do not uninstall an existing app without protecting its data.
+
+**Open questions**
+- Default assumption: include public feed configurations in encrypted workspace backup; credentials must remain outside ordinary source records and be added only with a secure provider-specific store.
+
+**Risks / landmines**
+- Source configurations are not yet included in encrypted backup.
+- Feed checks are manual only; no scheduler, streaming or background watch is implemented.
+- Search/feed content is unverified until inspected; DuckDuckGo markup/source access can change.
+- Reddit needs OAuth and deletion/retention enforcement; Meta Content Library is not a general Facebook Groups API; Facebook browser capture is user initiated.
+- CI debug signing identity continuity is not established; release signing is not configured.
+- No physical-device or live-feed smoke test has been recorded.
