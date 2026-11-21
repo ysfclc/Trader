@@ -400,7 +400,7 @@ class WorkflowPersistenceTest {
         old.close()
 
         val migrated = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .allowMainThreadQueries()
             .build()
         try {
@@ -446,6 +446,12 @@ class WorkflowPersistenceTest {
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_strategies'"
             )
             try { assertTrue(discoveryStrategyTable.moveToFirst()) } finally { discoveryStrategyTable.close() }
+            listOf("discovery_runs", "source_runs").forEach { table ->
+                val cursor = migrated.openHelper.readableDatabase.query(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='$table'"
+                )
+                try { assertTrue("Missing $table", cursor.moveToFirst()) } finally { cursor.close() }
+            }
             val archiveColumn = migrated.openHelper.readableDatabase.query("PRAGMA table_info(problem_cases)")
             try {
                 var found = false

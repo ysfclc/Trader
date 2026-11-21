@@ -440,6 +440,61 @@ interface DiscoveryStrategyDao {
     suspend fun deleteAll()
 }
 
+
+@Entity(
+    tableName = "discovery_runs",
+    foreignKeys = [ForeignKey(entity = DiscoveryStrategyEntity::class, parentColumns = ["id"], childColumns = ["strategyId"], onDelete = ForeignKey.SET_NULL)],
+    indices = [Index(value = ["strategyId"]), Index(value = ["status"]), Index(value = ["createdAt"])]
+)
+data class DiscoveryRunEntity(
+    @PrimaryKey val id: String, val strategyId: String?, val objective: String, val status: String,
+    val createdAt: Long, val startedAt: Long?, val finishedAt: Long?,
+    val cancellationRequestedAt: Long?, val lastError: String?
+)
+
+@Entity(
+    tableName = "source_runs",
+    foreignKeys = [ForeignKey(entity = DiscoveryRunEntity::class, parentColumns = ["id"], childColumns = ["discoveryRunId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["discoveryRunId"]), Index(value = ["sourceId"]), Index(value = ["status"])]
+)
+data class SourceRunEntity(
+    @PrimaryKey val id: String, val discoveryRunId: String, val sourceId: String, val adapterId: String,
+    val status: String, val startedAt: Long?, val finishedAt: Long?, val resultCount: Int,
+    val errorCode: String?, val errorMessage: String?
+)
+
+@Dao
+interface DiscoveryRunDao {
+    @Query("SELECT * FROM discovery_runs ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<DiscoveryRunEntity>>
+    @Query("SELECT * FROM discovery_runs WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): DiscoveryRunEntity?
+    @Query("SELECT * FROM discovery_runs WHERE status = 'RUNNING'")
+    suspend fun getRunning(): List<DiscoveryRunEntity>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(run: DiscoveryRunEntity)
+    @Update
+    suspend fun update(run: DiscoveryRunEntity)
+}
+
+@Dao
+interface SourceRunDao {
+    @Query("SELECT * FROM source_runs WHERE discoveryRunId = :runId ORDER BY rowid ASC")
+    fun observeForRun(runId: String): Flow<List<SourceRunEntity>>
+    @Query("SELECT * FROM source_runs WHERE discoveryRunId = :runId ORDER BY rowid ASC")
+    suspend fun getForRun(runId: String): List<SourceRunEntity>
+    @Query("SELECT * FROM source_runs WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): SourceRunEntity?
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(sourceRun: SourceRunEntity)
+    @Update
+    suspend fun update(sourceRun: SourceRunEntity)
+    @Query("UPDATE source_runs SET status = 'CANCELLED', finishedAt = :at WHERE discoveryRunId = :runId AND status IN ('PENDING', 'RUNNING')")
+    suspend fun cancelPending(runId: String, at: Long)
+    @Query("UPDATE source_runs SET status = 'FAILED', finishedAt = :at, errorCode = 'INTERRUPTED', errorMessage = 'Process stopped before source execution completed.' WHERE discoveryRunId = :runId AND status = 'RUNNING'")
+    suspend fun markInterrupted(runId: String, at: Long)
+}
+
 @Database(
     entities = [
         ProblemEntity::class,
@@ -451,9 +506,11 @@ interface DiscoveryStrategyDao {
         WorkflowStepEntity::class,
         WorkflowEventEntity::class,
         ProofAssetEntity::class,
-        DiscoveryStrategyEntity::class
+        DiscoveryStrategyEntity::class,
+        DiscoveryRunEntity::class,
+        SourceRunEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -631,5 +688,33 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
         """.trimIndent())
         db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_strategies_proofAssetId ON discovery_strategies (proofAssetId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_strategies_updatedAt ON discovery_strategies (updatedAt)")
+    }
+}
+
+
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS discovery_runs (
+                id TEXT NOT NULL, strategyId TEXT, objective TEXT NOT NULL, status TEXT NOT NULL,
+                createdAt INTEGER NOT NULL, startedAt INTEGER, finishedAt INTEGER,
+                cancellationRequestedAt INTEGER, lastError TEXT, PRIMARY KEY(id),
+                FOREIGN KEY(strategyId) REFERENCES discovery_strategies(id) ON UPDATE NO ACTION ON DELETE SET NULL
+            )
+        """.trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_runs_strategyId ON discovery_runs (strategyId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_runs_status ON discovery_runs (status)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_runs_createdAt ON discovery_runs (createdAt)")
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS source_runs (
+                id TEXT NOT NULL, discoveryRunId TEXT NOT NULL, sourceId TEXT NOT NULL, adapterId TEXT NOT NULL,
+                status TEXT NOT NULL, startedAt INTEGER, finishedAt INTEGER, resultCount INTEGER NOT NULL,
+                errorCode TEXT, errorMessage TEXT, PRIMARY KEY(id),
+                FOREIGN KEY(discoveryRunId) REFERENCES discovery_runs(id) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_discoveryRunId ON source_runs (discoveryRunId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_sourceId ON source_runs (sourceId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_status ON source_runs (status)")
     }
 }
