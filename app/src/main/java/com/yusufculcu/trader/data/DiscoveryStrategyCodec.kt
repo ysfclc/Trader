@@ -136,7 +136,7 @@ object DiscoveryStrategyCodec {
         )
     }
 
-    private fun strings(values: List<String>) = JSONArray().apply { values.forEach(::put) }
+    private fun strings(values: List<String>) = JSONArray().apply { values.forEach { put(it) } }
     private fun readStrings(values: JSONArray) = List(values.length()) { values.getString(it) }
     private fun JSONObject.stringOrNull(key: String): String? = if (isNull(key)) null else getString(key)
     private fun JSONObject.longOrNull(key: String): Long? = if (isNull(key)) null else getLong(key)
