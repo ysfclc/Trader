@@ -105,7 +105,7 @@ Every source instance declares one of these read modes; the UI must not call the
 6. **Browser-assisted capture** — user is visibly logged in, sees the target page, starts capture and reviews/redacts material before saving. It is not unattended polling.
 7. **Import/manual** — user supplies a file, link, message, screenshot or note.
 
-The first mobile implementation is intentionally one-shot public search plus user-triggered RSS/Atom refresh. Do not schedule background polls or run an unbounded crawler until the durable job runtime and source-specific policy controls are implemented.
+The first mobile implementation is available in PR #18: one-shot DuckDuckGo search, configurable public RSS/Atom source instances, explicit manual refresh, source health, open-in-Trader-browser and save-to-Work as UNREVIEWED evidence. Fresh installs land on Discover; a one-tap Hacker News front-page RSS example can be added. CI run 385 passed 97 tests and the full build/lint/signature/package pipeline. No live-device or real-feed network smoke test has been recorded. It is intentionally one-shot public search plus user-triggered RSS/Atom refresh. Do not schedule background polls or run an unbounded crawler until the durable job runtime and source-specific policy controls are implemented.
 
 ## Common adapter and evidence contracts
 
@@ -152,14 +152,13 @@ A community author is not automatically a business buyer. A post may be personal
 
 ## Build order
 
-1. Generic adapter registry and common result envelope.
-2. Public RSS/Atom source instances with user-triggered refresh and deduped, source-linked research capture.
-3. Public web search integrated into Discover.
-4. Scheduled polling only after durable jobs, cancellation, caching and recovery are implemented.
-5. Bluesky public API and Mastodon per-instance adapter.
-6. Reddit OAuth adapter with deletion reconciliation, 48-hour retention controls and current terms review.
-7. GitHub, public procurement/register and selected job-board adapters.
-8. Telegram/Discord/Slack with explicit installation/permission; Facebook remains user-visible browser capture unless formal permitted API access is approved.
-9. Broader signal extraction, explainable project-fit assessment and entity dossiers.
+1. **Delivered and CI-verified:** built-in adapter registry/common result envelope; configurable public RSS/Atom source instances; manual refresh; one-shot DuckDuckGo query in Discover; source health; save-to-Work as unreviewed evidence; open result in Trader WebView.
+2. Include source configuration in encrypted backup/restore and add explicit editable watch rules (keywords, language, geography, signal classes).
+3. Add durable DiscoveryRun/SourceRun state, scheduled polling, cursor/ETag, per-source backoff, pause/stop and recovery only after WorkManager execution is implemented and verified.
+4. Add public API adapters for Bluesky and per-instance Mastodon.
+5. Add Reddit OAuth with deletion reconciliation, 48-hour retention controls and current terms review.
+6. Add GitHub, public procurement/register and selected job-board adapters.
+7. Add Telegram/Discord/Slack with explicit installation/permission; Facebook remains visible user-initiated browser capture unless formal permitted API access is approved.
+8. Build broader signal extraction, explainable project-fit assessment and normalized company/person dossiers.
 
 The success metric is qualified, verifiable signal-to-action progression, not feed volume or scraped profile counts.
