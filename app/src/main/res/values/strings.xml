@@ -131,7 +131,7 @@
     <string name="event_evidence_verified">Evidence marked verified</string>
     <string name="event_evidence_unreviewed">Evidence returned to unreviewed</string>
     <string name="backup_restore">Backup &amp; restore</string>
-    <string name="backup_intro">Create a passphrase-protected copy of all cases, evidence, plans and workflow history, or restore a previous Trader backup.</string>
+    <string name="backup_intro">Create a passphrase-protected copy of cases, evidence, plans, workflow history and public discovery sources, or restore a previous Trader backup.</string>
     <string name="backup_passphrase">Backup passphrase</string>
     <string name="backup_confirm_passphrase">Confirm passphrase</string>
     <string name="backup_passphrase_hint">Use at least 12 characters. Trader never stores or sends this passphrase. Losing it means the backup cannot be unlocked.</string>
