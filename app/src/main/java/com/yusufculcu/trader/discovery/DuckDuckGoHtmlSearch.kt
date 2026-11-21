@@ -81,7 +81,7 @@ class DuckDuckGoHtmlSearch(
         } catch (error: PublicSearchException) {
             throw error
         } catch (error: Exception) {
-            throw PublicSearchException("Public search failed: \${error.message ?: error.javaClass.simpleName}", error)
+            throw PublicSearchException("Public search failed: ${error.message ?: error.javaClass.simpleName}", error)
         } finally {
             connection.disconnect()
         }
@@ -121,6 +121,7 @@ class DuckDuckGoHtmlSearch(
                     retrievedAt = retrievedAt
                 )
             }
+                .toList()
         }
 
         private fun resolveResultUrl(raw: String): String? {
