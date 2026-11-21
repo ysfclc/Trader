@@ -12,6 +12,8 @@ import com.yusufculcu.trader.domain.ProofAssetKind
 import com.yusufculcu.trader.domain.ProofClaim
 import com.yusufculcu.trader.domain.ProofClaimStatus
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -67,6 +69,47 @@ class DiscoveryStrategyPersistenceTest {
         assertEquals(asset, repository.getProofAsset(asset.id))
         assertEquals(strategy, repository.getStrategy(strategy.id))
         assertEquals(asset.id, database.discoveryStrategyDao().getById(strategy.id)?.proofAssetId)
+    }
+
+    @Test
+    fun encryptedBackupPreservesProofAssetsAndStrategies() = runBlocking {
+        val asset = ProofAsset(
+            id = "backup-asset",
+            kind = ProofAssetKind.SERVICE_CAPABILITY,
+            name = "Operational automation",
+            description = "A validated service capability.",
+            capabilities = listOf("integration design"),
+            claims = emptyList(),
+            createdAt = 10,
+            updatedAt = 20
+        )
+        assertTrue(repository.saveProofAsset(asset).isEmpty())
+        val strategy = DiscoveryStrategy(
+            id = "backup-strategy",
+            proofAssetId = asset.id,
+            signatures = listOf(ProblemSignature("backup-signature", "A company has a manual workflow.", listOf("manual handoffs"))),
+            queries = listOf(DiscoveryQuery("public-search", "manual workflow help", resultLimit = 5)),
+            createdAt = 30,
+            updatedAt = 40
+        )
+        assertTrue(repository.saveStrategy(strategy).isEmpty())
+
+        val output = ByteArrayOutputStream()
+        TraderBackupManager(database).exportEncrypted(output, "trader-test-passphrase-2026".toCharArray())
+
+        val restoredDatabase = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            TraderBackupManager(restoredDatabase).restoreEncrypted(
+                ByteArrayInputStream(output.toByteArray()),
+                "trader-test-passphrase-2026".toCharArray()
+            )
+            assertEquals(asset, DiscoveryStrategyCodec.decodeAsset(restoredDatabase.proofAssetDao().getAll().single().payloadJson))
+            assertEquals(strategy, DiscoveryStrategyCodec.decodeStrategy(restoredDatabase.discoveryStrategyDao().getAll().single().payloadJson))
+        } finally {
+            restoredDatabase.close()
+        }
     }
 
     @Test
