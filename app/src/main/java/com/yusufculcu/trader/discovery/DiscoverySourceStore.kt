@@ -16,8 +16,8 @@ data class DiscoverySourceConfig(
 )
 
 /** Local user-owned source instances. Credentials are deliberately unsupported in this first version. */
-class DiscoverySourceStore(context: Context) {
-    private val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+class DiscoverySourceStore(context: Context, preferencesName: String = PREFERENCES) {
+    private val preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
 
     @Synchronized
     fun list(): List<DiscoverySourceConfig> {
@@ -56,6 +56,24 @@ class DiscoverySourceStore(context: Context) {
         return source
     }
 
+    /** Replace the complete portable source list after validating every item. */
+    @Synchronized
+    fun replaceAll(sources: List<DiscoverySourceConfig>) {
+        require(sources.size <= MAX_SOURCES) { "This backup contains too many discovery sources." }
+        val normalized = sources.map { source ->
+            require(source.id.isNotBlank() && source.id.length <= 128) { "A discovery source has an invalid identifier." }
+            require(source.adapterId == RssAtomFeedAdapter.ADAPTER_ID) { "This backup contains an unsupported source adapter." }
+            val name = source.name.trim().take(100)
+            require(name.isNotBlank()) { "A discovery source is missing its name." }
+            val url = RssAtomFeedAdapter.validateFeedUrl(source.feedUrl).toString()
+            require(source.lastCheckedAt == null || source.lastCheckedAt >= 0) { "A discovery source has an invalid check timestamp." }
+            source.copy(name = name, feedUrl = url, lastError = source.lastError?.take(300))
+        }
+        require(normalized.map { it.id }.distinct().size == normalized.size) { "Discovery source identifiers must be unique." }
+        require(normalized.map { it.feedUrl.lowercase() }.distinct().size == normalized.size) { "Discovery feed URLs must be unique." }
+        persist(normalized)
+    }
+
     @Synchronized
     fun setEnabled(id: String, enabled: Boolean) =
         persist(list().map { if (it.id == id) it.copy(enabled = enabled) else it })
@@ -91,5 +109,6 @@ class DiscoverySourceStore(context: Context) {
     companion object {
         private const val PREFERENCES = "trader_discovery_sources"
         private const val KEY_SOURCES = "configured_public_feeds"
+        private const val MAX_SOURCES = 500
     }
 }
