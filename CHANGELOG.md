@@ -1,3 +1,10 @@
+## 2026-11-21 — Evidence-backed discovery foundation (PR #18 in progress)
+
+- Added versioned ProofAsset and DiscoveryStrategy models with fail-closed validation for claims, evidence references, target constraints, bounded query plans and disqualifiers.
+- Added Room schema v4→v5 migration, durable proof/strategy tables and DAOs, a stable JSON codec and a repository that validates evidence references and strategy-to-asset links before saving.
+- Extended encrypted workspace snapshot v2→v3 to preserve proof assets and discovery strategies. Restore validates record metadata, payload consistency, evidence provenance and foreign-key relationships; legacy v1/v2 snapshots remain readable with empty new record groups.
+- Added persistence and encrypted backup/restore tests. CI and device migration acceptance pending.
+
 ## 2026-11-20 — Trader local AI foundation (in progress)
 
 - Accepted D-021: local AI is the intelligence backbone for discovery, qualification, research and outreach preparation; Memo-2 supplies patterns only.
