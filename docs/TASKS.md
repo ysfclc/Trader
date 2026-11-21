@@ -18,12 +18,16 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.0a Add a Problem Inbox that accepts a manually described problem or goal without requiring a trade/service/job classification.
 - [x] T1.0b Add durable plan-step records linked to ProblemCase. Step dependencies, capability execution contracts, approvals and postconditions remain open.
 - [x] T1.1 Create native Kotlin/Compose Android project with a distinct application ID, dark mobile UI and English/Turkish/Polish string resources. Device visual acceptance remains open.
+- [x] T1.1a Add adaptive Trader launcher/round icons and wire them through the manifest; physical launcher rendering on Redmi remains unverified.
+- [x] T1.1b Preserve debug install identity: keep `com.yusufculcu.trader.debug`, increment versionCode monotonically, and use an optional dedicated Trader development keystore in CI. Workflow and Gradle wiring are implemented; user must configure `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` before any installable artifact is produced.
+- [ ] T1.1c Verify an in-place update on the Redmi using two successive APKs signed by the same stable development certificate; prove Room rows, source preferences and browser session remain intact.
 - [ ] T1.2 Rebuild the product shell around Discover, Work, Live and Studio while preserving Inbox, Pipeline and Activity as linked views; add per-destination state/back-stack and migration tests.
 - [x] T1.3 Room entities/DAOs and schema export are implemented; schema snapshot policy remains open.
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
 - [x] T1.3c Add Room v3→v4 optional opportunity profiles; legacy schema-v3 encrypted backups remain readable with an empty opportunity set. PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device migration acceptance remains open.
 - [x] T1.4 Implement passphrase-protected local backup/export and integrity-verified restore for all eight current Room record groups using AES-256-GCM and PBKDF2-HMAC-SHA256 (210,000 iterations, random 16-byte salt and 12-byte IV); validate the authenticated payload/schema/relationships and replace rows atomically. CI verified in PR #8 and main run 256 (4 backup tests; 37 total tests passed). Device acceptance remains open; see `docs/COVERAGE.md` R-007 and `docs/RISKS.md`.
+- [ ] T1.4a Extend encrypted workspace backup to include non-secret discovery source configurations and app-owned settings; add backward-compatible schema migration and atomic restore tests. Never include signing secrets, browser cookies or provider credentials.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Incoming intent extraction now has Robolectric coverage for styled CharSequence text, VIEW URLs, blank/missing payloads and unrelated actions; Android chooser/device acceptance, quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
@@ -118,6 +122,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T6 — Pilot and verification
 
+- [ ] T6.0b Verify signed update continuity on Redmi across two releases, including Room, preferences and WebView session retention; no uninstall/clear-data as an update strategy.
 - [ ] T6.0 Verify one non-commercial ProblemCase end-to-end: capture → context/evidence → plan → supported actions → postcondition verification → user-confirmed closure.
 - [ ] T6.0a Verify pause, resume, cancellation and process-death recovery for a multi-step workflow, including truthful partial/failed states.
 - [ ] T6.1 Start with industrial tooling and machining between Türkiye and Poland/EU.
