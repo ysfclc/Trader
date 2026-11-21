@@ -24,7 +24,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - Current branch: `feature/public-search-adapter`; PR #18 open, not merged.
 - Candidate package/version: `com.yusufculcu.trader.debug`, versionCode 2, versionName `0.2.0-debug`.
 - Previous CI run 385 validated versionCode 1 / `0.1.0-debug` using an ephemeral runner debug key. That certificate cannot be assumed compatible with the new stable Trader key.
-- A dedicated development keystore has been generated outside Git. Repository Actions secrets `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` are absent. CI labels builds without the key as CI-only and not for installation. Run 405 artifact is not installable.
+- A dedicated PKCS12 development keystore has been generated outside Git for the next stable signing setup. Its SHA-256 certificate fingerprint is pinned in `.github/workflows/android.yml`; the private bundle contains the key, base64 secret value and password. Repository Actions secrets `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` remain absent until GitHub sign-in is completed. CI labels builds without the key as CI-only and not for installation.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
 ## Immediate next increments
