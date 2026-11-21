@@ -6,6 +6,7 @@ plugins {
 }
 
 val stableDebugKeystore = System.getenv("TRADER_KEYSTORE_PATH")
+    ?.takeIf { it.isNotBlank() }
     ?.let { file(it) }
     ?.takeIf { it.isFile }
 val stableDebugPassword = System.getenv("TRADER_KEYSTORE_PASSWORD")
