@@ -127,7 +127,7 @@ class DuckDuckGoHtmlSearch(
             val decoded = decodeEntities(raw.trim())
             val candidate = runCatching {
                 val uri = URI(decoded)
-                if (uri.host?.lowercase(Locale.ROOT)?.contains("duckduckgo.com") == true &&
+                if (uri.host?.lowercase(Locale.ROOT)?.let { host -> host == "duckduckgo.com" || host.endsWith(".duckduckgo.com") } == true &&
                     uri.rawQuery != null && uri.rawQuery.contains("uddg=")
                 ) {
                     val encoded = uri.rawQuery.split("&").firstOrNull { it.startsWith("uddg=") }?.substringAfter("uddg=")
@@ -136,7 +136,7 @@ class DuckDuckGoHtmlSearch(
             }.getOrNull() ?: return null
             val parsed = runCatching { URI(candidate) }.getOrNull() ?: return null
             if (parsed.scheme?.lowercase(Locale.ROOT) != "https" || parsed.host.isNullOrBlank() ||
-                parsed.rawUserInfo != null || parsed.host.lowercase(Locale.ROOT).endsWith("duckduckgo.com")
+                parsed.rawUserInfo != null || parsed.host.lowercase(Locale.ROOT).let { host -> host == "duckduckgo.com" || host.endsWith(".duckduckgo.com") }
             ) return null
             return parsed.toASCIIString().takeIf { it.length <= 2_048 }
         }
@@ -165,11 +165,11 @@ class DuckDuckGoHtmlSearch(
         }
 
         private val RESULT_LINK = Regex(
-            "(?is)<a\\b([^>]*class=[\\"'][^\\"']*\\bresult__a\b[^\\"']*[\\"'][^>]*)>(.*?)</a>"
+            """(?is)<a\\b([^>]*class="[^"]*\\bresult__a[^"]*"[^>]*)>(.*?)</a>"""
         )
-        private val ATTRIBUTE_HREF = Regex("(?is)href=[\\"']([^\\"']+)[\\"']")
+        private val ATTRIBUTE_HREF = Regex("""(?is)href=["']([^"']+)["']""")
         private val RESULT_SNIPPET = Regex(
-            "(?is)<(?:a|div)[^>]*class=[\\"'][^\\"']*\\bresult__snippet\b[^\\"']*[\\"'][^>]*>(.*?)</(?:a|div)>"
+            """(?is)<(?:a|div)[^>]*class=["'][^"']*\\bresult__snippet[^"']*["'][^>]*>(.*?)</(?:a|div)>"""
         )
     }
 }
