@@ -56,7 +56,14 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T3.1a Define versioned ProofAsset and DiscoveryStrategy records: real user capability/proof, problem signatures, target constraints, query plan and disqualifiers.
 - [ ] T3.1b Define durable DiscoveryRun and SourceRun state with bounded execution, cancellation, caching, timestamps, health and explicit failures.
 - [ ] T3.2a Implement one real, documented public-source adapter end-to-end; no fixtures or fake result lists.
-- [x] T3.2b Add an experimental bounded DuckDuckGo public HTML search adapter with HTTPS-only external result validation, timeouts, response-size cap, URL deduplication and parser/query tests. CI validation pending; Discover UI and persistent candidate dossiers are not wired.
+- [ ] T3.2b Stabilize and CI-verify the bounded DuckDuckGo HTML search adapter (run 379 failed Kotlin compilation); integrate it into Discover.
+- [x] T3.1c Lock the provider-neutral source ecosystem, adapter/source-instance/watch-rule split, source modes and provider access matrix in docs/SOURCE_ECOSYSTEM.md.
+- [ ] T3.1d Implement configurable local public-feed source instances with enabled/disabled/remove and health state.
+- [ ] T3.2c Implement bounded RSS 2.0/Atom fetch, hardened XML parsing, native item identity, timestamps, dedupe and offline tests.
+- [ ] T3.2d Add Discover UI: one-shot public search, manual feed refresh and save-to-workspace with provenance.
+- [ ] T3.2e Include configured source instances in encrypted backup/restore.
+- [ ] T3.2f Add scheduled polling only after durable WorkManager execution, pause/backoff/cursor and recovery contracts.
+- [ ] T3.2g Add provider-specific community adapters: Bluesky/Mastodon public APIs, Reddit OAuth with deletion/retention reconciliation, authorized Telegram/Discord/Slack, and browser-assisted Facebook capture unless formal access is approved.
 - [ ] T3.2 Implement public-web/source search adapters with source attribution.
 - [x] T3.3a Add first Trader-owned browser screen with address/search, back/forward, stop/reload, title/current URL, progress and share-page handoff. Browser code is in PR #17; physical-device acceptance remains open. Tabs, bookmarks/history, find-in-page, downloads, site-specific session controls and dossier evidence capture remain open.
 - [x] T3.3b Add account-login foundations: persistent app-local WebView cookie storage and flush, explicit third-party cookie policy for SSO, user-gesture popup windows, Android autofill and web file chooser; detect Google OAuth and restart the relying-party site in the system browser without attempting embedded Google sign-in or copying Chrome cookies. CI run 349 passed 65 tests; run 358 passed the full build/test/lint/signature/package pipeline. User confirmed embedded account login works on Redmi; provider-by-provider and process-restart coverage remains open.

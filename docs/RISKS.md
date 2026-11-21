@@ -30,3 +30,8 @@ _Last reviewed: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b
 ## Operating rule
 
 A risk is not closed because a related screen or safeguard exists. Close it only with the mitigation evidence and update this file and `docs/STATE.md` in the same increment.
+
+
+| R-19 | The initial source watchlist is stored in app-private preferences and is not included in encrypted Trader backups. | Medium | Only public HTTPS feed URLs and labels are stored; no API credentials are accepted. | Add source configuration backup/restore and migration tests before treating the source watchlist as portable. |
+| R-20 | Community/social content may include personal information and provider-specific deletion/retention duties. | High | Community adapters remain disabled in the feed-first slice; provider access and retention constraints are documented in docs/SOURCE_ECOSYSTEM.md. | Before enabling each provider, implement its permission/scopes, deletion reconciliation, expiry, data minimization and policy checks. |
+| R-21 | A manual feed check may be mistaken for continuous monitoring. | Medium | Initial Discover feed refresh is user-triggered only; no polling worker is wired. | Use the label “Check now”; add scheduled monitoring only after durable jobs, cancellation, cursor/backoff and recovery are implemented. |

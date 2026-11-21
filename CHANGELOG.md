@@ -130,3 +130,9 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Added a bounded user-triggered DuckDuckGo HTML search adapter: query length and result limits, HTTPS-only external result validation, request timeouts, response byte cap, URL deduplication and retrieval timestamps.
 - Added parser/query unit tests for encoding, result extraction, redirect handling, unsafe URLs, duplicates and field truncation.
 - Not wired to Discover UI, persistent candidate dossiers, or AI qualification; CI and live-source/device validation pending.
+
+## 2026-11-21 — Extensible source ecosystem
+
+- Locked the adapter / configured source instance / watch rule separation and expanded the source taxonomy across feeds, company sites, registers, procurement, job/project markets, communities, federated social, developer ecosystems, reviews, authorized group workspaces and webhooks.
+- Recorded Reddit, Meta/Facebook, Bluesky, Mastodon, Telegram and YouTube access constraints in docs/SOURCE_ECOSYSTEM.md.
+- First working delivery is public RSS/Atom configuration and manual refresh plus one-shot search. No continuous monitoring or social API connection is claimed.

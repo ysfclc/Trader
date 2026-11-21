@@ -145,3 +145,12 @@ A static list, seeded demo data, search mock, browser link-out or draft-only scr
 6. **Broaden source/channel coverage only after the first end-to-end journey works on the target phone.**
 
 Do not attempt all six as one giant rewrite. Each increment must preserve current data, include tests and docs, pass CI, produce a verified APK and record physical-device acceptance separately.
+
+
+## Source Manager and Discover
+
+Discover is not a fixed list of hardcoded targets. The operator can add/configure source instances (initially public RSS/Atom feed URLs), enable/disable/remove them, run a visible one-shot public-web search, manually refresh a feed, inspect source health and save an item into Work as source-linked UNREVIEWED research evidence. Search results and feed items retain original source URL, source label, publication time when available and retrieval time. Saving the same canonical URL twice resolves to the existing research record rather than creating duplicate leads.
+
+The broader ecosystem includes public search, feeds/publications, company sites/careers/changelogs, registers/procurement/job marketplaces, public communities/federated networks, developer/product ecosystems, reviews, explicitly authorized messaging workspaces, user-provided material and signed webhooks. Provider access is adapter-specific; see docs/SOURCE_ECOSYSTEM.md.
+
+A manual refresh is not a scheduled watch. Do not claim background monitoring until durable jobs, per-source rate/cursor/backoff, pause/stop, deletion/retention and recovery exist. Facebook group research is visible browser capture initiated by the user unless an approved API route is obtained. Reddit requires dedicated OAuth and deletion/retention enforcement; Bluesky and Mastodon need separate public API adapters; private Telegram/Discord/Slack groups require explicit authorized installation.
