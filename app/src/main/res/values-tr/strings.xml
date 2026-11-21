@@ -131,7 +131,7 @@
     <string name="event_evidence_verified">Kanıt doğrulandı olarak işaretlendi</string>
     <string name="event_evidence_unreviewed">Kanıt yeniden inceleme bekliyor</string>
     <string name="backup_restore">Yedekle ve geri yükle</string>
-    <string name="backup_intro">Tüm kayıtların, kanıtların, planların ve iş akışı geçmişinin parola korumalı kopyasını oluştur veya önceki bir Trader yedeğini geri yükle.</string>
+    <string name="backup_intro">Kayıtların, kanıtların, planların, iş akışı geçmişinin ve herkese açık keşif kaynaklarının parola korumalı kopyasını oluştur veya önceki bir Trader yedeğini geri yükle.</string>
     <string name="backup_passphrase">Yedekleme parolası</string>
     <string name="backup_confirm_passphrase">Parolayı doğrula</string>
     <string name="backup_passphrase_hint">En az 12 karakter kullan. Trader bu parolayı saklamaz veya göndermez. Kaybedersen yedeğin kilidini açamazsın.</string>
