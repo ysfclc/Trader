@@ -8,6 +8,7 @@ import com.yusufculcu.trader.data.MIGRATION_3_4
 import com.yusufculcu.trader.data.MIGRATION_4_5
 import com.yusufculcu.trader.data.TraderDatabase
 import com.yusufculcu.trader.data.TraderRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 
@@ -18,6 +19,7 @@ class TraderApplication : Application() {
             .build()
     }
     val repository: TraderRepository by lazy { TraderRepository(database) }
+    val discoveryStrategyRepository: DiscoveryStrategyRepository by lazy { DiscoveryStrategyRepository(database) }
     val modelStore: TraderModelStore by lazy { TraderModelStore(this) }
     val discoverySourceStore: DiscoverySourceStore by lazy { DiscoverySourceStore(this) }
 }
