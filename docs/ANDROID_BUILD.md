@@ -42,7 +42,7 @@ A dedicated development keystore is generated for Trader and is deliberately not
 
 The certificate SHA-256 fingerprint is `F9:6D:D2:4E:1C:C7:B7:17:70:EB:44:AC:9E:9B:2B:80:E8:54:F1:09:89:D3:16:93:45:64:38:CE:8D:50:EE:74`. After setting both secrets, rerun the Android workflow. The workflow will produce the installable artifact only when the stable key is present. Keep the keystore and password in a secure password manager and retain an offline backup. Never reuse signing identities from VaultOS, Memo or another project.
 
-**Important migration boundary:** an APK previously signed with a different ephemeral CI debug key cannot be updated in place with this new key. Do not uninstall it casually. First export an encrypted Trader workspace backup and the current snapshot v2 includes public discovery feed settings; only then plan a one-time signature transition. Once installed from the stable-signed artifact, future versionCode increments update in place and retain app data. Release signing remains a separate future identity and must not silently replace this development key.
+**Important migration boundary:** an APK previously signed with a different ephemeral CI debug key cannot be updated in place with this new key. Do not uninstall it casually. First export a verified encrypted Trader workspace backup (snapshot v2 includes public discovery feed settings); only then plan a one-time signature transition. Once installed from the stable-signed artifact, future versionCode increments update in place and retain app data. Release signing remains a separate future identity and must not silently replace this development key.
 
 
 ## Launcher identity and data continuity
@@ -57,8 +57,8 @@ The Android manifest declares the Trader adaptive launcher icon (`ic_launcher` a
 - A CI-generated debug key is not a production signing identity; update compatibility with a previously installed debug APK is not established. Do not uninstall an existing installation without protecting local data.
 
 
-## Current candidate (not yet CI-verified)
+## Current candidate (CI verified; stable installable signing setup pending)
 
 - Version: `0.2.0-debug`, versionCode 2; package remains `com.yusufculcu.trader.debug`.
-- Adds adaptive launcher icon and optional stable development signing via the two Actions secrets above.
-- Do not install any artifact until the workflow confirms the stable signing path and certificate fingerprint. Previous CI run 385 artifact used an ephemeral runner key and cannot be assumed upgrade-compatible.
+- Adds adaptive launcher icon, optional stable development signing via the two Actions secrets above, and encrypted backup snapshot v2 for public source settings.
+- CI run 405 passed 98 tests, lint, build, package/version and signature checks. Stable secrets were absent, so the produced artifact is CI-only and must not be installed. Previous CI run 385 artifact used an ephemeral runner key and cannot be assumed upgrade-compatible.
