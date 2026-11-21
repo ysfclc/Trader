@@ -36,3 +36,11 @@ Robolectric tests use Maven Central's canonical `repo.maven.apache.org` host for
 ## Release signing
 
 No production signing key or password belongs in this repository. A release-signing workflow must be added only after the user configures GitHub Actions secrets for a dedicated Trader keystore and passwords. Never reuse signing identities from VaultOS, Memo or another project. Until that exists, do not describe a debug APK as a production release.
+
+
+## Latest verified Discover build
+
+- Feature PR: #18, branch feature/public-search-adapter.
+- CI validation: run 385, validation branch build/discovery-source-slice; its tree matches the PR head tree. 97 tests, 0 failures, 0 errors, 0 skipped; lint, assembleDebug, apksigner and exact package/version checks passed.
+- Artifact: trader-debug-apk, 69,441,948 bytes; package com.yusufculcu.trader.debug, version 0.1.0-debug; SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210.
+- A CI-generated debug key is not a production signing identity; update compatibility with a previously installed debug APK is not established. Do not uninstall an existing installation without protecting local data.
