@@ -61,6 +61,38 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 - [ ] No product decision blocks the implementation plan. Keep backup restore as explicit whole-workspace replacement; any merge behavior requires a separately specified decision.
 - [ ] Before public distribution, configure a dedicated Trader release keystore via protected GitHub Actions secrets; never reuse another app's signing identity.
 
+
+## Session 12 handoff — experimental public-search adapter
+
+**Done this session**
+- Added a bounded user-triggered DuckDuckGo HTML search adapter with query/result bounds, request timeout, response-byte cap, HTTPS-only external result URLs, redirect resolution, URL deduplication, retrieval timestamps and parser field limits.
+- Added parser/query tests for URL encoding, result extraction, snippet normalization, redirect handling, unsafe links, deduplication and truncation.
+- Updated task, coverage, risk, decision and changelog documentation. PR #18 is open against the browser/discovery foundation branch; it is not merged.
+
+**State changed**
+- `app/src/main/java/com/yusufculcu/trader/discovery/DuckDuckGoHtmlSearch.kt`
+- `app/src/test/java/com/yusufculcu/trader/discovery/DuckDuckGoHtmlSearchTest.kt`
+- `docs/TASKS.md`, `docs/COVERAGE.md`, `docs/RISKS.md`, `docs/DECISIONS.md`, `CHANGELOG.md`, `docs/STATE.md`
+
+**Verified**
+- Build: pending GitHub Actions run 379; local build unavailable because this runtime cannot resolve GitHub.
+- Tests: pending run 379; no local test execution.
+- CI validation branch: `build/public-search-adapter` uses the same adapter source and tests as PR #18 head (source blob SHA verified equal). Run 379 is still in progress at handoff.
+
+**Not done / next**
+1. Get a clean CI result and fix any compile/test/lint failures.
+2. Add user-triggered Discover query UI and connect the adapter, then persist deduplicated candidate/source records with provenance.
+3. Validate live source access and behavior on device; do not label snippets verified.
+
+**Open questions**
+- DuckDuckGo HTML access policy/terms and long-term markup stability need review before promoting this adapter beyond experimental use.
+
+**Risks / landmines**
+- This adapter is not wired into Discover UI or persistent candidate dossiers; it is not a complete discovery workflow.
+- Search snippets are unverified source claims and may be incomplete; do not score or qualify a company from snippets alone.
+- No result-page crawling, authentication, CAPTCHA/challenge solving or access-control bypass is implemented.
+- No device acceptance or real-source test has been recorded.
+
 ## Session 7 handoff — incoming share intent hardening
 
 **Implemented on branch `test/incoming-share-intent`**
