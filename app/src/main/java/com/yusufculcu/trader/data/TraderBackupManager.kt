@@ -267,8 +267,22 @@ class TraderBackupManager(
         require(snapshot.proofAssets.all { row -> row.id.isNotBlank() && row.schemaVersion == 1 && row.kind.isNotBlank() && row.payloadJson.length <= 64_000 }) { "Backup contains an invalid proof asset." }
         require(snapshot.discoveryStrategies.all { row -> row.id.isNotBlank() && row.schemaVersion == 1 && row.payloadJson.length <= 128_000 }) { "Backup contains an invalid discovery strategy." }
         require(proofAssets.all { DiscoveryStrategyRules.validate(it).isEmpty() }) { "Backup contains an invalid proof asset payload." }
+        require(snapshot.proofAssets.all { row ->
+            val asset = proofAssets.firstOrNull { it.id == row.id }
+            asset != null && asset.schemaVersion == row.schemaVersion && asset.kind.name == row.kind &&
+                asset.createdAt == row.createdAt && asset.updatedAt == row.updatedAt
+        }) { "Proof asset metadata does not match its payload." }
         require(strategies.all { strategy -> DiscoveryStrategyRules.validate(strategy, proofAssets).isEmpty() }) { "Backup contains an invalid discovery strategy payload." }
-        require(snapshot.discoveryStrategies.all { row -> row.proofAssetId in snapshot.proofAssets.map { it.id } }) { "A discovery strategy points to a missing proof asset." }
+        require(snapshot.discoveryStrategies.all { row ->
+            val strategy = strategies.firstOrNull { it.id == row.id }
+            strategy != null && row.proofAssetId in snapshot.proofAssets.map { it.id } &&
+                strategy.proofAssetId == row.proofAssetId && strategy.schemaVersion == row.schemaVersion &&
+                strategy.createdAt == row.createdAt && strategy.updatedAt == row.updatedAt
+        }) { "A discovery strategy is invalid or points to a missing proof asset." }
+        val evidenceIds = snapshot.evidence.map { it.id }.toSet()
+        require(proofAssets.flatMap { it.claims }.flatMap { it.evidenceIds }.all { it in evidenceIds }) {
+            "A proof claim points to a missing evidence record."
+        }
 
         val problems = snapshot.problems.map { it.id }.toSet()
         val runs = snapshot.workflowRuns.associateBy { it.id }
