@@ -73,7 +73,7 @@ The open feature branch feature/public-search-adapter adds the first working Dis
 
 PR #18 CI validation run 385 used a source tree identical to the PR head and passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and package/version checks. See docs/SOURCE_ECOSYSTEM.md for the wider provider-neutral source plan and current access limits.
 
-This is not continuous monitoring: feed checks are manual only. Configured feeds are not yet included in encrypted backups. Reddit, Facebook, Bluesky, Mastodon and private-community adapters are not implemented. Normalized company/person dossiers, AI signal qualification and outbound sending are also not included. No physical-device or live-feed smoke test has been recorded. The main branch does not yet contain this open feature.
+This is not continuous monitoring: feed checks are manual only. Configured public feeds are included in encrypted backup snapshot v2; legacy snapshot v1 restores with an empty feed list. Credentials/cookies are never included. Reddit, Facebook, Bluesky, Mastodon and private-community adapters are not implemented. Normalized company/person dossiers, AI signal qualification and outbound sending are also not included. No physical-device or live-feed smoke test has been recorded. The main branch does not yet contain this open feature.
 
 
 ## App identity and safe updates
