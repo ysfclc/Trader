@@ -147,13 +147,13 @@ A community author is not automatically a business buyer. A post may be personal
 - Built-in adapter registration is explicit and fail-closed. Do not download or execute arbitrary third-party code, scripts or JARs as plugins.
 - User-configured URLs must be HTTPS, credential-free and host-validated. Redirects, if enabled by a future adapter, must be bounded and revalidated at every hop.
 - No stealth automation, credential/cookie extraction, CAPTCHA solving, access-control bypass or fake user-agent identity.
-- The initial local source list contains public feed URLs only; it stores no API secrets. It is currently app-private preference data and is not yet included in Trader's encrypted workspace backup. This limitation must remain visible until backup export/restore integration is added.
+- The initial local source list contains public feed URLs only; it stores no API secrets. It remains app-private preference data and is now included in encrypted Trader workspace backup snapshot v2. Restore replaces the complete list; legacy snapshot v1 restores with an empty source list. Device acceptance remains open.
 - Monitoring and source-derived data must have a user-visible pause/disable/remove action. A source failure cannot silently fall back to a different provider.
 
 ## Build order
 
 1. **Delivered and CI-verified:** built-in adapter registry/common result envelope; configurable public RSS/Atom source instances; manual refresh; one-shot DuckDuckGo query in Discover; source health; save-to-Work as unreviewed evidence; open result in Trader WebView.
-2. Include source configuration in encrypted backup/restore and add explicit editable watch rules (keywords, language, geography, signal classes).
+2. Add explicit editable watch rules (keywords, language, geography, signal classes) and durable DiscoveryRun/SourceRun state.
 3. Add durable DiscoveryRun/SourceRun state, scheduled polling, cursor/ETag, per-source backoff, pause/stop and recovery only after WorkManager execution is implemented and verified.
 4. Add public API adapters for Bluesky and per-instance Mastodon.
 5. Add Reddit OAuth with deletion reconciliation, 48-hour retention controls and current terms review.
