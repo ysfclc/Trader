@@ -524,6 +524,8 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun workflowEventDao(): WorkflowEventDao
     abstract fun proofAssetDao(): ProofAssetDao
     abstract fun discoveryStrategyDao(): DiscoveryStrategyDao
+    abstract fun discoveryRunDao(): DiscoveryRunDao
+    abstract fun sourceRunDao(): SourceRunDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
