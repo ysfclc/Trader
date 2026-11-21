@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-21 — session 15 (app identity, launcher and encrypted source-settings backup; CI run 405 passed)_
+_Last updated: 2026-11-21 — session 16 (proof asset and discovery strategy domain foundation; CI pending)_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -14,7 +14,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first slice CI-verified | One-shot DuckDuckGo search; user-configurable RSS/Atom feeds; manual checks, source health, browser handoff and source-linked UNREVIEWED evidence. CI run 405: 98 tests passed (0 failures/errors/skips), lint/build/signature/package checks. No live-feed or physical-device acceptance. |
-| Company / people graph | ⚪ not implemented | Normalized Organization/Person, ProofAsset/DiscoveryStrategy, company dossiers, explainable fit and qualification remain open. |
+| Company / people graph | 🟡 domain foundation | Versioned ProofAsset/DiscoveryStrategy domain models and validation are added on `build/proofasset-discovery-strategy`; Room persistence, backup integration, company dossiers and explainable fit remain open. |
 | Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub foundations. No verified on-device model inference or durable WorkManager executor. |
 | Social/community sources | ⚪ not implemented | Reddit OAuth, Bluesky/Mastodon APIs, authorized groups and Facebook browser-assisted research remain future provider-specific adapters. |
 | Outreach | ⚪ not implemented | Drafting/approval/handoff contracts remain planned; no autonomous send. |
@@ -31,7 +31,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 1. Configure the two signing secrets; run CI; verify stable certificate fingerprint and build an installable candidate. Never uninstall/clear data as routine update procedure.
 2. Verify source-settings backup snapshot v2 and restore/rollback on Redmi; keep credentials/cookies/signing material excluded.
 3. Verify in-place update and backup/restore on Redmi Note 12 Pro 5G, including Room data, feed settings and WebView session.
-4. Implement ProofAsset + DiscoveryStrategy + durable DiscoveryRun/SourceRun, then source-grounded Organization/Person dossiers and explainable matching.
+4. Persist ProofAsset/DiscoveryStrategy with a Room migration and encrypted-backup schema migration; then add durable DiscoveryRun/SourceRun, source-grounded Organization/Person dossiers and explainable matching.
 5. Add scheduled polling only after durable WorkManager cancellation, backoff, cursor and process-death recovery are proven. Then add community adapters with explicit permissions and retention/deletion controls.
 6. Complete Work/Live/Studio UX, browser tabs/history/downloads and the end-to-end problem → plan → action → verified outcome loop.
 
@@ -81,3 +81,17 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - Existing run-385 APK is signed with a different ephemeral certificate and cannot accept the stable key in place.
 - Source settings are now in encrypted backup snapshot v2; device restore acceptance remains open. Browser cookies and provider credentials are intentionally excluded.
 - No physical-device acceptance has been performed for this icon/update candidate.
+
+
+## Session 16 handoff — proof assets and discovery strategy foundation
+
+**Implemented on branch** `build/proofasset-discovery-strategy`, based on PR #18 head `ec03edf10e76c309b5291fda568af65206b95aa1`.
+
+- Added versioned `ProofAsset`, evidence-linked `ProofClaim`, `ProblemSignature`, `DiscoveryTarget`, `DiscoveryQuery` and editable `DiscoveryStrategy` domain records.
+- Added fail-closed validation for schema versions, IDs, duplicate claims/signatures, evidence requirements for SUPPORTED claims, bounded lists/text/query counts/result limits and timestamps.
+- Added 5 unit tests covering valid strategy, evidence-backed claims, missing asset, bounded query, duplicate signature IDs and unsupported schema versions.
+
+**Not yet done / verification pending**
+- Room persistence, migrations and encrypted backup compatibility are not implemented; these domain models are not yet user-editable in the app.
+- CI has not yet completed for this branch. No APK or device acceptance is claimed.
+- Next: persist these records without losing existing v4 data; bump encrypted backup snapshot schema and test legacy v1/v2 compatibility; add DiscoveryRun/SourceRun persistence and cancellation semantics.
