@@ -2,6 +2,7 @@ package com.yusufculcu.trader.data
 
 import androidx.room.withTransaction
 import com.yusufculcu.trader.domain.OpportunityRules
+import com.yusufculcu.trader.domain.DiscoveryStrategyRules
 import com.yusufculcu.trader.discovery.DiscoverySourceConfig
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 import com.yusufculcu.trader.discovery.RssAtomFeedAdapter
@@ -47,7 +48,9 @@ class TraderBackupManager(
                     workflowRuns = database.workflowRunDao().getAll(),
                     workflowSteps = database.workflowStepDao().getAll(),
                     workflowEvents = database.workflowEventDao().getAll(),
-                    discoverySources = discoverySources
+                    discoverySources = discoverySources,
+                    proofAssets = database.proofAssetDao().getAll(),
+                    discoveryStrategies = database.discoveryStrategyDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -113,6 +116,8 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.discoveryStrategyDao().deleteAll()
+                        database.proofAssetDao().deleteAll()
                         database.workflowStepDao().deleteAll()
                         database.workflowRunDao().deleteAll()
                         database.planStepDao().deleteAll()
@@ -129,6 +134,8 @@ class TraderBackupManager(
                         database.workflowRunDao().insertAll(snapshot.workflowRuns)
                         database.workflowStepDao().insertAll(snapshot.workflowSteps)
                         database.workflowEventDao().insertAll(snapshot.workflowEvents)
+                        database.proofAssetDao().insertAll(snapshot.proofAssets)
+                        database.discoveryStrategyDao().insertAll(snapshot.discoveryStrategies)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -192,6 +199,8 @@ class TraderBackupManager(
             .put("workflowSteps", jsonArray(snapshot.workflowSteps, ::encodeWorkflowStep))
             .put("workflowEvents", jsonArray(snapshot.workflowEvents, ::encodeWorkflowEvent))
             .put("discoverySources", jsonArray(snapshot.discoverySources, ::encodeDiscoverySource))
+            .put("proofAssets", jsonArray(snapshot.proofAssets, ::encodeProofAsset))
+            .put("discoveryStrategies", jsonArray(snapshot.discoveryStrategies, ::encodeDiscoveryStrategy))
         return root.toString()
     }
 
@@ -218,14 +227,16 @@ class TraderBackupManager(
             workflowRuns = decodeArray(root, "workflowRuns", ::decodeWorkflowRun),
             workflowSteps = decodeArray(root, "workflowSteps", ::decodeWorkflowStep),
             workflowEvents = decodeArray(root, "workflowEvents", ::decodeWorkflowEvent),
-            discoverySources = if (snapshotVersion >= 2) decodeArray(root, "discoverySources", ::decodeDiscoverySource) else emptyList()
+            discoverySources = if (snapshotVersion >= 2) decodeArray(root, "discoverySources", ::decodeDiscoverySource) else emptyList(),
+            proofAssets = if (backupSchemaVersion >= 5) decodeArray(root, "proofAssets", ::decodeProofAsset) else emptyList(),
+            discoveryStrategies = if (backupSchemaVersion >= 5) decodeArray(root, "discoveryStrategies", ::decodeDiscoveryStrategy) else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -242,12 +253,22 @@ class TraderBackupManager(
         unique(snapshot.workflowEvents.map { it.id }, "workflow-event")
         unique(snapshot.workflowRuns.map { it.idempotencyKey }, "workflow idempotency")
         unique(snapshot.discoverySources.map { it.id }, "discovery source")
+        unique(snapshot.proofAssets.map { it.id }, "proof asset")
+        unique(snapshot.discoveryStrategies.map { it.id }, "discovery strategy")
         unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
         require(snapshot.discoverySources.all {
             it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
                 it.id.isNotBlank() && it.id.length <= 128 && (it.lastCheckedAt == null || it.lastCheckedAt >= 0)
         }) { "Backup contains an invalid discovery source." }
         snapshot.discoverySources.forEach { RssAtomFeedAdapter.validateFeedUrl(it.feedUrl) }
+
+        val proofAssets = snapshot.proofAssets.map { DiscoveryStrategyCodec.decodeAsset(it.payloadJson) }
+        val strategies = snapshot.discoveryStrategies.map { DiscoveryStrategyCodec.decodeStrategy(it.payloadJson) }
+        require(snapshot.proofAssets.all { row -> row.id.isNotBlank() && row.schemaVersion == 1 && row.kind.isNotBlank() && row.payloadJson.length <= 64_000 }) { "Backup contains an invalid proof asset." }
+        require(snapshot.discoveryStrategies.all { row -> row.id.isNotBlank() && row.schemaVersion == 1 && row.payloadJson.length <= 128_000 }) { "Backup contains an invalid discovery strategy." }
+        require(proofAssets.all { DiscoveryStrategyRules.validate(it).isEmpty() }) { "Backup contains an invalid proof asset payload." }
+        require(strategies.all { strategy -> DiscoveryStrategyRules.validate(strategy, proofAssets).isEmpty() }) { "Backup contains an invalid discovery strategy payload." }
+        require(snapshot.discoveryStrategies.all { row -> row.proofAssetId in snapshot.proofAssets.map { it.id } }) { "A discovery strategy points to a missing proof asset." }
 
         val problems = snapshot.problems.map { it.id }.toSet()
         val runs = snapshot.workflowRuns.associateBy { it.id }
@@ -404,6 +425,26 @@ class TraderBackupManager(
         details = o.getString("details"), occurredAt = o.getLong("occurredAt")
     )
 
+    private fun encodeProofAsset(row: ProofAssetEntity) = json(
+        "id" to row.id, "schemaVersion" to row.schemaVersion, "kind" to row.kind,
+        "payloadJson" to row.payloadJson, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+
+    private fun decodeProofAsset(o: JSONObject) = ProofAssetEntity(
+        id = o.getString("id"), schemaVersion = o.getInt("schemaVersion"), kind = o.getString("kind"),
+        payloadJson = o.getString("payloadJson"), createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+
+    private fun encodeDiscoveryStrategy(row: DiscoveryStrategyEntity) = json(
+        "id" to row.id, "proofAssetId" to row.proofAssetId, "schemaVersion" to row.schemaVersion,
+        "payloadJson" to row.payloadJson, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+
+    private fun decodeDiscoveryStrategy(o: JSONObject) = DiscoveryStrategyEntity(
+        id = o.getString("id"), proofAssetId = o.getString("proofAssetId"), schemaVersion = o.getInt("schemaVersion"),
+        payloadJson = o.getString("payloadJson"), createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+
     private fun encodeDiscoverySource(row: DiscoverySourceConfig) = json(
         "id" to row.id, "adapterId" to row.adapterId, "name" to row.name, "feedUrl" to row.feedUrl,
         "enabled" to row.enabled, "lastCheckedAt" to row.lastCheckedAt, "lastError" to row.lastError
@@ -435,13 +476,15 @@ class TraderBackupManager(
         val workflowRuns: List<WorkflowRunEntity>,
         val workflowSteps: List<WorkflowStepEntity>,
         val workflowEvents: List<WorkflowEventEntity>,
-        val discoverySources: List<DiscoverySourceConfig> = emptyList()
+        val discoverySources: List<DiscoverySourceConfig> = emptyList(),
+        val proofAssets: List<ProofAssetEntity> = emptyList(),
+        val discoveryStrategies: List<DiscoveryStrategyEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 2
-        private const val DATABASE_SCHEMA_VERSION = 4
+        private const val SNAPSHOT_VERSION = 3
+        private const val DATABASE_SCHEMA_VERSION = 5
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
