@@ -80,6 +80,69 @@ class TraderRepository(private val database: TraderDatabase) {
     }
 
     /**
+     * Persists a public discovery result as source-linked, unreviewed research evidence.
+     * Repeated saves of the same canonical URL return the existing research case.
+     */
+    suspend fun captureDiscoveryItem(
+        sourceName: String,
+        title: String,
+        sourceUrl: String,
+        summary: String,
+        publishedAt: Long?
+    ): String? {
+        val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
+        val parsed = runCatching { java.net.URI(sourceUrl.trim()) }.getOrNull()
+        if (cleanTitle.isBlank() || parsed == null || parsed.scheme?.lowercase() != "https" ||
+            parsed.host.isNullOrBlank() || parsed.rawUserInfo != null
+        ) return null
+        val cleanUrl = parsed.toASCIIString().substringBefore("#").takeIf { it.length <= 2_048 } ?: return null
+        val source = sourceName.trim().take(100).ifBlank { "Public source" }
+        val cleanSummary = summary.trim().take(4_000)
+        val now = System.currentTimeMillis()
+        return database.withTransaction {
+            database.evidenceDao().findBySourceUri(cleanUrl)?.let { return@withTransaction it.problemId }
+            val problemId = UUID.randomUUID().toString()
+            val body = buildString {
+                append("Source: ").append(source)
+                if (publishedAt != null) append("\nPublished: ").append(publishedAt)
+                if (cleanSummary.isNotBlank()) append("\n\n").append(cleanSummary)
+                append("\n\nThis is an unreviewed source capture. Verify the original before relying on it.")
+            }
+            database.problemDao().insert(
+                ProblemEntity(
+                    id = problemId,
+                    title = cleanTitle,
+                    description = "Discovered from a configured public source. Review the source-linked evidence before relying on it.",
+                    desiredOutcome = "Assess whether this signal is relevant and identify a justified next action.",
+                    constraintsText = "",
+                    category = "Research",
+                    status = ProblemStatus.OPEN.name,
+                    inputKind = "discovery",
+                    originalContent = cleanUrl,
+                    sourceUri = cleanUrl,
+                    outcomeNote = "",
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+            database.evidenceDao().insert(
+                EvidenceEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = problemId,
+                    title = cleanTitle,
+                    content = body,
+                    sourceUri = cleanUrl,
+                    sourceKind = "PUBLIC_SOURCE",
+                    verificationState = "UNREVIEWED",
+                    capturedAt = now
+                )
+            )
+            addEvent(problemId, "discovery_item_saved", "Discovery item saved", "$source · $cleanTitle", now)
+            problemId
+        }
+    }
+
+    /**
      * Saves a user-reviewed capture from the currently visible browser page.
      * A null problemId creates a new research case; otherwise evidence is attached
      * to the selected active case. Page content and its source link are committed atomically.

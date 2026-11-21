@@ -64,4 +64,18 @@ Use [PROJECT_LOCK.md](docs/PROJECT_LOCK.md) as the canonical product specificati
 
 ## First practical workflow in progress
 
-The active PR #17 adds a Trader-owned authenticated browser, visible-page evidence capture and source-linked research intake from Memo's Android Sharesheet. The user explicitly reviews and can redact visible page text before saving; captured evidence begins unreviewed, and URLs are stripped of query/fragment. The share bridge transfers page text and source provenance only, never account sessions. Trader CI run 358 passed 76 tests, lint and APK package/signature checks; Memo's sender PR #15 passed CI run 1009 but remains draft/unmerged; its source-only CI run published no installable APK artifact. Public-source discovery, company qualification and automatic outreach remain future increments. See the state ledger for current acceptance boundaries.
+PR #17 provides the Trader-owned authenticated browser, visible-page evidence capture and source-linked research intake from Memo's Android Sharesheet. PR #18 adds the first public-source Discover workflow: DuckDuckGo one-shot search, user-configurable RSS/Atom feeds, manual checks, per-source status, open in Trader browser and save as unreviewed evidence. CI run 385 passed 97 tests, lint, APK build/signature/package checks on a tree matching PR #18 app code. Company qualification, scheduled monitoring, social connectors and automatic outreach remain future increments. Memo's sender PR #15 is still draft/unmerged; its capture button is not yet available in the installed Memo app. See the state ledger for acceptance boundaries.
+
+
+## Current discovery implementation — PR #18
+
+The open feature branch feature/public-search-adapter adds the first working Discover/source-ingestion path on top of the Trader browser. Fresh installs land on Discover. Users can run a one-shot DuckDuckGo search, add arbitrary permitted public RSS/Atom URLs, enable/pause/remove sources, manually check feeds, inspect per-source health, open results inside Trader's WebView and save items into Work as source-linked UNREVIEWED evidence. Repeated source URLs resolve to existing research evidence. A one-tap Hacker News front-page feed is included as a real example, not mock data.
+
+PR #18 CI validation run 385 used a source tree identical to the PR head and passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and package/version checks. See docs/SOURCE_ECOSYSTEM.md for the wider provider-neutral source plan and current access limits.
+
+This is not continuous monitoring: feed checks are manual only. Configured public feeds are included in encrypted backup snapshot v2; legacy snapshot v1 restores with an empty feed list. Credentials/cookies are never included. Reddit, Facebook, Bluesky, Mastodon and private-community adapters are not implemented. Normalized company/person dossiers, AI signal qualification and outbound sending are also not included. No physical-device or live-feed smoke test has been recorded. The main branch does not yet contain this open feature.
+
+
+## App identity and safe updates
+
+The Android launcher icon is now defined as an adaptive icon. The debug package ID remains `com.yusufculcu.trader.debug`; candidate version is `0.2.0-debug` / versionCode 2. CI only publishes a `trader-installable-apk` when the dedicated Trader development keystore is configured through repository Actions secrets. Without those secrets, the artifact is explicitly named `trader-ci-debug-apk-not-for-installation`. Do not uninstall or clear app storage as a routine update step. See [ANDROID_BUILD.md](docs/ANDROID_BUILD.md) for the one-time signing setup and migration caveat.

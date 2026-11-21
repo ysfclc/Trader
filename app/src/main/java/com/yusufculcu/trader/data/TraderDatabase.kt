@@ -266,6 +266,9 @@ interface EvidenceDao {
     @Query("SELECT * FROM evidence_records WHERE problemId = :problemId ORDER BY capturedAt DESC")
     fun observeForProblem(problemId: String): Flow<List<EvidenceEntity>>
 
+    @Query("SELECT * FROM evidence_records WHERE sourceUri = :sourceUri LIMIT 1")
+    suspend fun findBySourceUri(sourceUri: String): EvidenceEntity?
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(evidence: EvidenceEntity)
 

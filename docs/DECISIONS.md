@@ -229,3 +229,42 @@ Memo can hand a user-reviewed page to Trader through Android Sharesheet using th
 **Reason:** The user researches through authenticated websites in Memo but needs the resulting evidence in Trader's durable discovery and qualification workspace. Sharing content keeps the account session with its owning browser and avoids a cookie/token export mechanism.
 
 **Consequences:** Keep this operation user-triggered and reviewable; treat page content as untrusted until the user verifies it. Support redaction before save/share. A green CI build verifies parsing and persistence contracts, not the actual Android Sharesheet flow or completeness of dynamically rendered pages. Memo sender PR #15 and installed-build acceptance remain separate gates.
+
+
+## D-022 — Experimental bounded public-search adapter
+**Date:** 2026-11-21  
+**Status:** Accepted for prototype only  
+
+Trader may prototype a user-triggered DuckDuckGo HTML search adapter as a single public source. It performs one bounded request and returns source-linked search-result metadata only. It must not crawl result pages, bypass access controls, solve challenges, authenticate or imply that snippets are verified evidence. Adapter remains experimental until source policy, health, device and failure behavior are reviewed.
+
+
+## D-024 — Extensible source ecosystem, not a hardcoded source list
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+Trader separates adapter implementations, configured source instances and watch rules. Source IDs and provider access methods are code; source instances are user-owned data. A single adapter supports many feed URLs, websites, subreddits or instance hosts. New source instances do not require code changes or schema migrations; a genuinely new protocol may require an explicit built-in adapter and tests. Arbitrary third-party scripts/JARs are never downloaded and executed as plugins.
+
+**Reason:** Opportunities and real-world information appear across an open-ended and changing set of websites, registries, marketplaces, communities and apps. Hardcoding every target makes Trader brittle and turns every source addition into a product release.
+
+**Consequences:** A common source-document/evidence contract and source health model are mandatory. Each adapter declares access mode, permissions, origin scope, terms, quotas, time/byte/rate limits, retention/deletion, freshness, operations and failure semantics. See docs/SOURCE_ECOSYSTEM.md.
+
+## D-025 — Feed-first working discovery, manual before scheduled monitoring
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+The first configurable collection source is public HTTPS RSS/Atom. Discover supports user-added feed URLs, explicit manual refresh, source status and save-to-workspace. Public web search is a separate one-shot query source. The initial slice does not schedule polling, stream, crawl arbitrary pages or monitor private groups in the background.
+
+**Reason:** Feeds are a widely supported cross-site protocol with no per-instance provider API credentials, and manual refresh allows a real source-to-evidence outcome without pretending the durable background executor is ready.
+
+**Consequences:** Source configurations initially contain only public feed endpoints and no credentials. They are stored locally but are not yet part of encrypted workspace backup; backup integration is a tracked follow-up. Add scheduled polling only after durable bounded jobs, cancellation, cursor/backoff and recovery are verified.
+
+
+## D-026 — Persistent app identity, stable development signing and non-destructive updates
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+Trader's Android application ID is a durable data identity and must not change between development updates. The debug package remains `com.yusufculcu.trader.debug`; every subsequent installable APK must have a monotonically increasing versionCode and be signed by the same dedicated Trader development certificate. CI may still build an ephemeral debug APK for tests when the key is unavailable, but it must label that artifact CI-only and must not present it as an installable update. The adaptive launcher icon is part of the minimum app identity, not optional polish.
+
+**Reason:** Android preserves app-private Room data, preferences and WebView storage during a valid in-place package update. Uninstalling or clearing storage destroys that continuity; a different signing certificate prevents an in-place update even when the package ID matches.
+
+**Consequences:** Keep the keystore outside Git and configure `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` as protected repository Actions secrets. Never silently change package ID, signing key or app data location. Before any unavoidable one-time signing migration, export a verified encrypted workspace backup. Snapshot v2 now includes non-secret discovery source configurations and restore; provider credentials, cookies and signing material remain excluded. Verify the actual certificate and in-place update on the Redmi. Production release signing is a separate future identity and gate.

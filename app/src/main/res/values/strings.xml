@@ -131,7 +131,7 @@
     <string name="event_evidence_verified">Evidence marked verified</string>
     <string name="event_evidence_unreviewed">Evidence returned to unreviewed</string>
     <string name="backup_restore">Backup &amp; restore</string>
-    <string name="backup_intro">Create a passphrase-protected copy of all cases, evidence, plans and workflow history, or restore a previous Trader backup.</string>
+    <string name="backup_intro">Create a passphrase-protected copy of cases, evidence, plans, workflow history and public discovery sources, or restore a previous Trader backup.</string>
     <string name="backup_passphrase">Backup passphrase</string>
     <string name="backup_confirm_passphrase">Confirm passphrase</string>
     <string name="backup_passphrase_hint">Use at least 12 characters. Trader never stores or sends this passphrase. Losing it means the backup cannot be unlocked.</string>
@@ -203,4 +203,45 @@
     <string name="event_opportunity_stage_changed">Opportunity stage changed</string>
     <string name="event_opportunity_updated">Opportunity details updated</string>
 
+
+    <string name="discover_nav">Discover</string>
+    <string name="discover_title">Discover useful signals</string>
+    <string name="discover_subtitle">Search public sources and bring real evidence into your workspace.</string>
+    <string name="discover_web_search">One-time public web search</string>
+    <string name="discover_search_hint">What are you looking for?</string>
+    <string name="discover_query_too_short">Enter at least two characters.</string>
+    <string name="discover_public_web">Public web search</string>
+    <string name="discover_search_now">Search now</string>
+    <string name="discover_search_disclaimer">Search results are leads, not verified facts. Open the original source before acting.</string>
+    <string name="discover_add_feed">Add a public RSS / Atom feed</string>
+    <string name="discover_source_name">Source name</string>
+    <string name="discover_feed_url">Public HTTPS feed URL</string>
+    <string name="discover_add_source">Add source</string>
+    <string name="discover_feed_security">Only public HTTPS feeds are accepted. Local/private network hosts and redirects are blocked. Source lists are stored on this device, not yet in encrypted backups.</string>
+    <string name="discover_sources">Your sources</string>
+    <string name="discover_reload">Reload</string>
+    <string name="discover_no_sources">No feeds configured yet. Add a public RSS or Atom feed to start.</string>
+    <string name="discover_enabled">Enabled</string>
+    <string name="discover_paused">Paused</string>
+    <string name="discover_last_error">Last check failed: %1$s</string>
+    <string name="discover_last_checked">Last checked: %1$s</string>
+    <string name="discover_never_checked">Not checked yet · manual refresh only</string>
+    <string name="discover_check_now">Check now</string>
+    <string name="discover_remove">Remove</string>
+    <string name="discover_results">Collected results</string>
+    <string name="discover_result_count">%1$d items</string>
+    <string name="discover_no_results">Search the web or check a configured feed to see real source results.</string>
+    <string name="discover_unverified_note">Source content · not yet reviewed or verified</string>
+    <string name="discover_save">Save to Work</string>
+    <string name="discover_saved_button">Saved to Work</string>
+    <string name="discover_saved">Saved as unreviewed research evidence in your workspace.</string>
+    <string name="discover_save_failed">Could not save this source item.</string>
+    <string name="discover_source_failed">Source check failed.</string>
+    <string name="discover_source_added">Added source: %1$s</string>
+    <string name="discover_search_complete">Search returned %1$d items.</string>
+    <string name="discover_feed_complete">%1$d items received from %2$s.</string>
+
+    <string name="discover_open_source">Open in Trader browser</string>
+    <string name="discover_hn_example_name">Hacker News — front page</string>
+    <string name="discover_add_hn_example">Add real example feed · Hacker News</string>
 </resources>

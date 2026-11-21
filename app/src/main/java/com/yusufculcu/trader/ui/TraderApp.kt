@@ -69,7 +69,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY, BROWSER, AI }
+private enum class AppTab { INBOX, DISCOVER, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +82,8 @@ fun TraderApp(
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
-    var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
+    var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
+    var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showArchived by rememberSaveable { mutableStateOf(false) }
@@ -101,7 +102,7 @@ fun TraderApp(
                     val app = context.applicationContext as TraderApplication
                     val output = context.contentResolver.openOutputStream(uri)
                         ?: error("The selected destination could not be opened.")
-                    output.use { TraderBackupManager(app.database).exportEncrypted(it, passphrase.toCharArray()) }
+                    output.use { TraderBackupManager(app.database, app.discoverySourceStore).exportEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_export_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
@@ -120,7 +121,7 @@ fun TraderApp(
                     val app = context.applicationContext as TraderApplication
                     val input = context.contentResolver.openInputStream(uri)
                         ?: error("The selected backup file could not be opened.")
-                    input.use { TraderBackupManager(app.database).restoreEncrypted(it, passphrase.toCharArray()) }
+                    input.use { TraderBackupManager(app.database, app.discoverySourceStore).restoreEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_restore_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
@@ -155,6 +156,7 @@ fun TraderApp(
         bottomBar = {
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.DISCOVER, { tab = AppTab.DISCOVER }, icon = { Icon(Icons.Rounded.Search, null) }, label = { Text(stringResource(R.string.discover_nav)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
                 NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
@@ -183,8 +185,16 @@ fun TraderApp(
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
+            tab == AppTab.DISCOVER -> DiscoveryScreen(
+                repository = (context.applicationContext as TraderApplication).repository,
+                sourceStore = (context.applicationContext as TraderApplication).discoverySourceStore,
+                onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
+                modifier = Modifier.padding(padding)
+            )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
                 modifier = Modifier.padding(padding),
+                initialUrl = requestedBrowserUrl,
+                onInitialUrlHandled = { requestedBrowserUrl = null },
                 problems = problems,
                 onSaveCapture = { problemId, title, url, content, onSaved ->
                     viewModel.captureBrowserPage(problemId, title, url, content, onSaved)

@@ -1,6 +1,6 @@
 # Risk register
 
-_Last reviewed: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b246b3b37`._
+_Last reviewed: 2026-11-21 against the PR #18 source-ingestion branch; CI validation run 385 passed._
 
 | ID | Risk | Severity | Current control / evidence | Required mitigation / trigger |
 |---|---|---|---|---|
@@ -25,6 +25,18 @@ _Last reviewed: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b
 
 | R-18 | Visible authenticated pages may contain private or sensitive text even when cookies and credentials are excluded; URL query/fragment can contain OAuth codes or temporary tokens. | High | Trader capture reads only rendered body/selection and requires user review/edit before save. Memo V1 share contract exports bounded page text and base URL; query/fragment removed in both Memo and Trader; evidence starts UNREVIEWED. Parser and persistence/security tests passed Trader CI run 358 (76 tests). | Keep capture user initiated, show source and content before save/share, support redaction, never read cookies/storage/passwords/hidden values, and never export URL query/fragment. Verify Android Sharesheet end-to-end on device after Memo PR #15 build is green and installed. Treat copied page text as untrusted evidence until user review. |
 
+| R-13 | Experimental HTML search adapter may break when search markup or source access policy changes; search snippets are incomplete and unverified. | Medium | Bounded adapter is integrated into Discover; parser tests and full CI run 385 passed (97 tests, lint/build/signature/package). No live-source or device acceptance. | Keep the adapter experimental. Re-check provider terms/markup health; preserve result provenance and never score a snippet as verified evidence. |
+
+
+| R-22 | CI debug APK signing may not be stable between hosted runner executions, so a new sideload APK may not update an older debug install. | High | A dedicated Trader development keystore was generated outside Git; Gradle/CI now support it. Repository secrets are not yet configured, so no stable-signed APK has been verified. Previous run-385 artifact used an ephemeral key. | Configure the two repository Actions secrets; assert the certificate fingerprint in CI; test a two-version in-place update on Redmi. Never uninstall or clear data to solve signing conflicts without a verified export and explicit migration plan. |
+
 ## Operating rule
 
 A risk is not closed because a related screen or safeguard exists. Close it only with the mitigation evidence and update this file and `docs/STATE.md` in the same increment.
+
+
+| R-19 | The source watchlist is stored in app-private preferences, so backup/restore must preserve it without leaking credentials or silently dropping it on legacy imports. | Medium | Backup snapshot v2 includes validated public feed config; restore replaces the full list and compensates preferences if Room restore fails. New source-settings round-trip test passed in CI run 405 (98 tests total); physical-device restore acceptance remains open. | Keep backward compatibility for snapshot v1 (empty source list), verify restore and rollback tests, and never include provider credentials, cookies or signing keys. |
+| R-20 | Community/social content may include personal information and provider-specific deletion/retention duties. | High | Community adapters remain disabled in the feed-first slice; provider access and retention constraints are documented in docs/SOURCE_ECOSYSTEM.md. | Before enabling each provider, implement its permission/scopes, deletion reconciliation, expiry, data minimization and policy checks. |
+| R-21 | A manual feed check may be mistaken for continuous monitoring. | Medium | Initial Discover feed refresh is user-triggered only; no polling worker is wired. | Use the label “Check now”; add scheduled monitoring only after durable jobs, cancellation, cursor/backoff and recovery are implemented. |
+
+| R-23 | Launcher icon absence and version/signing drift make test builds look disposable and risk accidental data loss during reinstall. | Medium | Adaptive launcher and round icons are now wired; package ID is unchanged and versionCode is 2. CI signing is conditional on the dedicated stable key. | Verify icon on Redmi and enforce monotonically increasing versionCode plus stable certificate before publishing any sideloadable APK. |

@@ -123,3 +123,44 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Locked Trader as an independent Android-first, local-first problem-solving and opportunity-execution system, not a trading-only app.
 - Set industrial tooling/machining between Türkiye and Poland/EU as the first market pilot, not a hard-coded product category.
 - Audited reference repositories, including QRKey, and documented no-fork/no-runtime-dependency decisions.
+
+
+## 2026-11-21 — Experimental public search adapter (prototype)
+
+- Added a bounded user-triggered DuckDuckGo HTML search adapter: query length and result limits, HTTPS-only external result validation, request timeouts, response byte cap, URL deduplication and retrieval timestamps.
+- Added parser/query unit tests for encoding, result extraction, redirect handling, unsafe URLs, duplicates and field truncation.
+- Not wired to Discover UI, persistent candidate dossiers, or AI qualification; CI and live-source/device validation pending.
+
+## 2026-11-21 — Extensible source ecosystem
+
+- Locked the adapter / configured source instance / watch rule separation and expanded the source taxonomy across feeds, company sites, registers, procurement, job/project markets, communities, federated social, developer ecosystems, reviews, authorized group workspaces and webhooks.
+- Recorded Reddit, Meta/Facebook, Bluesky, Mastodon, Telegram and YouTube access constraints in docs/SOURCE_ECOSYSTEM.md.
+- First working delivery is public RSS/Atom configuration and manual refresh plus one-shot search. No continuous monitoring or social API connection is claimed.
+
+
+## 2026-11-21 — Discover and first public-source ingestion (PR #18)
+
+- Added a user-configurable local source list for public RSS/Atom feeds with enable/pause/remove and last-check/error health; no API secrets are stored.
+- Added bounded RSS 2.0/Atom fetching, DocDecl-disabled XML parsing, public-host checks, native item IDs, publication/retrieval timestamps and URL deduplication.
+- Added an explicit built-in adapter registry, one-shot DuckDuckGo search and the Discover landing screen in English, Polish and Turkish.
+- Users can manually check a feed, open a result inside Trader's WebView, and save it to Work as source-linked UNREVIEWED research evidence. Repeated source URLs resolve to existing research records.
+- Added a one-tap real Hacker News front-page RSS example; other targets remain user-configurable.
+- CI validation run 385 passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and exact package/version assertions. APK artifact 14698585569: 69,441,948 bytes, SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210.
+- Limitations: feed checks are manual only; source configurations are not yet in encrypted backups; no device/live-feed test, normalized company dossiers, AI qualification or social-platform adapters are claimed.
+
+
+## 2026-11-21 — Persistent Android identity and launcher icon (candidate 0.2.0)
+
+- Added adaptive launcher and round icons and wired them into the Android manifest.
+- Kept `com.yusufculcu.trader.debug` unchanged; incremented versionCode 1 → 2 and versionName 0.1.0 → 0.2.0.
+- Added optional stable development signing through a dedicated Trader keystore supplied only via GitHub Actions secrets. CI labels the no-secret APK as CI-only and does not call it installable.
+- Generated the development keystore outside the repository; fingerprint and secret setup are documented in `docs/ANDROID_BUILD.md`. User configuration and CI verification remain pending.
+- No Room schema or application data location changed. In-place updates with the same package and certificate preserve app-private data; uninstall/clear-storage does not.
+
+
+## 2026-11-21 — Discovery settings backup continuity
+
+- Bumped the encrypted workspace snapshot payload from v1 to v2 while keeping the outer AES-GCM file format stable.
+- Included public RSS/Atom source configurations, enabled state and last-check/error health in encrypted backups; provider credentials, browser cookies and signing material are excluded.
+- Kept legacy snapshot-v1 backups readable (source list defaults to empty). Restore validates source identity/adapter/HTTPS URL and replaces the full list; preference changes are compensated if the Room restore transaction fails.
+- Added a source-settings round-trip test and wired the app's actual DiscoverySourceStore into export/restore. CI verification pending.
