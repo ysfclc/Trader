@@ -230,7 +230,7 @@
     <string name="discover_remove">Kaldır</string>
     <string name="discover_results">Toplanan sonuçlar</string>
     <string name="discover_result_count">%1$d öğe</string>
-    <string name="discover_no_results">Gerçek kaynak sonuçlarını görmek için web'de ara veya eklediğin bir akışı kontrol et.</string>
+    <string name="discover_no_results">Gerçek kaynak sonuçları için web üzerinde ara veya eklediğin akışı kontrol et.</string>
     <string name="discover_unverified_note">Kaynak içeriği · henüz incelenmedi veya doğrulanmadı</string>
     <string name="discover_save">Work alanına kaydet</string>
     <string name="discover_saved_button">Work alanına kaydedildi</string>

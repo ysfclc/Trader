@@ -35,8 +35,10 @@ class FeedSourceException(message: String, cause: Throwable? = null) : IOExcepti
 class RssAtomFeedAdapter(
     private val clock: () -> Long = System::currentTimeMillis,
     private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection }
-) {
-    suspend fun fetch(source: DiscoverySourceConfig): List<DiscoveryDocument> = withContext(Dispatchers.IO) {
+) : DiscoverySourceAdapter {
+    override val adapterId: String = ADAPTER_ID
+
+    override suspend fun fetch(source: DiscoverySourceConfig): List<DiscoveryDocument> = withContext(Dispatchers.IO) {
         val url = validateFeedUrl(source.feedUrl)
         validatePublicHost(url.host)
         val connection = connectionFactory(url)
