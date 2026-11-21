@@ -69,7 +69,7 @@ jobs:
           $ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK" | grep "package: name='com.yusufculcu.trader.debug' versionCode='2' versionName='0.2.0-debug'"
           if [ "$STABLE_SIGNING_READY" = "true" ]; then
             CERT=$($ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs "$APK" | awk '/certificate SHA-256 digest:/ {print $NF}' | tr -d ':' | tr '[:upper:]' '[:lower:]')
-            test "$CERT" = "f96dd24e1cc7b71770eb44ac9e9b2b80e854f10989d31693456438ce8d50ee74"
+            test "$CERT" = "cac4f54035d70ee305be9cad2a44419e83929a6e806132011ffa0afa00fab1c6"
           fi
       - name: Upload persistent installable APK
         if: steps.stable_signing.outputs.ready == 'true'
