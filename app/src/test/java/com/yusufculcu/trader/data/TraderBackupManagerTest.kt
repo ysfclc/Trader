@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import org.json.JSONArray
 import org.json.JSONObject
+import com.yusufculcu.trader.discovery.DiscoverySourceStore
 
 @RunWith(RobolectricTestRunner::class)
 class TraderBackupManagerTest {
@@ -62,6 +63,45 @@ class TraderBackupManagerTest {
     }
 
     @Test
+    fun encryptedBackupRoundTripPreservesDiscoverySourceSettingsAndReplacesTargetSources() = runBlocking {
+        val source = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val target = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val sourceStore = DiscoverySourceStore(context, "backup_source_preferences")
+        val targetStore = DiscoverySourceStore(context, "backup_target_preferences")
+        try {
+            sourceStore.replaceAll(emptyList())
+            targetStore.replaceAll(emptyList())
+            val sourceConfig = sourceStore.add("Hacker News", "https://news.ycombinator.com/rss")
+            sourceStore.setEnabled(sourceConfig.id, false)
+            sourceStore.markChecked(sourceConfig.id, 1_700_000_000_000L, "temporary refresh error")
+            targetStore.add("Local only", "https://example.test/feed.xml")
+
+            val output = ByteArrayOutputStream()
+            TraderBackupManager(source, sourceStore).exportEncrypted(output, "correct horse battery".toCharArray())
+            val bytes = output.toByteArray()
+            assertFalse(String(bytes, StandardCharsets.ISO_8859_1).contains("news.ycombinator.com"))
+
+            TraderBackupManager(target, targetStore).restoreEncrypted(
+                ByteArrayInputStream(bytes),
+                "correct horse battery".toCharArray()
+            )
+
+            assertEquals(sourceStore.list(), targetStore.list())
+            assertEquals(1, targetStore.list().size)
+            assertEquals(false, targetStore.list().single().enabled)
+            assertEquals("temporary refresh error", targetStore.list().single().lastError)
+            assertEquals(1_700_000_000_000L, targetStore.list().single().lastCheckedAt)
+        } finally {
+            sourceStore.replaceAll(emptyList())
+            targetStore.replaceAll(emptyList())
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
     fun schemaThreeBackupSnapshotRemainsReadableWithoutOpportunityRows() {
         val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
             .allowMainThreadQueries().build()
@@ -79,6 +119,7 @@ class TraderBackupManagerTest {
 
             val decoded = TraderBackupManager(database).decodeSnapshot(legacy.toString())
             assertTrue(decoded.opportunities.isEmpty())
+            assertTrue(decoded.discoverySources.isEmpty())
         } finally {
             database.close()
         }
