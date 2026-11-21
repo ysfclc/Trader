@@ -55,6 +55,8 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 **State changed**
 - `app/src/main/AndroidManifest.xml`, `app/build.gradle.kts`, `.github/workflows/android.yml`
+- `app/src/main/java/com/yusufculcu/trader/data/TraderBackupManager.kt`, `app/src/main/java/com/yusufculcu/trader/discovery/DiscoverySourceStore.kt`, `app/src/main/java/com/yusufculcu/trader/ui/TraderApp.kt`
+- `app/src/test/java/com/yusufculcu/trader/data/TraderBackupManagerTest.kt`; EN/PL/TR backup strings
 - `app/src/main/res/drawable/ic_trader_launcher_foreground.xml`
 - `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`, `ic_launcher_round.xml`, `app/src/main/res/values/trader_icon_colors.xml`
 - `docs/ANDROID_BUILD.md`, `docs/TASKS.md`, `docs/DECISIONS.md`, `docs/RISKS.md`, `docs/STATE.md`, `docs/STATE_HISTORY.md`, `README.md`, `CHANGELOG.md`
@@ -67,7 +69,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 **Not done / next**
 1. User configures `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` from the secure setup bundle; then trigger CI and verify stable APK signature.
-2. Add discovery source settings to encrypted backup/restore before any one-time signing transition.
+2. Verify encrypted backup snapshot v2 restore/rollback on the Redmi before any one-time signing transition.
 3. Verify in-place update, Room/preferences/WebView continuity on the Redmi.
 4. Continue ProofAsset → source evidence → Organization/Person dossier → explainable fit; preserve whole product scope.
 
