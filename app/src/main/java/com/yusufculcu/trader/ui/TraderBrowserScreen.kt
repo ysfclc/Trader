@@ -53,7 +53,9 @@ import com.yusufculcu.trader.data.ProblemEntity
 fun TraderBrowserScreen(
     modifier: Modifier = Modifier,
     problems: List<ProblemEntity>,
-    onSaveCapture: (String?, String, String, String, (String?) -> Unit) -> Unit
+    onSaveCapture: (String?, String, String, String, (String?) -> Unit) -> Unit,
+    initialUrl: String? = null,
+    onInitialUrlHandled: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -357,6 +359,17 @@ fun TraderBrowserScreen(
                     browserMessage = ""
                 }
             }
+        }
+    }
+
+    LaunchedEffect(initialUrl, mainWebView) {
+        val requested = initialUrl ?: return@LaunchedEffect
+        val webView = mainWebView ?: return@LaunchedEffect
+        if (TraderBrowserRouting.isWebUrl(requested)) {
+            address = requested
+            currentUrl = requested
+            webView.loadUrl(requested)
+            onInitialUrlHandled()
         }
     }
 

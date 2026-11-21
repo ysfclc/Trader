@@ -241,4 +241,5 @@
     <string name="discover_search_complete">Search returned %1$d items.</string>
     <string name="discover_feed_complete">%1$d items received from %2$s.</string>
 
+    <string name="discover_open_source">Open in Trader browser</string>
 </resources>
