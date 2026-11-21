@@ -156,3 +156,11 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Added optional stable development signing through a dedicated Trader keystore supplied only via GitHub Actions secrets. CI labels the no-secret APK as CI-only and does not call it installable.
 - Generated the development keystore outside the repository; fingerprint and secret setup are documented in `docs/ANDROID_BUILD.md`. User configuration and CI verification remain pending.
 - No Room schema or application data location changed. In-place updates with the same package and certificate preserve app-private data; uninstall/clear-storage does not.
+
+
+## 2026-11-21 — Discovery settings backup continuity
+
+- Bumped the encrypted workspace snapshot payload from v1 to v2 while keeping the outer AES-GCM file format stable.
+- Included public RSS/Atom source configurations, enabled state and last-check/error health in encrypted backups; provider credentials, browser cookies and signing material are excluded.
+- Kept legacy snapshot-v1 backups readable (source list defaults to empty). Restore validates source identity/adapter/HTTPS URL and replaces the full list; preference changes are compensated if the Room restore transaction fails.
+- Added a source-settings round-trip test and wired the app's actual DiscoverySourceStore into export/restore. CI verification pending.
