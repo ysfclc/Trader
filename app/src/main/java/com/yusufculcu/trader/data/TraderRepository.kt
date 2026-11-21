@@ -92,7 +92,7 @@ class TraderRepository(private val database: TraderDatabase) {
     ): String? {
         val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
         val parsed = runCatching { java.net.URI(sourceUrl.trim()) }.getOrNull()
-        if (cleanTitle.isBlank() || parsed?.scheme?.lowercase() != "https" ||
+        if (cleanTitle.isBlank() || parsed == null || parsed.scheme?.lowercase() != "https" ||
             parsed.host.isNullOrBlank() || parsed.rawUserInfo != null
         ) return null
         val cleanUrl = parsed.toASCIIString().substringBefore("#").takeIf { it.length <= 2_048 } ?: return null

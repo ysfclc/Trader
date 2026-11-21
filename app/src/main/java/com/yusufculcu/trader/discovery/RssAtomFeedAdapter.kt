@@ -114,7 +114,6 @@ class RssAtomFeedAdapter(
             val parser = Xml.newPullParser()
             try {
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_DOCDECL, false)
-                parser.setFeature(XmlPullParser.FEATURE_VALIDATION, false)
                 parser.setInput(xml.reader())
                 val output = ArrayList<DiscoveryDocument>()
                 var item: FeedItem? = null
