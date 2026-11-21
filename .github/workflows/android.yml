@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [main, "build/**"]
+    branches: [main, "build/**", "feature/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feature/**"]
   workflow_dispatch:
 
 concurrency:
