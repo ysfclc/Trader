@@ -32,7 +32,19 @@ jobs:
           packages: platform-tools
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare persistent Trader development signing key
+        id: stable_signing
+        if: ${{ secrets.TRADER_KEYSTORE_BASE64 != '' && secrets.TRADER_KEYSTORE_PASSWORD != '' }}
+        env:
+          TRADER_KEYSTORE_BASE64: ${{ secrets.TRADER_KEYSTORE_BASE64 }}
+        run: |
+          echo "$TRADER_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/trader-upload.jks"
+          echo "path=$RUNNER_TEMP/trader-upload.jks" >> "$GITHUB_OUTPUT"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
       - name: Verify and build
+        env:
+          TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
+          TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug
       - name: Upload unit test reports
         if: always()
@@ -45,10 +57,20 @@ jobs:
       - name: Verify APK package and signature
         run: |
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.yusufculcu.trader.debug' versionCode='1' versionName='0.1.0-debug'"
-      - uses: actions/upload-artifact@v4
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.yusufculcu.trader.debug' versionCode='2' versionName='0.2.0-debug'"
+      - name: Upload persistent installable APK
+        if: steps.stable_signing.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
         with:
-          name: trader-debug-apk
+          name: trader-installable-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+      - name: Upload CI-only APK (not for installation)
+        if: steps.stable_signing.outputs.ready != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-ci-debug-apk-not-for-installation
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
