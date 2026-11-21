@@ -149,7 +149,7 @@ class DuckDuckGoHtmlSearch(
         private fun decodeEntities(value: String): String {
             var result = value
                 .replace("&amp;", "&", ignoreCase = true)
-                .replace("&quot;", "\\"", ignoreCase = true)
+                .replace("&quot;", "\"", ignoreCase = true)
                 .replace("&#39;", "'", ignoreCase = true)
                 .replace("&apos;", "'", ignoreCase = true)
                 .replace("&lt;", "<", ignoreCase = true)
