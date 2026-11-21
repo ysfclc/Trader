@@ -2,6 +2,9 @@ package com.yusufculcu.trader.data
 
 import androidx.room.withTransaction
 import com.yusufculcu.trader.domain.OpportunityRules
+import com.yusufculcu.trader.discovery.DiscoverySourceConfig
+import com.yusufculcu.trader.discovery.DiscoverySourceStore
+import com.yusufculcu.trader.discovery.RssAtomFeedAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -26,10 +29,14 @@ import javax.crypto.spec.SecretKeySpec
  * + AES-GCM ciphertext/authentication tag. Header bytes are authenticated as AAD.
  * The passphrase and derived key are never persisted.
  */
-class TraderBackupManager(private val database: TraderDatabase) {
+class TraderBackupManager(
+    private val database: TraderDatabase,
+    private val discoverySourceStore: DiscoverySourceStore? = null
+) {
     suspend fun exportEncrypted(output: OutputStream, passphrase: CharArray) = withContext(Dispatchers.IO) {
         try {
             requireValidPassphrase(passphrase)
+            val discoverySources = discoverySourceStore?.list().orEmpty()
             val snapshot = database.withTransaction {
                 BackupSnapshot(
                     problems = database.problemDao().getAll(),
@@ -39,7 +46,8 @@ class TraderBackupManager(private val database: TraderDatabase) {
                     opportunities = database.opportunityDao().getAll(),
                     workflowRuns = database.workflowRunDao().getAll(),
                     workflowSteps = database.workflowStepDao().getAll(),
-                    workflowEvents = database.workflowEventDao().getAll()
+                    workflowEvents = database.workflowEventDao().getAll(),
+                    discoverySources = discoverySources
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -96,25 +104,38 @@ class TraderBackupManager(private val database: TraderDatabase) {
             try {
                 val snapshot = decodeSnapshot(String(cleartext, StandardCharsets.UTF_8))
                 validateSnapshot(snapshot)
-                // One Room transaction makes replacement atomic. A validation or insert failure rolls back.
-                database.withTransaction {
-                    database.workflowEventDao().deleteAll()
-                    database.workflowStepDao().deleteAll()
-                    database.workflowRunDao().deleteAll()
-                    database.planStepDao().deleteAll()
-                    database.activityDao().deleteAll()
-                    database.evidenceDao().deleteAll()
-                    database.opportunityDao().deleteAll()
-                    database.problemDao().deleteAll()
+                require(snapshot.discoverySources.isEmpty() || discoverySourceStore != null) {
+                    "This backup contains discovery sources; use the full Trader app restore flow."
+                }
+                val previousSources = discoverySourceStore?.list()
+                try {
+                    // SharedPreferences cannot join Room's transaction; apply settings first and compensate on DB failure.
+                    discoverySourceStore?.replaceAll(snapshot.discoverySources)
+                    database.withTransaction {
+                        database.workflowEventDao().deleteAll()
+                        database.workflowStepDao().deleteAll()
+                        database.workflowRunDao().deleteAll()
+                        database.planStepDao().deleteAll()
+                        database.activityDao().deleteAll()
+                        database.evidenceDao().deleteAll()
+                        database.opportunityDao().deleteAll()
+                        database.problemDao().deleteAll()
 
-                    database.problemDao().insertAll(snapshot.problems)
-                    database.opportunityDao().insertAll(snapshot.opportunities)
-                    database.planStepDao().insertAll(snapshot.planSteps)
-                    database.activityDao().insertAll(snapshot.activityEvents)
-                    database.evidenceDao().insertAll(snapshot.evidence)
-                    database.workflowRunDao().insertAll(snapshot.workflowRuns)
-                    database.workflowStepDao().insertAll(snapshot.workflowSteps)
-                    database.workflowEventDao().insertAll(snapshot.workflowEvents)
+                        database.problemDao().insertAll(snapshot.problems)
+                        database.opportunityDao().insertAll(snapshot.opportunities)
+                        database.planStepDao().insertAll(snapshot.planSteps)
+                        database.activityDao().insertAll(snapshot.activityEvents)
+                        database.evidenceDao().insertAll(snapshot.evidence)
+                        database.workflowRunDao().insertAll(snapshot.workflowRuns)
+                        database.workflowStepDao().insertAll(snapshot.workflowSteps)
+                        database.workflowEventDao().insertAll(snapshot.workflowEvents)
+                    }
+                } catch (failure: Throwable) {
+                    if (previousSources != null) {
+                        runCatching { discoverySourceStore?.replaceAll(previousSources) }
+                            .onFailure(failure::addSuppressed)
+                    }
+                    throw failure
                 }
             } finally {
                 cleartext.fill(0)
@@ -170,12 +191,14 @@ class TraderBackupManager(private val database: TraderDatabase) {
             .put("workflowRuns", jsonArray(snapshot.workflowRuns, ::encodeWorkflowRun))
             .put("workflowSteps", jsonArray(snapshot.workflowSteps, ::encodeWorkflowStep))
             .put("workflowEvents", jsonArray(snapshot.workflowEvents, ::encodeWorkflowEvent))
+            .put("discoverySources", jsonArray(snapshot.discoverySources, ::encodeDiscoverySource))
         return root.toString()
     }
 
     internal fun decodeSnapshot(text: String): BackupSnapshot {
         val root = JSONObject(text)
-        require(root.getInt("formatVersion") == SNAPSHOT_VERSION) { "This backup format is not supported." }
+        val snapshotVersion = root.getInt("formatVersion")
+        require(snapshotVersion in MIN_SNAPSHOT_VERSION..SNAPSHOT_VERSION) { "This backup format is not supported." }
         val backupSchemaVersion = root.getInt("databaseSchemaVersion")
         require(backupSchemaVersion in MIN_SUPPORTED_DATABASE_SCHEMA_VERSION..DATABASE_SCHEMA_VERSION) {
             "This backup was created for an unsupported Trader database schema."
@@ -194,14 +217,15 @@ class TraderBackupManager(private val database: TraderDatabase) {
             opportunities = opportunities,
             workflowRuns = decodeArray(root, "workflowRuns", ::decodeWorkflowRun),
             workflowSteps = decodeArray(root, "workflowSteps", ::decodeWorkflowStep),
-            workflowEvents = decodeArray(root, "workflowEvents", ::decodeWorkflowEvent)
+            workflowEvents = decodeArray(root, "workflowEvents", ::decodeWorkflowEvent),
+            discoverySources = if (snapshotVersion >= 2) decodeArray(root, "discoverySources", ::decodeDiscoverySource) else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -217,6 +241,13 @@ class TraderBackupManager(private val database: TraderDatabase) {
         unique(snapshot.workflowSteps.map { it.id }, "workflow-step")
         unique(snapshot.workflowEvents.map { it.id }, "workflow-event")
         unique(snapshot.workflowRuns.map { it.idempotencyKey }, "workflow idempotency")
+        unique(snapshot.discoverySources.map { it.id }, "discovery source")
+        unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
+        require(snapshot.discoverySources.all {
+            it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
+                it.id.isNotBlank() && it.id.length <= 128 && (it.lastCheckedAt == null || it.lastCheckedAt >= 0)
+        }) { "Backup contains an invalid discovery source." }
+        snapshot.discoverySources.forEach { RssAtomFeedAdapter.validateFeedUrl(it.feedUrl) }
 
         val problems = snapshot.problems.map { it.id }.toSet()
         val runs = snapshot.workflowRuns.associateBy { it.id }
@@ -373,6 +404,21 @@ class TraderBackupManager(private val database: TraderDatabase) {
         details = o.getString("details"), occurredAt = o.getLong("occurredAt")
     )
 
+    private fun encodeDiscoverySource(row: DiscoverySourceConfig) = json(
+        "id" to row.id, "adapterId" to row.adapterId, "name" to row.name, "feedUrl" to row.feedUrl,
+        "enabled" to row.enabled, "lastCheckedAt" to row.lastCheckedAt, "lastError" to row.lastError
+    )
+
+    private fun decodeDiscoverySource(o: JSONObject) = DiscoverySourceConfig(
+        id = o.getString("id"),
+        adapterId = o.getString("adapterId"),
+        name = o.getString("name"),
+        feedUrl = o.getString("feedUrl"),
+        enabled = o.optBoolean("enabled", true),
+        lastCheckedAt = o.longOrNull("lastCheckedAt"),
+        lastError = o.stringOrNull("lastError")
+    )
+
     private fun json(vararg values: Pair<String, Any?>) = JSONObject().apply {
         values.forEach { (key, value) -> put(key, value ?: JSONObject.NULL) }
     }
@@ -388,11 +434,13 @@ class TraderBackupManager(private val database: TraderDatabase) {
         val opportunities: List<OpportunityEntity>,
         val workflowRuns: List<WorkflowRunEntity>,
         val workflowSteps: List<WorkflowStepEntity>,
-        val workflowEvents: List<WorkflowEventEntity>
+        val workflowEvents: List<WorkflowEventEntity>,
+        val discoverySources: List<DiscoverySourceConfig> = emptyList()
     )
 
     companion object {
-        private const val SNAPSHOT_VERSION = 1
+        private const val MIN_SNAPSHOT_VERSION = 1
+        private const val SNAPSHOT_VERSION = 2
         private const val DATABASE_SCHEMA_VERSION = 4
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
