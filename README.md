@@ -74,3 +74,8 @@ The open feature branch feature/public-search-adapter adds the first working Dis
 PR #18 CI validation run 385 used a source tree identical to the PR head and passed 97 tests (0 failures, 0 errors, 0 skipped), lint, debug APK assembly, signature verification and package/version checks. See docs/SOURCE_ECOSYSTEM.md for the wider provider-neutral source plan and current access limits.
 
 This is not continuous monitoring: feed checks are manual only. Configured feeds are not yet included in encrypted backups. Reddit, Facebook, Bluesky, Mastodon and private-community adapters are not implemented. Normalized company/person dossiers, AI signal qualification and outbound sending are also not included. No physical-device or live-feed smoke test has been recorded. The main branch does not yet contain this open feature.
+
+
+## App identity and safe updates
+
+The Android launcher icon is now defined as an adaptive icon. The debug package ID remains `com.yusufculcu.trader.debug`; candidate version is `0.2.0-debug` / versionCode 2. CI only publishes a `trader-installable-apk` when the dedicated Trader development keystore is configured through repository Actions secrets. Without those secrets, the artifact is explicitly named `trader-ci-debug-apk-not-for-installation`. Do not uninstall or clear app storage as a routine update step. See [ANDROID_BUILD.md](docs/ANDROID_BUILD.md) for the one-time signing setup and migration caveat.
