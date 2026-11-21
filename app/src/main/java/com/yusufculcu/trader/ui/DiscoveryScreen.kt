@@ -40,6 +40,7 @@ import com.yusufculcu.trader.R
 import com.yusufculcu.trader.TraderApplication
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.discovery.DiscoveryDocument
+import com.yusufculcu.trader.discovery.DiscoveryAdapterRegistry
 import com.yusufculcu.trader.discovery.DiscoverySourceConfig
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 import com.yusufculcu.trader.discovery.DuckDuckGoHtmlSearch
@@ -57,6 +58,7 @@ fun DiscoveryScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val adapterRegistry = remember { DiscoveryAdapterRegistry.builtIns() }
     val scope = rememberCoroutineScope()
     var sources by remember { mutableStateOf(sourceStore.list()) }
     var results by remember { mutableStateOf(emptyList<DiscoveryDocument>()) }
@@ -215,7 +217,7 @@ fun DiscoveryScreen(
                                     notice = null
                                     scope.launch {
                                         val checkedAt = System.currentTimeMillis()
-                                        runCatching { RssAtomFeedAdapter().fetch(source) }
+                                        runCatching { adapterRegistry.adapterFor(source).fetch(source) }
                                             .onSuccess { found ->
                                                 results = found
                                                 notice = context.getString(R.string.discover_feed_complete, found.size, source.name)
