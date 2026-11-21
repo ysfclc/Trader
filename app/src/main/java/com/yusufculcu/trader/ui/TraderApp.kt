@@ -102,7 +102,7 @@ fun TraderApp(
                     val app = context.applicationContext as TraderApplication
                     val output = context.contentResolver.openOutputStream(uri)
                         ?: error("The selected destination could not be opened.")
-                    output.use { TraderBackupManager(app.database).exportEncrypted(it, passphrase.toCharArray()) }
+                    output.use { TraderBackupManager(app.database, app.discoverySourceStore).exportEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_export_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
@@ -121,7 +121,7 @@ fun TraderApp(
                     val app = context.applicationContext as TraderApplication
                     val input = context.contentResolver.openInputStream(uri)
                         ?: error("The selected backup file could not be opened.")
-                    input.use { TraderBackupManager(app.database).restoreEncrypted(it, passphrase.toCharArray()) }
+                    input.use { TraderBackupManager(app.database, app.discoverySourceStore).restoreEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_restore_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
