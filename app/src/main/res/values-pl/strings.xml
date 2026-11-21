@@ -131,7 +131,7 @@
     <string name="event_evidence_verified">Oznaczono dowód jako zweryfikowany</string>
     <string name="event_evidence_unreviewed">Cofnięto weryfikację dowodu</string>
     <string name="backup_restore">Kopia zapasowa i przywracanie</string>
-    <string name="backup_intro">Utwórz kopię wszystkich spraw, dowodów, planów i historii przepływów pracy chronioną hasłem albo przywróć wcześniejszą kopię Trader.</string>
+    <string name="backup_intro">Utwórz kopię spraw, dowodów, planów, historii przepływów pracy i publicznych źródeł odkrywania chronioną hasłem albo przywróć wcześniejszą kopię Trader.</string>
     <string name="backup_passphrase">Hasło kopii zapasowej</string>
     <string name="backup_confirm_passphrase">Potwierdź hasło</string>
     <string name="backup_passphrase_hint">Użyj co najmniej 12 znaków. Trader nie zapisuje ani nie wysyła tego hasła. Bez niego nie będzie można otworzyć kopii.</string>
