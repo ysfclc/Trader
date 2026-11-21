@@ -412,6 +412,8 @@ interface ProofAssetDao {
     suspend fun getById(id: String): ProofAssetEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(asset: ProofAssetEntity)
+    @Update
+    suspend fun update(asset: ProofAssetEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertAll(items: List<ProofAssetEntity>)
     @Query("DELETE FROM proof_assets")
@@ -430,6 +432,8 @@ interface DiscoveryStrategyDao {
     fun observeForProofAsset(proofAssetId: String): Flow<List<DiscoveryStrategyEntity>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(strategy: DiscoveryStrategyEntity)
+    @Update
+    suspend fun update(strategy: DiscoveryStrategyEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertAll(items: List<DiscoveryStrategyEntity>)
     @Query("DELETE FROM discovery_strategies")
