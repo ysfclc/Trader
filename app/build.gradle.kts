@@ -5,6 +5,11 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val stableDebugKeystore = System.getenv("TRADER_KEYSTORE_PATH")
+    ?.let { file(it) }
+    ?.takeIf { it.isFile }
+val stableDebugPassword = System.getenv("TRADER_KEYSTORE_PASSWORD")
+
 android {
     namespace = "com.yusufculcu.trader"
     compileSdk = 36
@@ -12,12 +17,28 @@ android {
         applicationId = "com.yusufculcu.trader"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        if (stableDebugKeystore != null && !stableDebugPassword.isNullOrBlank()) {
+            create("traderStableDebug") {
+                storeFile = stableDebugKeystore
+                storePassword = stableDebugPassword
+                keyAlias = "trader-upload"
+                keyPassword = stableDebugPassword
+            }
+        }
+    }
     buildTypes {
-        debug { applicationIdSuffix = ".debug"; versionNameSuffix = "-debug" }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            if (stableDebugKeystore != null && !stableDebugPassword.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("traderStableDebug")
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
