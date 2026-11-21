@@ -242,4 +242,6 @@
     <string name="discover_feed_complete">%1$d elementów z kanału %2$s.</string>
 
     <string name="discover_open_source">Otwórz w przeglądarce Trader</string>
+    <string name="discover_hn_example_name">Hacker News — strona główna</string>
+    <string name="discover_add_hn_example">Dodaj przykładowy kanał · Hacker News</string>
 </resources>

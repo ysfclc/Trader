@@ -82,7 +82,7 @@ fun TraderApp(
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
-    var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
+    var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
     var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }

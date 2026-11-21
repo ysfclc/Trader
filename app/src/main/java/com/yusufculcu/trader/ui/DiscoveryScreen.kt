@@ -172,6 +172,23 @@ fun DiscoveryScreen(
                     Spacer(Modifier.padding(start = 4.dp))
                     Text(stringResource(R.string.discover_add_source))
                 }
+                OutlinedButton(
+                    onClick = {
+                        runCatching {
+                            sourceStore.add(
+                                context.getString(R.string.discover_hn_example_name),
+                                "https://news.ycombinator.com/rss"
+                            )
+                        }.onSuccess { saved ->
+                            reloadSources()
+                            error = null
+                            notice = context.getString(R.string.discover_source_added, saved.name)
+                        }.onFailure { error = it.message ?: context.getString(R.string.discover_source_failed) }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.discover_add_hn_example))
+                }
                 Text(stringResource(R.string.discover_feed_security), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
