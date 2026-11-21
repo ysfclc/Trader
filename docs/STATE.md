@@ -10,7 +10,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 | Android identity | 🟡 implementation pending CI | Package stays `com.yusufculcu.trader.debug`; candidate version `0.2.0-debug`, versionCode 2. Adaptive launcher/round icon wired. Stable signing support implemented; Actions secrets not yet configured. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
 | Local data | 🟡 partial | Room-backed cases, plans, evidence, opportunities, workflow records; schema migrations and encrypted export/restore exist. Physical-device restore acceptance open. |
-| Continuity / backup | 🟡 partial | Same package + signing certificate + in-place update preserves app-private data. Uninstall/clear-storage destroys it. Source feed settings in preferences are not yet included in encrypted backup. |
+| Continuity / backup | 🟡 partial | Same package + signing certificate + in-place update preserves app-private data. Uninstall/clear-storage destroys it. Public discovery feed settings in preferences are now included in encrypted backup snapshot v2; credentials/cookies are excluded. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first slice CI-verified | One-shot DuckDuckGo search; user-configurable RSS/Atom feeds; manual checks, source health, browser handoff and source-linked UNREVIEWED evidence. CI run 385: 97 tests passed plus lint/build/signature/package checks. No live-feed or physical-device acceptance. |
@@ -29,7 +29,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Immediate next increments
 1. Configure the two signing secrets; run CI; verify stable certificate fingerprint and build an installable candidate. Never uninstall/clear data as routine update procedure.
-2. Add source instances and relevant app settings to encrypted backup with backward-compatible schema migration and restore tests; keep credentials/cookies/signing material excluded.
+2. Verify source-settings backup snapshot v2 and restore/rollback tests on device; keep credentials/cookies/signing material excluded.
 3. Verify in-place update and backup/restore on Redmi Note 12 Pro 5G, including Room data, feed settings and WebView session.
 4. Implement ProofAsset + DiscoveryStrategy + durable DiscoveryRun/SourceRun, then source-grounded Organization/Person dossiers and explainable matching.
 5. Add scheduled polling only after durable WorkManager cancellation, backoff, cursor and process-death recovery are proven. Then add community adapters with explicit permissions and retention/deletion controls.
@@ -75,5 +75,5 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 **Risks / landmines**
 - Signing secrets are not configured yet; no new APK is safe to install as an update.
 - Existing run-385 APK is signed with a different ephemeral certificate.
-- Source feed settings are excluded from encrypted backup until T1.4a is complete.
+- Source settings are now in encrypted backup snapshot v2; device restore acceptance remains open.
 - No physical-device acceptance has been performed for this icon/update candidate.
