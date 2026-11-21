@@ -176,8 +176,6 @@ class RssAtomFeedAdapter(
                 throw error
             } catch (error: Exception) {
                 throw FeedSourceException("Feed is not valid RSS 2.0 or Atom XML.", error)
-            } finally {
-                runCatching { parser.setInput(null as java.io.Reader?) }
             }
         }
 

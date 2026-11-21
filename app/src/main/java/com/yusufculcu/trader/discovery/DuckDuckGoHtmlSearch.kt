@@ -121,7 +121,6 @@ class DuckDuckGoHtmlSearch(
                     retrievedAt = retrievedAt
                 )
             }.toList()
-                .toList()
         }
 
         private fun resolveResultUrl(raw: String): String? {
