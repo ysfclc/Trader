@@ -37,15 +37,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
-import com.yusufculcu.trader.TraderApplication
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.discovery.DiscoveryAdapterRegistry
-import com.yusufculcu.trader.discovery.DiscoverySourceConfig
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 import com.yusufculcu.trader.discovery.DuckDuckGoHtmlSearch
 import com.yusufculcu.trader.discovery.PublicSearchRequest
-import com.yusufculcu.trader.discovery.RssAtomFeedAdapter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
