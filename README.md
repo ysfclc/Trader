@@ -64,7 +64,7 @@ Use [PROJECT_LOCK.md](docs/PROJECT_LOCK.md) as the canonical product specificati
 
 ## First practical workflow in progress
 
-The active PR #17 adds a Trader-owned authenticated browser, visible-page evidence capture and source-linked research intake from Memo's Android Sharesheet. The user explicitly reviews and can redact visible page text before saving; captured evidence begins unreviewed, and URLs are stripped of query/fragment. The share bridge transfers page text and source provenance only, never account sessions. Trader CI run 358 passed 76 tests, lint and APK package/signature checks; Memo's sender PR #15 passed CI run 1009 but remains draft/unmerged; its source-only CI run published no installable APK artifact. Public-source discovery, company qualification and automatic outreach remain future increments. See the state ledger for current acceptance boundaries.
+PR #17 provides the Trader-owned authenticated browser, visible-page evidence capture and source-linked research intake from Memo's Android Sharesheet. PR #18 adds the first public-source Discover workflow: DuckDuckGo one-shot search, user-configurable RSS/Atom feeds, manual checks, per-source status, open in Trader browser and save as unreviewed evidence. CI run 385 passed 97 tests, lint, APK build/signature/package checks on a tree matching PR #18 app code. Company qualification, scheduled monitoring, social connectors and automatic outreach remain future increments. Memo's sender PR #15 is still draft/unmerged; its capture button is not yet available in the installed Memo app. See the state ledger for acceptance boundaries.
 
 
 ## Current discovery implementation — PR #18
