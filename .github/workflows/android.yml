@@ -34,13 +34,19 @@ jobs:
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Prepare persistent Trader development signing key
         id: stable_signing
-        if: ${{ secrets.TRADER_KEYSTORE_BASE64 != '' && secrets.TRADER_KEYSTORE_PASSWORD != '' }}
         env:
           TRADER_KEYSTORE_BASE64: ${{ secrets.TRADER_KEYSTORE_BASE64 }}
+          TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
         run: |
-          echo "$TRADER_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/trader-upload.jks"
-          echo "path=$RUNNER_TEMP/trader-upload.jks" >> "$GITHUB_OUTPUT"
-          echo "ready=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$TRADER_KEYSTORE_BASE64" ] && [ -n "$TRADER_KEYSTORE_PASSWORD" ]; then
+            echo "$TRADER_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/trader-upload.jks"
+            keytool -list -keystore "$RUNNER_TEMP/trader-upload.jks" -storepass "$TRADER_KEYSTORE_PASSWORD" -alias trader-upload >/dev/null
+            echo "path=$RUNNER_TEMP/trader-upload.jks" >> "$GITHUB_OUTPUT"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Stable signing secrets are not configured; the APK will be CI-only."
+          fi
       - name: Verify and build
         env:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
@@ -54,10 +60,17 @@ jobs:
           path: app/build/test-results/testDebugUnitTest/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Verify APK package and signature
+      - name: Verify APK package, signature and stable certificate
+        env:
+          STABLE_SIGNING_READY: ${{ steps.stable_signing.outputs.ready }}
         run: |
-          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.yusufculcu.trader.debug' versionCode='2' versionName='0.2.0-debug'"
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose "$APK"
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK" | grep "package: name='com.yusufculcu.trader.debug' versionCode='2' versionName='0.2.0-debug'"
+          if [ "$STABLE_SIGNING_READY" = "true" ]; then
+            CERT=$($ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs "$APK" | awk '/certificate SHA-256 digest:/ {print $NF}' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+            test "$CERT" = "f96dd24e1cc7b71770eb44ac9e9b2b80e854f10989d31693456438ce8d50ee74"
+          fi
       - name: Upload persistent installable APK
         if: steps.stable_signing.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
