@@ -49,3 +49,6 @@ A row is not marked complete merely because a screen or class exists. The status
 - JUnit report artifact `14507792856`: 37 tests, 0 failures, 0 errors, 0 skipped (backup manager 4; workflow persistence 10; capability registry 6; context packet 1; problem rules 4; workflow rules 12).
 - Debug APK artifact `14507787890`; 19,046,757 bytes; package `com.yusufculcu.trader.debug`; version `0.1.0-debug`; SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`.
 - CI proves compilation, test execution, lint and APK signature/package checks. It does not prove install, UI behavior, document-picker access, process-death recovery or production signing.
+
+
+| R-013 | Experimental public-search adapter: bounded query, HTTPS result links, retrieval timestamps, duplicate filtering and parser safety. | `app/src/main/java/com/yusufculcu/trader/discovery/DuckDuckGoHtmlSearch.kt` | `DuckDuckGoHtmlSearchTest` covers query encoding/limits, result extraction, redirect decoding, unsafe URL rejection, deduplication and field bounds. HTTP behavior still requires source/device validation. | `docs/ARCHITECTURE.md` source-adapter contract; `docs/TASKS.md` T3.2b | 🟡 Adapter code added; CI pending; not yet wired to Discover UI or persistent dossiers |

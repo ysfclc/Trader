@@ -229,3 +229,10 @@ Memo can hand a user-reviewed page to Trader through Android Sharesheet using th
 **Reason:** The user researches through authenticated websites in Memo but needs the resulting evidence in Trader's durable discovery and qualification workspace. Sharing content keeps the account session with its owning browser and avoids a cookie/token export mechanism.
 
 **Consequences:** Keep this operation user-triggered and reviewable; treat page content as untrusted until the user verifies it. Support redaction before save/share. A green CI build verifies parsing and persistence contracts, not the actual Android Sharesheet flow or completeness of dynamically rendered pages. Memo sender PR #15 and installed-build acceptance remain separate gates.
+
+
+## D-022 — Experimental bounded public-search adapter
+**Date:** 2026-11-21  
+**Status:** Accepted for prototype only  
+
+Trader may prototype a user-triggered DuckDuckGo HTML search adapter as a single public source. It performs one bounded request and returns source-linked search-result metadata only. It must not crawl result pages, bypass access controls, solve challenges, authenticate or imply that snippets are verified evidence. Adapter remains experimental until source policy, health, device and failure behavior are reviewed.

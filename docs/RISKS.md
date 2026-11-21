@@ -28,3 +28,5 @@ _Last reviewed: 2026-11-19 against main commit `4ffd465e7c89a35d3a5c3b6125f8097b
 ## Operating rule
 
 A risk is not closed because a related screen or safeguard exists. Close it only with the mitigation evidence and update this file and `docs/STATE.md` in the same increment.
+
+| R-13 | Experimental HTML search adapter may break when search markup or source access policy changes; search snippets are incomplete and unverified. | Medium | Parser is bounded, HTTPS-only for external result links, deduplicates URLs and does not fetch result pages. Automated parser tests are added; CI and real-source/device validation are pending. | Keep the adapter experimental. Check source terms/access policy and health before exposing it as a generally available discovery source; preserve raw result provenance and never score a snippet as verified evidence. |

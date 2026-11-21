@@ -123,3 +123,10 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Locked Trader as an independent Android-first, local-first problem-solving and opportunity-execution system, not a trading-only app.
 - Set industrial tooling/machining between Türkiye and Poland/EU as the first market pilot, not a hard-coded product category.
 - Audited reference repositories, including QRKey, and documented no-fork/no-runtime-dependency decisions.
+
+
+## 2026-11-21 — Experimental public search adapter (prototype)
+
+- Added a bounded user-triggered DuckDuckGo HTML search adapter: query length and result limits, HTTPS-only external result validation, request timeouts, response byte cap, URL deduplication and retrieval timestamps.
+- Added parser/query unit tests for encoding, result extraction, redirect handling, unsafe URLs, duplicates and field truncation.
+- Not wired to Discover UI, persistent candidate dossiers, or AI qualification; CI and live-source/device validation pending.
