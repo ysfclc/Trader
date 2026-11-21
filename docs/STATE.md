@@ -20,7 +20,7 @@ Trader is an Android-first, local-first problem-solving and opportunity-executio
 | AI / live discovery / matching | 🟡 first source slice CI-verified | One-shot DuckDuckGo search, configurable public RSS/Atom sources, manual refresh, per-source health, open-in-Trader-browser and save-to-Work as UNREVIEWED evidence. CI run 385 passed 97 tests plus lint/build/signature/package. No live-feed/device, scheduled polling, social adapters, company dossiers or AI fit verification yet |
 | Opportunity tracking | 🟡 partial | Optional one-to-one manual profile is implemented; normalized organizations/people, buyer/supplier graph, consent, discovery and send adapter remain absent |
 | Release signing | ⚪ not started | Debug build only; release key not configured |
-| Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained on main |
+| Documentation / traceability | ✅ done | Product lock, task ledger, coverage matrix, risk register, capability contracts, decision log and changelog are maintained in this feature branch; PR #18 merge is pending |
 
 ## 3. Currently in flight
 - Local AI milestone is accepted and code started on the discovery/browser branch. `docs/LOCAL_AI_ARCHITECTURE.md` is the canonical design. Current implementation includes Trader-owned model metadata, a real LiteRT-LM CPU inference adapter with pinned hash verification, resumable download/install logic, storage/RAM preflight, Model Hub UI and bounded evidence context packets. CI run 349 passed the full test/lint/debug-build/signature/package pipeline; do not claim device inference until a verified model has actually run on the Redmi.
