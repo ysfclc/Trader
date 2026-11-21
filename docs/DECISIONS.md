@@ -257,3 +257,14 @@ The first configurable collection source is public HTTPS RSS/Atom. Discover supp
 **Reason:** Feeds are a widely supported cross-site protocol with no per-instance provider API credentials, and manual refresh allows a real source-to-evidence outcome without pretending the durable background executor is ready.
 
 **Consequences:** Source configurations initially contain only public feed endpoints and no credentials. They are stored locally but are not yet part of encrypted workspace backup; backup integration is a tracked follow-up. Add scheduled polling only after durable bounded jobs, cancellation, cursor/backoff and recovery are verified.
+
+
+## D-026 — Persistent app identity, stable development signing and non-destructive updates
+**Date:** 2026-11-21  
+**Status:** Accepted
+
+Trader's Android application ID is a durable data identity and must not change between development updates. The debug package remains `com.yusufculcu.trader.debug`; every subsequent installable APK must have a monotonically increasing versionCode and be signed by the same dedicated Trader development certificate. CI may still build an ephemeral debug APK for tests when the key is unavailable, but it must label that artifact CI-only and must not present it as an installable update. The adaptive launcher icon is part of the minimum app identity, not optional polish.
+
+**Reason:** Android preserves app-private Room data, preferences and WebView storage during a valid in-place package update. Uninstalling or clearing storage destroys that continuity; a different signing certificate prevents an in-place update even when the package ID matches.
+
+**Consequences:** Keep the keystore outside Git and configure `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` as protected repository Actions secrets. Never silently change package ID, signing key or app data location. Before any unavoidable one-time signing migration, export a verified encrypted workspace backup and separately preserve data not yet covered by backup (currently discovery source preferences). Verify the actual certificate and in-place update on the Redmi. Production release signing is a separate future identity and gate.
