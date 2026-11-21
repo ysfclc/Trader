@@ -98,7 +98,7 @@ class DuckDuckGoHtmlSearch(
 
         fun buildSearchUrl(query: String): URL {
             val clean = query.trim().replace(Regex("\\s+"), " ").take(MAX_QUERY_LENGTH)
-            return URL("https://html.duckduckgo.com/html/?q=\${URLEncoder.encode(clean, "UTF-8")}")
+            return URL("https://html.duckduckgo.com/html/?q=" + URLEncoder.encode(clean, Charsets.UTF_8.name()))
         }
 
         fun parseHtml(html: String, retrievedAt: Long): List<PublicSearchResult> {
@@ -120,7 +120,7 @@ class DuckDuckGoHtmlSearch(
                     snippet = snippets.getOrNull(index).orEmpty().take(1_000),
                     retrievedAt = retrievedAt
                 )
-            }
+            }.toList()
                 .toList()
         }
 
