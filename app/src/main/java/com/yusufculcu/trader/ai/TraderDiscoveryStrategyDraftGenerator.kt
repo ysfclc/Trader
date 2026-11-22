@@ -3,6 +3,7 @@ package com.yusufculcu.trader.ai
 import com.yusufculcu.trader.domain.DiscoveryStrategy
 import com.yusufculcu.trader.domain.ProofAsset
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
 
 /**
  * Runs one real local-only discovery strategy draft. It deliberately returns an
@@ -42,6 +43,8 @@ class TraderDiscoveryStrategyDraftGenerator(
                 prompt = prompt,
                 maxOutputTokens = modelStore.outputTokenLimit(model)
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Exception) {
             return TraderDiscoveryStrategyParseResult(null, listOf("Local inference failed: ${error.message ?: error.javaClass.simpleName}"))
         }
