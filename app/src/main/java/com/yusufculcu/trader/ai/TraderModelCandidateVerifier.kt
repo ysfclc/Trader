@@ -15,6 +15,8 @@ import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
+private const val CANDIDATE_PROGRESS_INTERVAL_BYTES = 8L * 1024 * 1024
+
 enum class CandidateVerificationStatus { DOWNLOADING, VERIFYING, BYTES_VERIFIED, CANCELLED, FAILED }
 
 data class CandidateVerificationState(
@@ -55,6 +57,7 @@ class TraderModelCandidateVerifier(context: Context) {
         val expectedBytes = candidate.candidateSizeBytes
         val digest = candidate.candidateSha256
         val valid = spec.isValidCatalogEntry() &&
+            spec.id.matches(Regex("[a-z0-9][a-z0-9-]{0,79}")) &&
             candidate.status == ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED &&
             candidate.latestRevision.matches(Regex("[a-fA-F0-9]{40}")) &&
             expectedBytes != null && expectedBytes in 1L..MAX_CANDIDATE_BYTES &&
@@ -63,6 +66,18 @@ class TraderModelCandidateVerifier(context: Context) {
         if (!valid) {
             publish(spec.id, CandidateVerificationState(
                 CandidateVerificationStatus.FAILED, detail = "No valid changed candidate is available for byte verification.",
+                revision = candidate.latestRevision
+            ))
+            return
+        }
+        val anotherVerificationRunning = mutableStates.value.any { (id, state) ->
+            id != spec.id && (state.status == CandidateVerificationStatus.DOWNLOADING ||
+                state.status == CandidateVerificationStatus.VERIFYING)
+        }
+        if (anotherVerificationRunning) {
+            publish(spec.id, CandidateVerificationState(
+                CandidateVerificationStatus.FAILED,
+                detail = "Another candidate verification is already running. Cancel or finish it before starting another.",
                 revision = candidate.latestRevision
             ))
             return
@@ -91,6 +106,7 @@ class TraderModelCandidateVerifier(context: Context) {
     private fun downloadAndVerify(spec: TraderModelSpec, candidate: ModelUpdateResult, expectedBytes: Long, expectedSha256: String) {
         val temporaryFile = File(stagingDir, "${spec.id}.candidate.tmp")
         var connection: HttpURLConnection? = null
+        var verifiedSha256: String? = null
         try {
             if (temporaryFile.exists() && !temporaryFile.delete()) {
                 throw IllegalStateException("Could not clear a previous temporary candidate file.")
@@ -140,11 +156,8 @@ class TraderModelCandidateVerifier(context: Context) {
             check(temporaryFile.isFile && temporaryFile.length() == expectedBytes) {
                 "Temporary candidate file does not match the expected byte size."
             }
-            publish(spec.id, CandidateVerificationState(
-                CandidateVerificationStatus.BYTES_VERIFIED, 1f,
-                "Downloaded bytes match the immutable source metadata. This candidate is still not approved or installable.",
-                candidate.latestRevision, actualSha256
-            ))
+            if (cancellation[spec.id] == true) throw CandidateVerificationCancelledException()
+            verifiedSha256 = actualSha256
         } catch (_: CandidateVerificationCancelledException) {
             publish(spec.id, CandidateVerificationState(
                 CandidateVerificationStatus.CANCELLED, detail = "Verification cancelled. Temporary candidate data was discarded.",
@@ -158,8 +171,21 @@ class TraderModelCandidateVerifier(context: Context) {
             ))
         } finally {
             connection?.disconnect()
-            if (temporaryFile.exists()) temporaryFile.delete()
+            val cleanupSucceeded = !temporaryFile.exists() || temporaryFile.delete()
             cancellation.remove(spec.id)
+            if (!cleanupSucceeded) {
+                publish(spec.id, CandidateVerificationState(
+                    CandidateVerificationStatus.FAILED,
+                    detail = "Candidate bytes were checked, but Android could not remove the temporary file. Clear Trader's app cache before retrying.",
+                    revision = candidate.latestRevision
+                ))
+            } else if (verifiedSha256 != null) {
+                publish(spec.id, CandidateVerificationState(
+                    CandidateVerificationStatus.BYTES_VERIFIED, 1f,
+                    "Downloaded bytes match the immutable source metadata. The temporary file was deleted. This candidate is still not approved or installable.",
+                    candidate.latestRevision, verifiedSha256
+                ))
+            }
         }
     }
 
@@ -206,6 +232,7 @@ internal fun copyCandidateAndHash(
     val digest = MessageDigest.getInstance("SHA-256")
     val buffer = ByteArray(64 * 1024)
     var total = 0L
+    var lastProgressReport = 0L
     while (true) {
         if (shouldCancel()) throw CandidateVerificationCancelledException()
         val count = input.read(buffer)
@@ -214,7 +241,10 @@ internal fun copyCandidateAndHash(
         check(total <= expectedSizeBytes) { "Downloaded candidate exceeded the metadata-checked byte size." }
         digest.update(buffer, 0, count)
         output.write(buffer, 0, count)
-        onProgress(total)
+        if (total - lastProgressReport >= CANDIDATE_PROGRESS_INTERVAL_BYTES || total == expectedSizeBytes) {
+            onProgress(total)
+            lastProgressReport = total
+        }
     }
     check(total == expectedSizeBytes) { "Incomplete candidate download: $total of $expectedSizeBytes bytes." }
     val actual = digest.digest().joinToString("") { "%02x".format(it) }
