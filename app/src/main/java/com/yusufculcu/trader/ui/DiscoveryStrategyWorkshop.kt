@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.TraderApplication
+import com.yusufculcu.trader.data.DiscoveryStrategyCodec
 import com.yusufculcu.trader.ai.TraderContextPacket
 import com.yusufculcu.trader.ai.TraderContextFact
 import com.yusufculcu.trader.ai.TraderFactStatus
@@ -40,7 +41,9 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun DiscoveryStrategyWorkshop(app: TraderApplication, modelStore: TraderModelStore) {
     val problems by app.repository.observeProblems().collectAsState(initial = emptyList())
-    val assets by app.discoveryStrategyRepository.observeProofAssets().collectAsState(initial = emptyList())
+    val assetRows by app.discoveryStrategyRepository.observeProofAssets().collectAsState(initial = emptyList())
+    // Room rows intentionally keep a compact indexed envelope; decode the versioned domain payload at this boundary.
+    val assets = assetRows.mapNotNull { row -> runCatching { DiscoveryStrategyCodec.decodeAsset(row.payloadJson) }.getOrNull() }
     val scope = rememberCoroutineScope()
     var problemId by remember { mutableStateOf("") }
     var assetId by remember { mutableStateOf("") }
