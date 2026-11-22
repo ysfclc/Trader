@@ -16,16 +16,22 @@ class TraderLocalAiFoundationTest {
         assertTrue(TraderModelCatalog.entries.all { it.strengths.isNotEmpty() && it.limitations.isNotEmpty() && it.deviceGuidance.isNotBlank() })
     }
 
-    @Test fun sourceUpdatePolicyDistinguishesCurrentCandidateAndMissingArtifact() {
+    @Test fun sourceUpdatePolicyRequiresArtifactSizeAndDigestReview() {
         val model = TraderModelCatalog.defaultModel()
         val now = 1234L
-        val current = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot(model.sourceRevision + "0000000000000000000000000000000000000", true), now)
+        val pinnedArtifact = ModelArtifactMetadata(model.fileName, model.sizeBytes, model.sha256)
+        val current = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot(model.sourceRevision.padEnd(40, '0'), pinnedArtifact), now)
         assertEquals(ModelSourceStatus.CURRENT, current.status)
-        val candidate = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), true), now)
-        assertEquals(ModelSourceStatus.UPDATE_AVAILABLE, candidate.status)
-        assertTrue(candidate.detail.contains("only a candidate"))
-        val missing = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), false), now)
+        val candidateArtifact = ModelArtifactMetadata(model.fileName, model.sizeBytes + 1L, "f".repeat(64))
+        val candidate = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), candidateArtifact), now)
+        assertEquals(ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED, candidate.status)
+        assertTrue(candidate.detail.contains("not installable"))
+        assertEquals(model.sizeBytes + 1L, candidate.candidateSizeBytes)
+        assertEquals("f".repeat(64), candidate.candidateSha256)
+        val missing = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), null), now)
         assertEquals(ModelSourceStatus.ARTIFACT_MISSING, missing.status)
+        val invalid = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), ModelArtifactMetadata(model.fileName, -1L, "bad")), now)
+        assertEquals(ModelSourceStatus.ARTIFACT_UNVERIFIED, invalid.status)
     }
 
     @Test fun metadataResponseReaderAcceptsWithinLimitAndRejectsOversizedBody() {

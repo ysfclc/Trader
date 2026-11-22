@@ -41,11 +41,16 @@ Record device/chipset/RAM, Android version, runtime version, model revision/hash
 
 The Model Hub can perform a user-triggered metadata check against the Hugging Face model revision API for each curated repository. The check compares the default-branch commit with the pinned source revision and confirms whether the catalogued artifact filename still appears in the repository file list. Results and timestamps are cached in app-private preferences.
 
-Statuses: `CURRENT` means the pinned revision matches; `UPDATE_AVAILABLE` means a different revision exists and the artifact is still listed; `ARTIFACT_MISSING` means the default branch no longer lists that filename; `CHECK_FAILED` means the request or response validation failed.
+The checker first resolves the repository's current default-branch commit, then requests the recursive file tree at that immutable 40-character revision with expanded metadata. It locates the exact catalogued filename and reads its byte size and Git LFS SHA-256 OID.
 
-This does not prove a candidate artifact's hash, compatibility, license, quality, or device performance. No model file is downloaded or replaced by this check. Updates remain manually reviewed and repinned.
+Statuses: `CURRENT` means the source revision and artifact metadata match the pinned catalogue, or a newer source revision still points to exactly the same bytes; `CANDIDATE_REVIEW_REQUIRED` means the artifact's source-declared size or digest differs and requires human review; `ARTIFACT_MISSING` means the immutable tree does not contain the expected file; `ARTIFACT_UNVERIFIED` means required metadata is missing or malformed; `CHECK_FAILED` means the request or response validation failed.
+
+The SHA-256 shown for a candidate is the digest declared by the upstream Git LFS metadata. This check does not download the candidate and independently hash its bytes, and does not prove compatibility, license, quality, or device performance. A changed artifact is explicitly not installable. No model file is downloaded or replaced by this check. Before a release can be added to the catalogue, its file must be independently downloaded and hashed, its size and digest reviewed, and its license, runtime compatibility and device acceptance completed.
 
 
 ## Metadata response bounds
 
 The source checker rejects an advertised response larger than 1 MB and also enforces the same limit while streaming bytes. The streaming limit applies even if the server omits or misreports `Content-Length`, preventing an unbounded metadata-body allocation before JSON parsing.
+
+
+The source metadata request uses a bounded 1 MB streaming reader for both revision and expanded-tree responses. The reader enforces the limit even when the server omits or misreports `Content-Length`.

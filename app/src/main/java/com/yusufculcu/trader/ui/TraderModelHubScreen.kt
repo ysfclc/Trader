@@ -78,12 +78,14 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                     Text("SHA-256: " + model.sha256, style = MaterialTheme.typography.bodySmall)
                     sourceChecks[model.id]?.let { check ->
                         val statusColor = when (check.status) {
-                            ModelSourceStatus.UPDATE_AVAILABLE -> MaterialTheme.colorScheme.tertiary
-                            ModelSourceStatus.ARTIFACT_MISSING, ModelSourceStatus.CHECK_FAILED -> MaterialTheme.colorScheme.error
+                            ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED -> MaterialTheme.colorScheme.tertiary
+                            ModelSourceStatus.ARTIFACT_MISSING, ModelSourceStatus.ARTIFACT_UNVERIFIED, ModelSourceStatus.CHECK_FAILED -> MaterialTheme.colorScheme.error
                             else -> MaterialTheme.colorScheme.primary
                         }
                         Text("SOURCE CHECK · " + check.status.name.replace('_', ' '), style = MaterialTheme.typography.labelMedium, color = statusColor)
                         if (check.latestRevision.isNotBlank()) Text("Upstream revision: " + check.latestRevision, style = MaterialTheme.typography.bodySmall)
+                        check.candidateSizeBytes?.let { Text("Upstream artifact size: " + formatModelSize(it), style = MaterialTheme.typography.bodySmall) }
+                        if (check.candidateSha256.isNotBlank()) Text("Upstream SHA-256: " + check.candidateSha256, style = MaterialTheme.typography.bodySmall)
                         Text(check.detail, style = MaterialTheme.typography.bodySmall)
                         Text("Checked: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(check.checkedAtEpochMs)), style = MaterialTheme.typography.labelSmall)
                     }
@@ -114,7 +116,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Runtime settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Backend: CPU. Cloud fallback: disabled. Models are stored in private app storage.", style = MaterialTheme.typography.bodyMedium)
-                    Text("Updates: checks Hugging Face default-branch metadata on demand. A newer revision is only a review signal; Trader never installs it automatically.", style = MaterialTheme.typography.bodyMedium)
+                    Text("Updates: checks the upstream immutable revision, artifact byte size and source-declared SHA-256. Changed artifacts remain review-only; Trader never installs them automatically.", style = MaterialTheme.typography.bodyMedium)
                     Button(enabled = !checkingSources, onClick = {
                         checkingSources = true
                         scope.launch {
@@ -122,7 +124,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                             checkingSources = false
                         }
                     }) { Text(if (checkingSources) "Checking model sources…" else "Check upstream for updates") }
-                    Text("Source checks read repository metadata only. They do not download model files or verify a candidate release.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("The digest comes from upstream LFS metadata; it is not an independent download-and-hash verification. A changed artifact is not installable until independently verified, reviewed and repinned.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Inference smoke test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Run a real prompt on the active model. This confirms local inference, not discovery automation.", style = MaterialTheme.typography.bodyMedium)
                     Button(enabled = activeId != null && !testing, onClick = {
