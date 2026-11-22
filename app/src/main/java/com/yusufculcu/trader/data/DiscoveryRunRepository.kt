@@ -64,7 +64,8 @@ class DiscoveryRunRepository(private val database: TraderDatabase) {
 
     suspend fun startSource(sourceRunId: String, at: Long): Boolean = database.withTransaction {
         val row = database.sourceRunDao().getById(sourceRunId) ?: return@withTransaction false
-        if (row.status != SourceRunStatus.PENDING) return@withTransaction false
+        val parent = database.discoveryRunDao().getById(row.discoveryRunId) ?: return@withTransaction false
+        if (parent.status != DiscoveryRunStatus.RUNNING || row.status != SourceRunStatus.PENDING) return@withTransaction false
         database.sourceRunDao().update(row.copy(status = SourceRunStatus.RUNNING, startedAt = at))
         true
     }
@@ -111,6 +112,7 @@ class DiscoveryRunRepository(private val database: TraderDatabase) {
         val run = database.discoveryRunDao().getById(runId) ?: return@withTransaction false
         if (run.status != DiscoveryRunStatus.RUNNING) return@withTransaction false
         val sources = database.sourceRunDao().getForRun(runId)
+        if (sources.any { it.status == SourceRunStatus.PENDING || it.status == SourceRunStatus.RUNNING }) return@withTransaction false
         val status = when {
             sources.isEmpty() -> DiscoveryRunStatus.COMPLETED
             sources.all { it.status == SourceRunStatus.SUCCEEDED || it.status == SourceRunStatus.SKIPPED } -> DiscoveryRunStatus.COMPLETED

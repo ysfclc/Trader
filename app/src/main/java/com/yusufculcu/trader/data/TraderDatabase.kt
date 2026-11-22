@@ -471,6 +471,8 @@ interface DiscoveryRunDao {
     suspend fun getById(id: String): DiscoveryRunEntity?
     @Query("SELECT * FROM discovery_runs WHERE status = 'RUNNING'")
     suspend fun getRunning(): List<DiscoveryRunEntity>
+    @Query("SELECT * FROM discovery_runs")
+    suspend fun getAll(): List<DiscoveryRunEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(run: DiscoveryRunEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT)
@@ -489,6 +491,8 @@ interface SourceRunDao {
     suspend fun getForRun(runId: String): List<SourceRunEntity>
     @Query("SELECT * FROM source_runs WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): SourceRunEntity?
+    @Query("SELECT * FROM source_runs")
+    suspend fun getAll(): List<SourceRunEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(sourceRun: SourceRunEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT)

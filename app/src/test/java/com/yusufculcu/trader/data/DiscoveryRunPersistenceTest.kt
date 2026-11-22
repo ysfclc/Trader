@@ -45,6 +45,18 @@ class DiscoveryRunPersistenceTest {
         assertEquals(0, repo.reconcileInterrupted(6))
     }
 
+    @Test fun cannotStartSourcesAfterRunCancellationOrCompleteWithActiveSources() = runBlocking {
+        val run = repo.create(DiscoveryRunDraft(null, "Investigate supplier", 1))
+        assertTrue(repo.start(run.id, 2))
+        val source = repo.addSource(run.id, SourceRunDraft("source", "rss.atom", 3))
+        assertTrue(repo.startSource(source.id, 4))
+        assertFalse(repo.complete(run.id, 5))
+        assertTrue(repo.requestCancellation(run.id, 6))
+        assertFalse(repo.startSource(source.id, 7))
+        assertEquals(SourceRunStatus.CANCELLED, db.sourceRunDao().getById(source.id)?.status)
+    }
+
+
     @Test fun cancellationIsIdempotentAndPreventsLateCompletion() = runBlocking {
         val run = repo.create(DiscoveryRunDraft(null, "Find opportunities", 1))
         repo.start(run.id, 2)
