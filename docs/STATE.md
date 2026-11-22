@@ -163,3 +163,14 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - Unit tests added for prompt assembly, untrusted context retention, allowed adapter listing, size bounds and empty adapter rejection.
 - This is prompt construction only; it is not yet wired to an inference action or user-facing strategy review/save flow.
 - CI run 45058592503 for commit d0406ae was pending when the checkpoint was recorded. No build/test pass claimed.
+
+
+## Session 21 handoff — local discovery strategy workshop
+
+Implemented on `feature/discovery-run-persistence`:
+- `TraderDiscoveryStrategyDraftGenerator` calls the active pinned model through the local inference adapter, assembles the bounded prompt, and validates generated JSON against the current proof asset and registered adapters.
+- Context rendering uses the prompt builder's 18,000-character ceiling.
+- Model Hub now includes a Discovery Strategy Workshop: select a problem; create/select a user-owned proof asset; load that problem's plan and evidence; generate locally; edit the first problem signature and first query; explicitly approve and save through `DiscoveryStrategyRepository`.
+- Strategy generation does not run Discover, send communications, or create contacts. Other draft fields remain unchanged in this first review UI; full field-by-field editing remains future work.
+- Generator rethrows coroutine cancellation rather than converting cancellation into a normal inference error.
+- CI run 45058633990 failed three parser acceptance tests (valid JSON, fenced JSON, adapter error detail). Diagnostic assertions were added; later runs were superseded before completing. No build/test success or installable APK is claimed.
