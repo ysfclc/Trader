@@ -48,8 +48,9 @@ class DiscoveryRunRepository(private val database: TraderDatabase) {
         true
     }
 
-    suspend fun addSource(runId: String, draft: SourceRunDraft): SourceRunEntity {
+    suspend fun addSource(runId: String, draft: SourceRunDraft): SourceRunEntity = database.withTransaction {
         require(draft.sourceId.isNotBlank() && draft.adapterId.isNotBlank())
+        require(draft.startedAt >= 0)
         val parent = database.discoveryRunDao().getById(runId) ?: error("Discovery run does not exist.")
         require(parent.status == DiscoveryRunStatus.CREATED || parent.status == DiscoveryRunStatus.RUNNING)
         val row = SourceRunEntity(
@@ -59,7 +60,7 @@ class DiscoveryRunRepository(private val database: TraderDatabase) {
             resultCount = 0, errorCode = null, errorMessage = null
         )
         database.sourceRunDao().insert(row)
-        return row
+        row
     }
 
     suspend fun startSource(sourceRunId: String, at: Long): Boolean = database.withTransaction {
