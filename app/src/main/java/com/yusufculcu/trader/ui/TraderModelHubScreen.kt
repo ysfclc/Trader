@@ -68,6 +68,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                 Text("Models run on your phone. Trader does not silently fall back to cloud AI.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        item { DiscoveryStrategyWorkshop(app = app, modelStore = store) }
         items(TraderModelCatalog.entries, key = { it.id }) { model ->
             val state = states[model.id] ?: TraderModelStore.ModelState(TraderModelStore.Status.NOT_INSTALLED)
             val enoughStorage = store.hasEnoughStorage(model)
