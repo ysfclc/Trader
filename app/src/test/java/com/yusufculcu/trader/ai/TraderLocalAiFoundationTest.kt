@@ -15,6 +15,18 @@ class TraderLocalAiFoundationTest {
         assertTrue(TraderModelCatalog.entries.all { it.strengths.isNotEmpty() && it.limitations.isNotEmpty() && it.deviceGuidance.isNotBlank() })
     }
 
+    @Test fun sourceUpdatePolicyDistinguishesCurrentCandidateAndMissingArtifact() {
+        val model = TraderModelCatalog.defaultModel()
+        val now = 1234L
+        val current = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot(model.sourceRevision + "0000000000000000000000000000000000000", true), now)
+        assertEquals(ModelSourceStatus.CURRENT, current.status)
+        val candidate = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), true), now)
+        assertEquals(ModelSourceStatus.UPDATE_AVAILABLE, candidate.status)
+        assertTrue(candidate.detail.contains("only a candidate"))
+        val missing = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), false), now)
+        assertEquals(ModelSourceStatus.ARTIFACT_MISSING, missing.status)
+    }
+
     @Test fun contextPacketLabelsHypothesesAndPreservesSourceLinks() {
         val rendered = TraderContextPacket(
             task = "Assess company",

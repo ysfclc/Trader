@@ -35,3 +35,12 @@ Automatic upstream polling, update-available notifications, rollback slots, mode
 ## Device acceptance
 
 Record device/chipset/RAM, Android version, runtime version, model revision/hash, load time, peak memory where measurable, first-token latency, tokens/second, thermal state, battery impact and failures. A single-device result must not be generalized to all Android devices.
+
+
+## Upstream metadata checks
+
+The Model Hub can perform a user-triggered metadata check against the Hugging Face model revision API for each curated repository. The check compares the default-branch commit with the pinned source revision and confirms whether the catalogued artifact filename still appears in the repository file list. Results and timestamps are cached in app-private preferences.
+
+Statuses: `CURRENT` means the pinned revision matches; `UPDATE_AVAILABLE` means a different revision exists and the artifact is still listed; `ARTIFACT_MISSING` means the default branch no longer lists that filename; `CHECK_FAILED` means the request or response validation failed.
+
+This does not prove a candidate artifact's hash, compatibility, license, quality, or device performance. No model file is downloaded or replaced by this check. Updates remain manually reviewed and repinned.

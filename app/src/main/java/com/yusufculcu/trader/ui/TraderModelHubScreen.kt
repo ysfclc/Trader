@@ -33,6 +33,8 @@ import kotlinx.coroutines.launch
 import com.yusufculcu.trader.TraderApplication
 import com.yusufculcu.trader.ai.TraderModelCatalog
 import com.yusufculcu.trader.ai.TraderModelStore
+import com.yusufculcu.trader.ai.TraderModelUpdateChecker
+import com.yusufculcu.trader.ai.ModelSourceStatus
 import java.util.Locale
 
 @Composable
@@ -46,6 +48,9 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     var testOutput by remember { mutableStateOf("") }
     var testing by remember { mutableStateOf(false) }
     var settingsRefresh by remember { mutableStateOf(0) }
+    val updateChecker = remember(app) { TraderModelUpdateChecker(app) }
+    var sourceChecks by remember { mutableStateOf(TraderModelCatalog.entries.associate { it.id to updateChecker.cachedResult(it) }) }
+    var checkingSources by remember { mutableStateOf(false) }
     LazyColumn(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -71,6 +76,17 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                     Text("Device guidance: " + model.deviceGuidance, style = MaterialTheme.typography.bodySmall)
                     Text("Artifact: " + model.fileName, style = MaterialTheme.typography.bodySmall)
                     Text("SHA-256: " + model.sha256, style = MaterialTheme.typography.bodySmall)
+                    sourceChecks[model.id]?.let { check ->
+                        val statusColor = when (check.status) {
+                            ModelSourceStatus.UPDATE_AVAILABLE -> MaterialTheme.colorScheme.tertiary
+                            ModelSourceStatus.ARTIFACT_MISSING, ModelSourceStatus.CHECK_FAILED -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.primary
+                        }
+                        Text("SOURCE CHECK · " + check.status.name.replace('_', ' '), style = MaterialTheme.typography.labelMedium, color = statusColor)
+                        if (check.latestRevision.isNotBlank()) Text("Upstream revision: " + check.latestRevision, style = MaterialTheme.typography.bodySmall)
+                        Text(check.detail, style = MaterialTheme.typography.bodySmall)
+                        Text("Checked: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(check.checkedAtEpochMs)), style = MaterialTheme.typography.labelSmall)
+                    }
                     Text(state.detail.ifBlank { state.status.name }, style = MaterialTheme.typography.labelMedium)
                     if (state.status == TraderModelStore.Status.DOWNLOADING || state.status == TraderModelStore.Status.VERIFYING) LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
                     if (!enoughStorage) Text("Insufficient storage available for download plus reserve.", color = MaterialTheme.colorScheme.error)
@@ -98,7 +114,15 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Runtime settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Backend: CPU. Cloud fallback: disabled. Models are stored in private app storage.", style = MaterialTheme.typography.bodyMedium)
-                    Text("Updates: source repository and pinned revision are recorded per model. Releases are manually reviewed and repinned; automatic upstream polling is not implemented yet.", style = MaterialTheme.typography.bodyMedium)
+                    Text("Updates: checks Hugging Face default-branch metadata on demand. A newer revision is only a review signal; Trader never installs it automatically.", style = MaterialTheme.typography.bodyMedium)
+                    Button(enabled = !checkingSources, onClick = {
+                        checkingSources = true
+                        scope.launch {
+                            sourceChecks = updateChecker.checkAll()
+                            checkingSources = false
+                        }
+                    }) { Text(if (checkingSources) "Checking model sources…" else "Check upstream for updates") }
+                    Text("Source checks read repository metadata only. They do not download model files or verify a candidate release.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Inference smoke test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Run a real prompt on the active model. This confirms local inference, not discovery automation.", style = MaterialTheme.typography.bodyMedium)
                     Button(enabled = activeId != null && !testing, onClick = {
