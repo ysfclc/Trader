@@ -119,4 +119,95 @@ class TraderLocalAiFoundationTest {
         assertTrue(rendered.length <= 256)
         assertTrue(rendered.contains("Context budget reached"))
     }
+    private fun validDiscoveryDraftJson(adapterId: String = "duckduckgo_html"): String = """
+        {
+          "schemaVersion": 1,
+          "problemSignatures": [{
+            "problem": "Needs custom precision machining",
+            "observableSignals": ["tight tolerance"],
+            "buyerRoles": ["engineering"],
+            "searchPhrases": ["precision machining supplier"],
+            "mustHave": ["ISO certification"]
+          }],
+          "target": {
+            "countries": ["Poland"],
+            "regions": [],
+            "languages": ["English"],
+            "organizationTypes": ["manufacturer"],
+            "companySize": null,
+            "excludedDomains": []
+          },
+          "queries": [{
+            "sourceAdapterId": "$adapterId",
+            "query": "precision machining supplier Poland",
+            "language": "English",
+            "region": "Poland",
+            "resultLimit": 10
+          }],
+          "disqualifiers": ["No machining capability"],
+          "maxResultsPerSource": 10
+        }
+    """.trimIndent()
+
+    private fun parserProofAsset() = com.yusufculcu.trader.domain.ProofAsset(
+        id = "proof-1",
+        kind = com.yusufculcu.trader.domain.ProofAssetKind.SERVICE_CAPABILITY,
+        name = "Machining",
+        description = "Precision machining",
+        capabilities = listOf("Machining"),
+        claims = emptyList(),
+        createdAt = 1L,
+        updatedAt = 1L
+    )
+
+    @Test fun discoveryStrategyParserAcceptsBoundedDraftAndAppAssignsIdentity() {
+        val result = TraderDiscoveryStrategyOutputParser.parse(
+            validDiscoveryDraftJson(), parserProofAsset(), setOf("duckduckgo_html", "rss_atom")
+        )
+        assertTrue(result.valid)
+        val draft = result.draft!!
+        assertEquals("Needs custom precision machining", draft.problemSignatures.single().problem)
+        assertEquals("duckduckgo_html", draft.queries.single().sourceAdapterId)
+        val savedShape = draft.toStrategy("strategy-real-id", "proof-1", 1234L)
+        assertEquals("strategy-real-id", savedShape.id)
+        assertEquals("proof-1", savedShape.proofAssetId)
+        assertEquals(1234L, savedShape.createdAt)
+    }
+
+    @Test fun discoveryStrategyParserAcceptsSingleJsonFence() {
+        val fenced = "```json\n" + validDiscoveryDraftJson() + "\n```"
+        val result = TraderDiscoveryStrategyOutputParser.parse(fenced, parserProofAsset(), setOf("duckduckgo_html"))
+        assertTrue(result.valid)
+    }
+
+    @Test fun discoveryStrategyParserRejectsUnregisteredAdapterAndUnknownFields() {
+        val unknownAdapter = TraderDiscoveryStrategyOutputParser.parse(
+            validDiscoveryDraftJson("not_registered"), parserProofAsset(), setOf("duckduckgo_html")
+        )
+        assertTrue(!unknownAdapter.valid)
+        assertTrue(unknownAdapter.issues.any { it.contains("unregistered source adapter") })
+        val unknownFieldJson = validDiscoveryDraftJson().replace(
+            "\"maxResultsPerSource\": 10",
+            "\"maxResultsPerSource\": 10, \"executeImmediately\": true"
+        )
+        val unknownField = TraderDiscoveryStrategyOutputParser.parse(
+            unknownFieldJson, parserProofAsset(), setOf("duckduckgo_html")
+        )
+        assertTrue(!unknownField.valid)
+        assertTrue(unknownField.issues.any { it.contains("Unexpected root field") })
+    }
+
+    @Test fun discoveryStrategyParserRejectsMalformedOrOverBudgetOutput() {
+        val malformed = TraderDiscoveryStrategyOutputParser.parse(
+            "Here is the plan: {}", parserProofAsset(), setOf("duckduckgo_html")
+        )
+        assertTrue(!malformed.valid)
+        val oversized = TraderDiscoveryStrategyOutputParser.parse(
+            "x".repeat(TraderDiscoveryStrategyOutputParser.MAX_OUTPUT_CHARS + 1),
+            parserProofAsset(), setOf("duckduckgo_html")
+        )
+        assertTrue(!oversized.valid)
+        assertTrue(oversized.issues.single().contains("size limit"))
+    }
+
 }
