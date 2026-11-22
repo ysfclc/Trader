@@ -38,8 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
 import com.yusufculcu.trader.data.TraderRepository
-import com.yusufculcu.trader.data.DiscoveryRunRepository
-import com.yusufculcu.trader.discovery.DiscoveryExecutionCoordinator
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.discovery.DiscoveryAdapterRegistry
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
@@ -54,7 +52,6 @@ import kotlinx.coroutines.launch
 fun DiscoveryScreen(
     repository: TraderRepository,
     sourceStore: DiscoverySourceStore,
-    runRepository: DiscoveryRunRepository,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,7 +61,6 @@ fun DiscoveryScreen(
     var sources by remember { mutableStateOf(sourceStore.list()) }
     var results by remember { mutableStateOf(emptyList<DiscoveryDocument>()) }
     var searchQuery by remember { mutableStateOf("") }
-    var runObjective by remember { mutableStateOf("") }
     var feedName by remember { mutableStateOf("") }
     var feedUrl by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -82,43 +78,6 @@ fun DiscoveryScreen(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.discover_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.discover_subtitle), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(stringResource(R.string.discover_run_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                OutlinedTextField(
-                    value = runObjective,
-                    onValueChange = { runObjective = it.take(300); error = null },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.discover_run_objective_hint)) },
-                    maxLines = 3
-                )
-                Button(
-                    onClick = {
-                        if (runObjective.trim().length < 2) {
-                            error = context.getString(R.string.discover_query_too_short)
-                        } else {
-                            busy = true
-                            error = null
-                            notice = null
-                            scope.launch {
-                                val coordinator = DiscoveryExecutionCoordinator(sourceStore, adapterRegistry, runRepository)
-                                runCatching {
-                                    coordinator.execute(runObjective) { item -> results = (results + item).distinctBy { it.url } }
-                                }.onSuccess { summary ->
-                                    reloadSources()
-                                    notice = context.getString(R.string.discover_run_complete, summary.succeededSourceNames.size, summary.failedSourceNames.size, summary.documentsReceived)
-                                }.onFailure { error = it.message ?: context.getString(R.string.discover_source_failed) }
-                                busy = false
-                            }
-                        }
-                    },
-                    enabled = !busy && sources.any { it.enabled } && runObjective.trim().length >= 2,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(stringResource(R.string.discover_run_now)) }
-                Text(stringResource(R.string.discover_run_limit_note), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
         }
 
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {

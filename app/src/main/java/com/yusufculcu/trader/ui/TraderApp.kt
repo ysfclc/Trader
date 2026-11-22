@@ -188,7 +188,6 @@ fun TraderApp(
             tab == AppTab.DISCOVER -> DiscoveryScreen(
                 repository = (context.applicationContext as TraderApplication).repository,
                 sourceStore = (context.applicationContext as TraderApplication).discoverySourceStore,
-                runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
                 modifier = Modifier.padding(padding)
             )

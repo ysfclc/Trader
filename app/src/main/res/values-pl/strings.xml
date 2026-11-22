@@ -207,12 +207,7 @@
     <string name="discover_nav">Odkrywaj</string>
     <string name="discover_title">Odkrywaj przydatne sygnały</string>
     <string name="discover_subtitle">Przeszukuj publiczne źródła i zapisuj konkretne dowody w swojej przestrzeni.</string>
-        <string name="discover_run_title">Uruchom wyszukiwanie w aktywnych kanałach</string>
-    <string name="discover_run_objective_hint">Czego Trader ma szukać?</string>
-    <string name="discover_run_now">Uruchom aktywne źródła</string>
-    <string name="discover_run_complete">Zakończono: %1$d źródeł sukces, %2$d błędów, %3$d wyników.</string>
-    <string name="discover_run_limit_note">Tylko ręczne uruchomienie. Źródła działają kolejno, z limitem 30 sekund i 50 wyników na źródło. Wyniki wymagają weryfikacji.</string>
-<string name="discover_web_search">Jednorazowe wyszukiwanie w sieci</string>
+    <string name="discover_web_search">Jednorazowe wyszukiwanie w sieci</string>
     <string name="discover_search_hint">Czego szukasz?</string>
     <string name="discover_query_too_short">Wpisz co najmniej dwa znaki.</string>
     <string name="discover_public_web">Publiczne wyszukiwanie</string>
