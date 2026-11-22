@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.security.MessageDigest
 
 class TraderLocalAiFoundationTest {
     @Test fun catalogHasValidUniquePinnedModels() {
@@ -30,6 +32,12 @@ class TraderLocalAiFoundationTest {
         assertEquals("f".repeat(64), candidate.candidateSha256)
         val missing = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), null), now)
         assertEquals(ModelSourceStatus.ARTIFACT_MISSING, missing.status)
+        val malformedMetadata = TraderModelUpdatePolicy.evaluate(
+            model,
+            ModelSourceSnapshot("f".repeat(40), null, ModelArtifactLookupStatus.UNVERIFIED),
+            now
+        )
+        assertEquals(ModelSourceStatus.ARTIFACT_UNVERIFIED, malformedMetadata.status)
         val invalid = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), ModelArtifactMetadata(model.fileName, -1L, "bad")), now)
         assertEquals(ModelSourceStatus.ARTIFACT_UNVERIFIED, invalid.status)
     }
@@ -39,6 +47,56 @@ class TraderLocalAiFoundationTest {
         val oversized = runCatching { readBoundedUtf8(ByteArrayInputStream("hello!".toByteArray()), 5) }
         assertTrue(oversized.isFailure)
         assertTrue(oversized.exceptionOrNull()?.message.orEmpty().contains("safety limit"))
+    }
+
+    @Test fun candidateByteVerifierCopiesAndHashesExactBytes() {
+        val bytes = "verified candidate bytes".toByteArray()
+        val expected = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+        val output = ByteArrayOutputStream()
+        val actual = copyCandidateAndHash(
+            ByteArrayInputStream(bytes), output, bytes.size.toLong(), expected, shouldCancel = { false }
+        )
+        assertEquals(expected, actual)
+        assertTrue(output.toByteArray().contentEquals(bytes))
+    }
+
+    @Test fun candidateByteVerifierRejectsDigestMismatchAndWrongSize() {
+        val bytes = "candidate".toByteArray()
+        val wrongDigest = runCatching {
+            copyCandidateAndHash(
+                ByteArrayInputStream(bytes), ByteArrayOutputStream(), bytes.size.toLong(), "0".repeat(64),
+                shouldCancel = { false }
+            )
+        }
+        assertTrue(wrongDigest.isFailure)
+        assertTrue(wrongDigest.exceptionOrNull()?.message.orEmpty().contains("SHA-256"))
+
+        val tooLong = runCatching {
+            copyCandidateAndHash(
+                ByteArrayInputStream(bytes), ByteArrayOutputStream(), bytes.size.toLong() - 1L,
+                "0".repeat(64), shouldCancel = { false }
+            )
+        }
+        assertTrue(tooLong.isFailure)
+        assertTrue(tooLong.exceptionOrNull()?.message.orEmpty().contains("exceeded"))
+        val tooShort = runCatching {
+            copyCandidateAndHash(
+                ByteArrayInputStream(bytes), ByteArrayOutputStream(), bytes.size.toLong() + 1L,
+                "0".repeat(64), shouldCancel = { false }
+            )
+        }
+        assertTrue(tooShort.isFailure)
+        assertTrue(tooShort.exceptionOrNull()?.message.orEmpty().contains("Incomplete"))
+    }
+
+    @Test fun candidateByteVerifierHonorsCancellation() {
+        val cancelled = runCatching {
+            copyCandidateAndHash(
+                ByteArrayInputStream("candidate".toByteArray()), ByteArrayOutputStream(), 9L,
+                "0".repeat(64), shouldCancel = { true }
+            )
+        }
+        assertTrue(cancelled.exceptionOrNull() is CandidateVerificationCancelledException)
     }
 
     @Test fun contextPacketLabelsHypothesesAndPreservesSourceLinks() {

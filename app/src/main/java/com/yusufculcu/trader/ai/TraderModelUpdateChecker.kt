@@ -14,7 +14,12 @@ import java.net.URLEncoder
 enum class ModelSourceStatus { CURRENT, CANDIDATE_REVIEW_REQUIRED, ARTIFACT_MISSING, ARTIFACT_UNVERIFIED, CHECK_FAILED }
 
 data class ModelArtifactMetadata(val path: String, val sizeBytes: Long, val sha256: String)
-data class ModelSourceSnapshot(val revision: String, val artifact: ModelArtifactMetadata?)
+enum class ModelArtifactLookupStatus { FOUND, MISSING, UNVERIFIED }
+data class ModelSourceSnapshot(
+    val revision: String,
+    val artifact: ModelArtifactMetadata?,
+    val lookupStatus: ModelArtifactLookupStatus = if (artifact == null) ModelArtifactLookupStatus.MISSING else ModelArtifactLookupStatus.FOUND
+)
 data class ModelUpdateResult(
     val status: ModelSourceStatus,
     val checkedAtEpochMs: Long,
@@ -26,8 +31,15 @@ data class ModelUpdateResult(
 
 object TraderModelUpdatePolicy {
     fun evaluate(spec: TraderModelSpec, snapshot: ModelSourceSnapshot, checkedAtEpochMs: Long): ModelUpdateResult {
+        when (snapshot.lookupStatus) {
+            ModelArtifactLookupStatus.MISSING ->
+                return ModelUpdateResult(ModelSourceStatus.ARTIFACT_MISSING, checkedAtEpochMs, snapshot.revision, "The immutable upstream revision does not contain the catalogued artifact. The installed copy is unchanged.")
+            ModelArtifactLookupStatus.UNVERIFIED ->
+                return ModelUpdateResult(ModelSourceStatus.ARTIFACT_UNVERIFIED, checkedAtEpochMs, snapshot.revision, "The catalogued path exists upstream, but its artifact metadata is missing or malformed. The installed copy is unchanged.")
+            ModelArtifactLookupStatus.FOUND -> Unit
+        }
         val artifact = snapshot.artifact
-            ?: return ModelUpdateResult(ModelSourceStatus.ARTIFACT_MISSING, checkedAtEpochMs, snapshot.revision, "The immutable upstream revision does not contain the catalogued artifact. The installed copy is unchanged.")
+            ?: return ModelUpdateResult(ModelSourceStatus.ARTIFACT_UNVERIFIED, checkedAtEpochMs, snapshot.revision, "The catalogued path exists upstream, but its metadata could not be read.")
         if (artifact.path != spec.fileName || artifact.sizeBytes <= 0L || !artifact.sha256.matches(Regex("[a-fA-F0-9]{64}"))) {
             return ModelUpdateResult(ModelSourceStatus.ARTIFACT_UNVERIFIED, checkedAtEpochMs, snapshot.revision, "Upstream did not provide valid path, byte-size and SHA-256 metadata for this artifact.")
         }
@@ -76,8 +88,9 @@ class TraderModelUpdateChecker(context: Context) {
                 ?: throw IllegalStateException("Upstream response did not contain a valid commit revision.")
             val encodedRevision = URLEncoder.encode(revision, Charsets.UTF_8.name()).replace("+", "%20")
             val tree = getJsonArray("https://huggingface.co/api/models/$encodedRepo/tree/$encodedRevision?recursive=true&expand=true")
-            val artifact = parseArtifact(tree, model.fileName)
-            TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot(revision, artifact), now)
+            val lookup = findArtifact(tree, model.fileName)
+            val status = lookup?.lookupStatus ?: ModelArtifactLookupStatus.MISSING
+            TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot(revision, lookup?.artifact, status), now)
         }.getOrElse { error ->
             ModelUpdateResult(ModelSourceStatus.CHECK_FAILED, now, detail = error.message ?: "Could not verify upstream artifact metadata.")
         }
@@ -92,18 +105,28 @@ class TraderModelUpdateChecker(context: Context) {
         return result
     }
 
-    private fun parseArtifact(tree: JSONArray, expectedPath: String): ModelArtifactMetadata? {
+    private fun findArtifact(tree: JSONArray, expectedPath: String): ArtifactLookup? {
         for (index in 0 until tree.length()) {
             val item = tree.optJSONObject(index) ?: continue
-            if (item.optString("path") != expectedPath || item.optString("type") != "file") continue
+            if (item.optString("path") != expectedPath) continue
+            if (item.optString("type") != "file") {
+                return ArtifactLookup(null, ModelArtifactLookupStatus.UNVERIFIED)
+            }
             val size = item.optLong("size", -1L)
-            val lfs = item.optJSONObject("lfs")
-            val oid = lfs?.optString("oid").orEmpty()
-            val digest = oid.removePrefix("sha256:").takeIf { it.matches(Regex("[a-fA-F0-9]{64}")) } ?: return null
-            return ModelArtifactMetadata(expectedPath, size, digest)
+            val oid = item.optJSONObject("lfs")?.optString("oid").orEmpty()
+            val digest = oid.removePrefix("sha256:").takeIf { it.matches(Regex("[a-fA-F0-9]{64}")) }
+            if (size <= 0L || digest == null) {
+                return ArtifactLookup(null, ModelArtifactLookupStatus.UNVERIFIED)
+            }
+            return ArtifactLookup(ModelArtifactMetadata(expectedPath, size, digest), ModelArtifactLookupStatus.FOUND)
         }
         return null
     }
+
+    private data class ArtifactLookup(
+        val artifact: ModelArtifactMetadata?,
+        val lookupStatus: ModelArtifactLookupStatus
+    )
 
     private fun getJson(url: String): JSONObject {
         val body = requestBounded(url)

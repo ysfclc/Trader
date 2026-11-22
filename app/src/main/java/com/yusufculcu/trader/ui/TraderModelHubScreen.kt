@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
@@ -34,7 +36,9 @@ import com.yusufculcu.trader.TraderApplication
 import com.yusufculcu.trader.ai.TraderModelCatalog
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.ai.TraderModelUpdateChecker
+import com.yusufculcu.trader.ai.CandidateVerificationStatus
 import com.yusufculcu.trader.ai.ModelSourceStatus
+import com.yusufculcu.trader.ai.ModelUpdateResult
 import java.util.Locale
 
 @Composable
@@ -49,6 +53,9 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     var testing by remember { mutableStateOf(false) }
     var settingsRefresh by remember { mutableStateOf(0) }
     val updateChecker = remember(app) { TraderModelUpdateChecker(app) }
+    val candidateVerifier = remember(app) { app.modelCandidateVerifier }
+    val candidateStates by candidateVerifier.states.collectAsState()
+    var candidateToVerify by remember { mutableStateOf<Pair<com.yusufculcu.trader.ai.TraderModelSpec, ModelUpdateResult>?>(null) }
     var sourceChecks by remember { mutableStateOf(TraderModelCatalog.entries.associate { it.id to updateChecker.cachedResult(it) }) }
     var checkingSources by remember { mutableStateOf(false) }
     LazyColumn(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -88,6 +95,40 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                         if (check.candidateSha256.isNotBlank()) Text("Upstream SHA-256: " + check.candidateSha256, style = MaterialTheme.typography.bodySmall)
                         Text(check.detail, style = MaterialTheme.typography.bodySmall)
                         Text("Checked: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(check.checkedAtEpochMs)), style = MaterialTheme.typography.labelSmall)
+                    }
+                    candidateStates[model.id]?.let { verification ->
+                        val verificationColor = when (verification.status) {
+                            CandidateVerificationStatus.BYTES_VERIFIED -> MaterialTheme.colorScheme.primary
+                            CandidateVerificationStatus.FAILED -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.tertiary
+                        }
+                        Text("CANDIDATE BYTE CHECK · " + verification.status.name.replace('_', ' '), style = MaterialTheme.typography.labelMedium, color = verificationColor)
+                        Text(verification.detail, style = MaterialTheme.typography.bodySmall)
+                        if (verification.actualSha256.isNotBlank()) {
+                            Text("Downloaded SHA-256: " + verification.actualSha256, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    if (sourceChecks[model.id]?.status == ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED) {
+                        val verification = candidateStates[model.id]
+                        val activeVerification = verification?.status == CandidateVerificationStatus.DOWNLOADING ||
+                            verification?.status == CandidateVerificationStatus.VERIFYING
+                        if (activeVerification) {
+                            LinearProgressIndicator(
+                                progress = { verification!!.progress },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedButton(onClick = { candidateVerifier.cancel(model.id) }) { Text("Cancel byte verification") }
+                        } else if (verification?.status != CandidateVerificationStatus.BYTES_VERIFIED) {
+                            val candidate = sourceChecks[model.id]!!
+                            val enoughCandidateStorage = candidateVerifier.hasEnoughStorage(candidate)
+                            OutlinedButton(
+                                enabled = enoughCandidateStorage,
+                                onClick = { candidateToVerify = model to candidate }
+                            ) { Text("Verify candidate bytes") }
+                            if (!enoughCandidateStorage) {
+                                Text("Temporary verification needs the full candidate size plus 150 MB free storage.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
                     Text(state.detail.ifBlank { state.status.name }, style = MaterialTheme.typography.labelMedium)
                     if (state.status == TraderModelStore.Status.DOWNLOADING || state.status == TraderModelStore.Status.VERIFYING) LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
@@ -151,6 +192,26 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
             }
         }
         item { Spacer(Modifier.height(12.dp)) }
+    }
+    candidateToVerify?.let { (model, candidate) ->
+        AlertDialog(
+            onDismissRequest = { candidateToVerify = null },
+            title = { Text("Download candidate for verification?") },
+            text = {
+                Text(
+                    "Trader will download the full ${formatModelSize(candidate.candidateSizeBytes ?: 0L)} candidate from ${model.repository} at immutable revision ${candidate.latestRevision}. It will check the actual byte count and SHA-256 against the upstream-declared metadata, then delete the temporary file. This does not install, activate, approve or repin the model. A 150 MB storage reserve is required."
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    candidateVerifier.verify(model, candidate)
+                    candidateToVerify = null
+                }) { Text("Download and verify") }
+            },
+            dismissButton = {
+                TextButton(onClick = { candidateToVerify = null }) { Text("Cancel") }
+            }
+        )
     }
     @Suppress("UNUSED_EXPRESSION")
     settingsRefresh

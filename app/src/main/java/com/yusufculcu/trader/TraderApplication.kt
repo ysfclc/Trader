@@ -12,6 +12,7 @@ import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.ai.TraderModelStore
+import com.yusufculcu.trader.ai.TraderModelCandidateVerifier
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
 
 class TraderApplication : Application() {
@@ -24,5 +25,6 @@ class TraderApplication : Application() {
     val discoveryStrategyRepository: DiscoveryStrategyRepository by lazy { DiscoveryStrategyRepository(database) }
     val discoveryRunRepository: DiscoveryRunRepository by lazy { DiscoveryRunRepository(database) }
     val modelStore: TraderModelStore by lazy { TraderModelStore(this) }
+    val modelCandidateVerifier: TraderModelCandidateVerifier by lazy { TraderModelCandidateVerifier(this) }
     val discoverySourceStore: DiscoverySourceStore by lazy { DiscoverySourceStore(this) }
 }
