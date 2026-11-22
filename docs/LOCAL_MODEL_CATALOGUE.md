@@ -44,3 +44,8 @@ The Model Hub can perform a user-triggered metadata check against the Hugging Fa
 Statuses: `CURRENT` means the pinned revision matches; `UPDATE_AVAILABLE` means a different revision exists and the artifact is still listed; `ARTIFACT_MISSING` means the default branch no longer lists that filename; `CHECK_FAILED` means the request or response validation failed.
 
 This does not prove a candidate artifact's hash, compatibility, license, quality, or device performance. No model file is downloaded or replaced by this check. Updates remain manually reviewed and repinned.
+
+
+## Metadata response bounds
+
+The source checker rejects an advertised response larger than 1 MB and also enforces the same limit while streaming bytes. The streaming limit applies even if the server omits or misreports `Content-Length`, preventing an unbounded metadata-body allocation before JSON parsing.

@@ -7,6 +7,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 enum class ModelSourceStatus { CURRENT, UPDATE_AVAILABLE, ARTIFACT_MISSING, CHECK_FAILED }
 
@@ -45,8 +47,9 @@ class TraderModelUpdateChecker(context: Context) {
             try {
                 val code = connection.responseCode
                 if (code !in 200..299) throw IllegalStateException("Model source returned HTTP $code")
-                val body = connection.inputStream.bufferedReader().use { it.readText() }
-                require(body.length <= MAX_RESPONSE_CHARS) { "Upstream metadata response exceeded the safety limit." }
+                val declaredLength = connection.getHeaderFieldLong("Content-Length", -1L)
+                require(declaredLength < 0L || declaredLength <= MAX_RESPONSE_BYTES) { "Upstream metadata response exceeded the safety limit." }
+                val body = connection.inputStream.use { readBoundedUtf8(it, MAX_RESPONSE_BYTES) }
                 val json = JSONObject(body)
                 val revision = json.optString("sha").takeIf { it.matches(Regex("[a-fA-F0-9]{40}")) } ?: throw IllegalStateException("Upstream response did not contain a valid commit revision.")
                 val siblings = json.optJSONArray("siblings")
@@ -59,5 +62,22 @@ class TraderModelUpdateChecker(context: Context) {
     }
 
     private fun key(model: TraderModelSpec, field: String) = "${model.id}_$field"
-    companion object { private const val MAX_RESPONSE_CHARS = 1_000_000 }
+    companion object { private const val MAX_RESPONSE_BYTES = 1_000_000L }
+}
+
+/** Reads no more than maxBytes, even when the server omits or lies about Content-Length. */
+internal fun readBoundedUtf8(input: InputStream, maxBytes: Long): String {
+    require(maxBytes >= 0L) { "Maximum response size must not be negative." }
+    val output = ByteArrayOutputStream(minOf(maxBytes, 8_192L).toInt())
+    val buffer = ByteArray(8_192)
+    var total = 0L
+    while (true) {
+        val count = input.read(buffer)
+        if (count < 0) break
+        total += count
+        require(total <= maxBytes) { "Upstream metadata response exceeded the safety limit." }
+        output.write(buffer, 0, count)
+    }
+    return output.toString(Charsets.UTF_8.name())
+}
 }

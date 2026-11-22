@@ -3,6 +3,7 @@ package com.yusufculcu.trader.ai
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayInputStream
 
 class TraderLocalAiFoundationTest {
     @Test fun catalogHasValidUniquePinnedModels() {
@@ -25,6 +26,13 @@ class TraderLocalAiFoundationTest {
         assertTrue(candidate.detail.contains("only a candidate"))
         val missing = TraderModelUpdatePolicy.evaluate(model, ModelSourceSnapshot("f".repeat(40), false), now)
         assertEquals(ModelSourceStatus.ARTIFACT_MISSING, missing.status)
+    }
+
+    @Test fun metadataResponseReaderAcceptsWithinLimitAndRejectsOversizedBody() {
+        assertEquals("hello", readBoundedUtf8(ByteArrayInputStream("hello".toByteArray()), 5))
+        val oversized = runCatching { readBoundedUtf8(ByteArrayInputStream("hello!".toByteArray()), 5) }
+        assertTrue(oversized.isFailure)
+        assertTrue(oversized.exceptionOrNull()?.message.orEmpty().contains("safety limit"))
     }
 
     @Test fun contextPacketLabelsHypothesesAndPreservesSourceLinks() {
