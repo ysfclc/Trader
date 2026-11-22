@@ -207,7 +207,12 @@
     <string name="discover_nav">Keşfet</string>
     <string name="discover_title">İşe yarar sinyalleri keşfet</string>
     <string name="discover_subtitle">Herkese açık kaynakları ara ve gerçek kanıtları çalışma alanına getir.</string>
-    <string name="discover_web_search">Tek seferlik web araması</string>
+        <string name="discover_run_title">Etkin kaynaklarda keşif çalıştır</string>
+    <string name="discover_run_objective_hint">Trader ne aramalı?</string>
+    <string name="discover_run_now">Etkin kaynakları çalıştır</string>
+    <string name="discover_run_complete">Tamamlandı: %1$d kaynak başarılı, %2$d başarısız, %3$d sonuç.</string>
+    <string name="discover_run_limit_note">Yalnızca manuel çalıştırma. Kaynaklar sırayla, 30 saniye ve kaynak başına 50 sonuç sınırıyla çalışır. Sonuçlar doğrulanmamış ipuçlarıdır.</string>
+<string name="discover_web_search">Tek seferlik web araması</string>
     <string name="discover_search_hint">Ne arıyorsun?</string>
     <string name="discover_query_too_short">En az iki karakter gir.</string>
     <string name="discover_public_web">Herkese açık web araması</string>

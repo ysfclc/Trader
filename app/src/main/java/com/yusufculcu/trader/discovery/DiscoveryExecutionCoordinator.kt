@@ -51,17 +51,12 @@ class DiscoveryExecutionCoordinator(
                     runs.finishSource(sourceRun.id, documents.size, clock())
                     sourceStore.markChecked(source.id, clock())
                     successes += source.name
-                } catch (timeout: TimeoutCancellationException) {
-                    val message = "Source exceeded the configured time limit."
-                    runs.failSource(sourceRun.id, "TIMEOUT", message, clock())
-                    sourceStore.markChecked(source.id, clock(), message)
-                    failures += source.name
                 } catch (cancelled: CancellationException) {
                     sourceStore.markChecked(source.id, clock(), "Run cancelled.")
                     runs.requestCancellation(run.id, clock())
                     throw cancelled
                 } catch (failure: Exception) {
-                    val code = "SOURCE_FAILURE"
+                    val code = if (failure is TimeoutCancellationException) "TIMEOUT" else "SOURCE_FAILURE"
                     val message = (failure.message ?: failure.javaClass.simpleName).take(2_000)
                     runs.failSource(sourceRun.id, code, message, clock())
                     sourceStore.markChecked(source.id, clock(), message.take(300))

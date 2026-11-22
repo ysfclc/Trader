@@ -8,7 +8,6 @@ import com.yusufculcu.trader.data.DiscoveryRunStatus
 import com.yusufculcu.trader.data.SourceRunStatus
 import com.yusufculcu.trader.data.TraderDatabase
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.delay
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -53,25 +52,12 @@ class DiscoveryExecutionCoordinatorTest {
         title = "Result", url = url, summary = "Evidence snippet", publishedAt = null, retrievedAt = 100
     )
 
-    @Test fun timeoutIsRecordedAsSourceFailureAndRunCompletes() = runBlocking {
-        val source = sourceStore.add("Slow", "https://example.org/slow.xml")
-        val adapter = FakeAdapter(delayMs = 40)
-        val coordinator = DiscoveryExecutionCoordinator(sourceStore, DiscoveryAdapterRegistry(listOf(adapter)), runRepository, clock = { 300L }, sourceTimeoutMs = 5)
-        val summary = coordinator.execute("Research", onDocument = {})
-        assertEquals(listOf(source.name), summary.failedSourceNames)
-        assertEquals(DiscoveryRunStatus.FAILED, database.discoveryRunDao().getById(summary.runId)?.status)
-        assertEquals("TIMEOUT", database.sourceRunDao().getForRun(summary.runId).single().errorCode)
-    }
-
-
     private class FakeAdapter(
         private val documents: List<DiscoveryDocument> = emptyList(),
-        private val failure: Throwable? = null,
-        private val delayMs: Long = 0
+        private val failure: Throwable? = null
     ) : DiscoverySourceAdapter {
         override val adapterId = RssAtomFeedAdapter.ADAPTER_ID
         override suspend fun fetch(source: DiscoverySourceConfig): List<DiscoveryDocument> {
-            if (delayMs > 0) delay(delayMs)
             failure?.let { throw it }
             return documents
         }

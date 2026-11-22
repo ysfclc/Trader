@@ -207,7 +207,12 @@
     <string name="discover_nav">Discover</string>
     <string name="discover_title">Discover useful signals</string>
     <string name="discover_subtitle">Search public sources and bring real evidence into your workspace.</string>
-    <string name="discover_web_search">One-time public web search</string>
+        <string name="discover_run_title">Run discovery across enabled feeds</string>
+    <string name="discover_run_objective_hint">What should Trader look for?</string>
+    <string name="discover_run_now">Run enabled sources</string>
+    <string name="discover_run_complete">Discovery finished: %1$d sources succeeded, %2$d failed, %3$d items received.</string>
+    <string name="discover_run_limit_note">Manual run only. Sources run sequentially with a 30-second timeout and a 50-item maximum per source. Results are unreviewed leads.</string>
+<string name="discover_web_search">One-time public web search</string>
     <string name="discover_search_hint">What are you looking for?</string>
     <string name="discover_query_too_short">Enter at least two characters.</string>
     <string name="discover_public_web">Public web search</string>
