@@ -473,6 +473,10 @@ interface DiscoveryRunDao {
     suspend fun getRunning(): List<DiscoveryRunEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(run: DiscoveryRunEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(runs: List<DiscoveryRunEntity>)
+    @Query("DELETE FROM discovery_runs")
+    suspend fun deleteAll()
     @Update
     suspend fun update(run: DiscoveryRunEntity)
 }
@@ -487,6 +491,10 @@ interface SourceRunDao {
     suspend fun getById(id: String): SourceRunEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(sourceRun: SourceRunEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(sourceRuns: List<SourceRunEntity>)
+    @Query("DELETE FROM source_runs")
+    suspend fun deleteAll()
     @Update
     suspend fun update(sourceRun: SourceRunEntity)
     @Query("UPDATE source_runs SET status = 'CANCELLED', finishedAt = :at WHERE discoveryRunId = :runId AND status IN ('PENDING', 'RUNNING')")
