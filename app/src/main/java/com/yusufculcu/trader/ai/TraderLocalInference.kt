@@ -21,6 +21,7 @@ class TraderLocalInference {
         verifiedModelFile: File,
         systemInstruction: String,
         prompt: String,
+        maxOutputTokens: Int = model.maxOutputTokens,
     ): String = withContext(Dispatchers.IO) {
         require(model.isValidCatalogEntry()) { "Invalid model catalog entry: ${model.id}" }
         require(verifiedModelFile.isFile && verifiedModelFile.length() == model.sizeBytes) {
@@ -28,6 +29,7 @@ class TraderLocalInference {
         }
         require(systemInstruction.isNotBlank()) { "System instruction cannot be empty." }
         require(prompt.isNotBlank()) { "Prompt cannot be empty." }
+        require(maxOutputTokens in TraderModelStore.MIN_OUTPUT_TOKENS..model.maxOutputTokens) { "Output token budget is outside this model allowed range." }
         require(systemInstruction.length <= MAX_SYSTEM_CHARS) { "System instruction exceeds context input limit." }
         require(prompt.length <= MAX_PROMPT_CHARS) { "Prompt exceeds context input limit." }
 
@@ -41,7 +43,7 @@ class TraderLocalInference {
             )
             try {
                 val response = StringBuilder()
-                conversation.sendMessageAsync(prompt, maxOutputToken = model.maxOutputTokens).collect { message ->
+                conversation.sendMessageAsync(prompt, maxOutputToken = maxOutputTokens).collect { message ->
                     response.append(message.toString())
                     require(response.length <= MAX_RESPONSE_CHARS) { "Model response exceeded output safety limit." }
                 }

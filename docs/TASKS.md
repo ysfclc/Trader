@@ -115,7 +115,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T7.0b Add real LiteRT-LM inference adapter with CPU execution, off-main-thread operation, bounded input/output and pinned SHA-256 verification; CI build/test/lint verification passed in run 349; on-device LiteRT-LM inference remains open.
 - [~] T7.0d Add resumable pinned model download, SHA-256 verified install, private storage, storage/RAM preflight, active model selection and Model Hub UI with an actual inference smoke test. Code exists; CI build verification passed in run 349; model installation/inference on the target device remains unverified.
 - [x] T7.0c Add bounded ContextPacket with explicit fact status, provenance links, unknowns and truncation notice.
-- [ ] T7.1 Complete Model Hub: model scan/import, richer compatibility diagnostics, accelerator capability and runtime error details.
+- [~] T7.1 Expand Model Hub into a curated model library with publisher/source/revision/hash, artifact format, license-review status, strengths, limitations, device guidance and update policy; persist per-model output-token settings. Automatic upstream polling, model scan/import, accelerator capability and full runtime diagnostics remain open.
 - [ ] T7.2 Context Engine: assemble relevant proof assets, strategies, evidence, organizations, memory and unknowns; redact before external routing.
 - [ ] T7.3 Structured-output validation and plan parser; reject malformed output and unregistered capabilities.
 - [ ] T7.4 Local orchestrator: task routing, run persistence, cancellation, budgets and process-death recovery.

@@ -30,6 +30,16 @@ class TraderModelStore(context: Context) {
     private val prefs = app.getSharedPreferences("trader_models", Context.MODE_PRIVATE)
 
     fun activeModelId(): String? = prefs.getString("active_model", null)?.takeIf { installedFile(TraderModelCatalog.find(it) ?: return null) != null }
+
+    fun outputTokenLimit(spec: TraderModelSpec): Int =
+        prefs.getInt("output_tokens_\${spec.id}", spec.maxOutputTokens)
+            .coerceIn(MIN_OUTPUT_TOKENS, spec.maxOutputTokens)
+
+    fun setOutputTokenLimit(spec: TraderModelSpec, value: Int): Int {
+        val safe = value.coerceIn(MIN_OUTPUT_TOKENS, spec.maxOutputTokens)
+        prefs.edit().putInt("output_tokens_\${spec.id}", safe).apply()
+        return safe
+    }
     fun setActiveModel(id: String): Boolean {
         val spec = TraderModelCatalog.find(id) ?: return false
         if (installedFile(spec) == null) return false
@@ -133,5 +143,5 @@ class TraderModelStore(context: Context) {
     private fun formatBytes(bytes: Long): String = "%.1f MB".format(bytes / 1_000_000f)
 
     private class DownloadPausedException : Exception()
-    companion object { private const val STORAGE_RESERVE_BYTES = 150L * 1024 * 1024 }
+    companion object { private const val STORAGE_RESERVE_BYTES = 150L * 1024 * 1024; const val MIN_OUTPUT_TOKENS = 128 }
 }

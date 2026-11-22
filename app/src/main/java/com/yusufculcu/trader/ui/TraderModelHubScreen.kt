@@ -16,6 +16,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Slider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +45,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     var testOutput by remember { mutableStateOf("") }
     var testing by remember { mutableStateOf(false) }
+    var settingsRefresh by remember { mutableStateOf(0) }
     LazyColumn(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -60,10 +62,24 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                     Text(model.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(model.role.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() } + " · ${formatModelSize(model.sizeBytes)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(model.description, style = MaterialTheme.typography.bodyMedium)
+                    Text("Publisher: " + model.publisher, style = MaterialTheme.typography.bodySmall)
+                    Text("Source: " + model.repository + " · revision " + model.sourceRevision, style = MaterialTheme.typography.bodySmall)
+                    Text("Format: " + model.format + " · " + model.quantization, style = MaterialTheme.typography.bodySmall)
+                    Text("License: " + model.licenseStatus, style = MaterialTheme.typography.bodySmall)
+                    Text("Strengths: " + model.strengths.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                    Text("Limitations: " + model.limitations.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+                    Text("Device guidance: " + model.deviceGuidance, style = MaterialTheme.typography.bodySmall)
+                    Text("Artifact: " + model.fileName, style = MaterialTheme.typography.bodySmall)
+                    Text("SHA-256: " + model.sha256, style = MaterialTheme.typography.bodySmall)
                     Text(state.detail.ifBlank { state.status.name }, style = MaterialTheme.typography.labelMedium)
                     if (state.status == TraderModelStore.Status.DOWNLOADING || state.status == TraderModelStore.Status.VERIFYING) LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
                     if (!enoughStorage) Text("Insufficient storage available for download plus reserve.", color = MaterialTheme.colorScheme.error)
                     if (!ramOkay) Text("Available RAM is below this model's preflight recommendation. Download is allowed, but inference may fail or be slow.", color = MaterialTheme.colorScheme.error)
+                    if (state.status == TraderModelStore.Status.INSTALLED) {
+                        val tokenBudget = store.outputTokenLimit(model)
+                        Text("Maximum output tokens: " + tokenBudget + " / " + model.maxOutputTokens, style = MaterialTheme.typography.bodySmall)
+                        Slider(value = tokenBudget.toFloat(), onValueChange = { store.setOutputTokenLimit(model, it.toInt()); settingsRefresh++ }, valueRange = TraderModelStore.MIN_OUTPUT_TOKENS.toFloat()..model.maxOutputTokens.toFloat())
+                    }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         when (state.status) {
                             TraderModelStore.Status.INSTALLED -> {
@@ -80,6 +96,9 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Runtime settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Backend: CPU. Cloud fallback: disabled. Models are stored in private app storage.", style = MaterialTheme.typography.bodyMedium)
+                    Text("Updates: source repository and pinned revision are recorded per model. Releases are manually reviewed and repinned; automatic upstream polling is not implemented yet.", style = MaterialTheme.typography.bodyMedium)
                     Text("Inference smoke test", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Run a real prompt on the active model. This confirms local inference, not discovery automation.", style = MaterialTheme.typography.bodyMedium)
                     Button(enabled = activeId != null && !testing, onClick = {
@@ -94,7 +113,8 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                                 com.yusufculcu.trader.ai.TraderLocalInference().generate(
                                     model, file,
                                     "You are Trader, a private on-device assistant. Answer briefly and truthfully.",
-                                    "In one sentence, confirm that local inference is running and name one task you can help Trader with."
+                                    "In one sentence, confirm that local inference is running and name one task you can help Trader with.",
+                                    maxOutputTokens = store.outputTokenLimit(model)
                                 )
                             }.fold({ "Local inference succeeded:\\n\\n$it" }, { "Local inference failed: ${it.message ?: it.javaClass.simpleName}" })
                             testing = false
@@ -106,6 +126,8 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
         }
         item { Spacer(Modifier.height(12.dp)) }
     }
+    @Suppress("UNUSED_EXPRESSION")
+    settingsRefresh
 }
 
 private fun formatModelSize(bytes: Long): String = String.format(Locale.getDefault(), "%.0f MB", bytes / 1_000_000f)
