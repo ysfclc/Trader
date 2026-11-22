@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-22 — session 18 (durable discovery execution connected to Discover; CI run 44998620615 passed)_
+_Last updated: 2026-11-22 — session 19 (candidate model byte verification and lifecycle hardening; CI run 45052932934 pending)_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -15,13 +15,13 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first execution slice CI-verified | Objective-driven DuckDuckGo search plus all enabled local RSS/Atom feeds run through one bounded coordinator. Per-source run history/status, timeout isolation, cancellation, cross-source URL dedupe, manual feed checks, browser handoff and save-to-Work as UNREVIEWED evidence. CI run 44998620615: 115 tests passed, 0 failures/errors/skips; build, lint, signature and package/version checks passed. No live-source or physical-device acceptance. |
 | Company / people graph | 🟡 foundation only | ProofAsset/DiscoveryStrategy models, validation, Room migration, repository, codec and encrypted backup are CI-verified. There is no editor UI, strategy-driven execution, normalized Organization/Person record, dossier, identity review or explainable fit engine yet. |
-| Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub foundations. No verified on-device model inference or durable WorkManager executor. |
+| Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub. Curated source metadata checks and consent-gated immutable candidate downloads with exact-size/SHA-256 verification, cancellation, temporary-file cleanup and no automatic install are implemented; current feature CI is pending. No verified on-device model inference or durable WorkManager executor. |
 | Social/community sources | ⚪ not implemented | Reddit OAuth, Bluesky/Mastodon APIs, authorized groups and Facebook browser-assisted research remain future provider-specific adapters. |
 | Outreach | ⚪ not implemented | Drafting/approval/handoff contracts remain planned; no autonomous send. |
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; latest feature commit `9adb46cce95baa733e7c6f346904b313f924230d`.
+- Current branch: `feature/discovery-run-persistence`; latest feature commit `3e85b2aff2046939caa3384fe0f5977beb806cde` (candidate verification transport/UI lifecycle hardening).
 - Candidate package/version: `com.yusufculcu.trader.debug`, versionCode 2, versionName `0.2.0-debug`.
 - CI run 44998620615 validated versionCode 2 / `0.2.0-debug`; artifact SHA-256 `dd3b28aa150c360584abc67a273129bab627b665c7c22ecda3a84124abb463d5` (69,554,096 bytes). It was signed with the runner debug key because persistent signing secrets were not configured; do not assume upgrade compatibility with any previous APK.
 - A dedicated PKCS12 development keystore has been generated outside Git for the next stable signing setup. Its SHA-256 certificate fingerprint is pinned in `.github/workflows/android.yml`; the private bundle contains the key, base64 secret value and password. Repository Actions secrets `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` remain absent until GitHub sign-in is completed. CI labels builds without the key as CI-only and not for installation.
@@ -120,3 +120,34 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - CI has not yet verified the new Room migration, persistence and encrypted backup integration. No APK or device acceptance is claimed.
 - No UI for editing proof assets or strategies exists yet.
 - Next: verify Room migration and backup compatibility; then add DiscoveryRun/SourceRun persistence and cancellation semantics.
+
+
+## Session 19 handoff — immutable candidate model byte verification
+
+**Implemented on branch** `feature/discovery-run-persistence`, latest commit `3e85b2aff2046939caa3384fe0f5977beb806cde`.
+
+- Added a user-confirmed candidate integrity flow for changed upstream model artifacts. It uses the full immutable 40-character source revision, metadata-declared byte count and SHA-256.
+- Downloads the complete candidate into an app-private temporary cache file, enforces exact size while hashing the bytes, and deletes the temporary file after success, failure or cancellation. A 150 MB free-space reserve is required; candidate verification is capped at 8 GB.
+- Supports cancellation by disconnecting the active HTTP request, serializes candidate verification to one active download, throttles progress updates to 8 MB intervals and treats cleanup failure as a failed verification rather than success.
+- Enforces HTTPS after redirects and requests identity content encoding so the measured byte count applies to the artifact stream.
+- The Model Hub binds a displayed byte-verification result to the candidate's exact source revision. A result from an older candidate cannot hide the action for a newer candidate.
+- Source metadata policy distinguishes an absent artifact (`ARTIFACT_MISSING`) from a present artifact with missing/malformed integrity metadata (`ARTIFACT_UNVERIFIED`).
+- A successful byte check proves only that downloaded bytes match the digest declared by upstream metadata. It does not approve the model, verify license/usage rights, prove LiteRT-LM compatibility, establish quality/device performance, install, activate or repin a candidate.
+
+**CI status at handoff**
+- Latest commit: `3e85b2aff2046939caa3384fe0f5977beb806cde`.
+- Android CI run [45052932934](https://github.com/ysfclc/Trader/actions/runs/45052932934) was queued/in progress at handoff; no pass or failure is claimed yet.
+- Earlier run 45052696109 for parent commit 3db0c69 was cancelled by branch concurrency after the follow-up hardening commit. It is not a failed build.
+- No installable APK is claimed from this checkpoint. The previous green build (run 45006357134) uploaded only the explicitly non-installable CI APK because stable signing secrets were not configured at that time.
+
+**Still open**
+1. Confirm latest CI run 45052932934 passes tests, lint, APK package/signature checks and inspect whether the persistent installable artifact step actually ran.
+2. On the Redmi, exercise a real candidate check only after an upstream change exists; record device/runtime/storage/network evidence. No physical-device model download or inference is claimed.
+3. Complete the human model-card/license review, LiteRT-LM compatibility and structured-output quality testing, plus target-device memory/latency/thermal checks before any catalogue repinning.
+4. Continue T7.2 Context Engine and T7.3 structured-output validation only after the local model lifecycle is accepted; preserve deterministic validation and explicit fact provenance.
+
+**Risks / landmines**
+- Candidate byte verification downloads the entire model (up to 8 GB) to temporary app cache; the user explicitly confirms the transfer and must have the candidate size plus 150 MB reserve.
+- A byte-hash match is not publisher trust or release approval. Never promote a candidate automatically.
+- If cleanup fails, the UI reports failure and requires app-cache cleanup; it does not claim the candidate is safely discarded.
+- Stable APK signing secrets must be present in GitHub Actions before CI can publish an installable update. Never put the private keystore or password in chat or commit either to Git.
