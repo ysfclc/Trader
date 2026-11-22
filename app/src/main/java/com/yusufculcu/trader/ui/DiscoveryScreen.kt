@@ -105,7 +105,7 @@ fun DiscoveryScreen(
                             scope.launch {
                                 val coordinator = DiscoveryExecutionCoordinator(sourceStore, adapterRegistry, runRepository)
                                 runCatching {
-                                    coordinator.execute(runObjective) { item -> results = results + item }
+                                    coordinator.execute(runObjective) { item -> results = (results + item).distinctBy { it.url } }
                                 }.onSuccess { summary ->
                                     reloadSources()
                                     notice = context.getString(R.string.discover_run_complete, summary.succeededSourceNames.size, summary.failedSourceNames.size, summary.documentsReceived)
