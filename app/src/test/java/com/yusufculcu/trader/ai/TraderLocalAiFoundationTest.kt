@@ -164,7 +164,7 @@ class TraderLocalAiFoundationTest {
         val result = TraderDiscoveryStrategyOutputParser.parse(
             validDiscoveryDraftJson(), parserProofAsset(), setOf("duckduckgo_html", "rss_atom")
         )
-        assertTrue(result.valid)
+        assertTrue(result.issues.joinToString("; "), result.valid)
         val draft = result.draft!!
         assertEquals("Needs custom precision machining", draft.problemSignatures.single().problem)
         assertEquals("duckduckgo_html", draft.queries.single().sourceAdapterId)
@@ -177,7 +177,7 @@ class TraderLocalAiFoundationTest {
     @Test fun discoveryStrategyParserAcceptsSingleJsonFence() {
         val fenced = "```json\n" + validDiscoveryDraftJson() + "\n```"
         val result = TraderDiscoveryStrategyOutputParser.parse(fenced, parserProofAsset(), setOf("duckduckgo_html"))
-        assertTrue(result.valid)
+        assertTrue(result.issues.joinToString("; "), result.valid)
     }
 
     @Test fun discoveryStrategyParserRejectsUnregisteredAdapterAndUnknownFields() {
@@ -185,7 +185,7 @@ class TraderLocalAiFoundationTest {
             validDiscoveryDraftJson("not_registered"), parserProofAsset(), setOf("duckduckgo_html")
         )
         assertTrue(!unknownAdapter.valid)
-        assertTrue(unknownAdapter.issues.any { it.contains("unregistered source adapter") })
+        assertTrue(unknownAdapter.issues.joinToString("; "), unknownAdapter.issues.any { it.contains("unregistered source adapter") })
         val unknownFieldJson = validDiscoveryDraftJson().replace(
             "\"maxResultsPerSource\": 10",
             "\"maxResultsPerSource\": 10, \"executeImmediately\": true"
