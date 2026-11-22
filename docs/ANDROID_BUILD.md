@@ -28,7 +28,7 @@ The debug build has the stable application ID `com.yusufculcu.trader.debug` and 
 
 ## CI
 
-GitHub Actions runs the same Gradle tasks on pushes to `main` and `build/**`, and on pull requests targeting `main`. It uploads `trader-installable-apk` only when both `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` repository Actions secrets are configured. Without them, it uploads `trader-ci-debug-apk-not-for-installation`; that ephemeral CI signature must never be sideloaded as an update target.
+GitHub Actions runs the same Gradle tasks on pushes to `main`, `build/**` and `feature/**`, and on pull requests targeting `main` or `feature/**`. It uploads `trader-installable-apk` only when both `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` repository Actions secrets are configured. Without them, it uploads `trader-ci-debug-apk-not-for-installation`; that ephemeral CI signature must never be sideloaded as an update target.
 
 
 Robolectric tests use Maven Central's canonical `repo.maven.apache.org` host for Android SDK artifacts rather than the default `repo1.maven.org` checksum endpoint, which returned intermittent 404 responses in CI.
@@ -51,14 +51,11 @@ The Android manifest declares the Trader adaptive launcher icon (`ic_launcher` a
 
 ## Latest verified Discover build
 
-- Feature PR: #18, branch feature/public-search-adapter.
-- CI validation: run 385, validation branch build/discovery-source-slice; its tree matches the PR head tree. 97 tests, 0 failures, 0 errors, 0 skipped; lint, assembleDebug, apksigner and exact package/version checks passed.
-- Artifact: trader-debug-apk, 69,441,948 bytes; package com.yusufculcu.trader.debug, version 0.1.0-debug; SHA-256 b28d0b089962fb3481425ceae14dfb4d4449527a15f7d5bd3fd4408b2664f210.
-- A CI-generated debug key is not a production signing identity; update compatibility with a previously installed debug APK is not established. Do not uninstall an existing installation without protecting local data.
+- Branch: `feature/discovery-run-persistence`; commit `9adb46cce95baa733e7c6f346904b313f924230d`.
+- CI run [44998620615](https://github.com/ysfclc/Trader/actions/runs/44998620615) passed `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`: **115 tests, 0 failures, 0 errors, 0 skipped**.
+- CI also passed `apksigner verify` and exact `aapt` assertions for package `com.yusufculcu.trader.debug`, versionCode `2`, versionName `0.2.0-debug`.
+- Artifact: `trader-ci-debug-apk-not-for-installation`, artifact ID `14745225976`, APK size 69,554,096 bytes; SHA-256 `dd3b28aa150c360584abc67a273129bab627b665c7c22ecda3a84124abb463d5`.
+- Persistent Trader signing secrets were absent in this run. The artifact uses the ephemeral CI debug key and is not a stable-signed update target; provide the APK to the user's own signing step, and do not install over an existing copy expecting data-preserving update compatibility.
+- This commit makes the durable discovery-run coordinator reachable from the actual Discover UI, with one objective-driven DuckDuckGo search, enabled feeds, recent run/source history, timeout isolation, cancellation and URL deduplication. It is still a manual, bounded source scan; it does not create company dossiers or qualified matches.
+- CI does not prove live provider markup/access, physical-device UI acceptance, database migration/backup restore on Redmi or stable in-place update continuity.
 
-
-## Current candidate (CI verified; stable installable signing setup pending)
-
-- Version: `0.2.0-debug`, versionCode 2; package remains `com.yusufculcu.trader.debug`.
-- Adds adaptive launcher icon, optional stable development signing via the two Actions secrets above, and encrypted backup snapshot v2 for public source settings.
-- CI run 405 passed 98 tests, lint, build, package/version and signature checks. Stable secrets were absent, so the produced artifact is CI-only and must not be installed. Previous CI run 385 artifact used an ephemeral runner key and cannot be assumed upgrade-compatible.

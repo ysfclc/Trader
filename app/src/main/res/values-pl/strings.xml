@@ -239,7 +239,7 @@
     <string name="discover_source_name">Nazwa źródła</string>
     <string name="discover_feed_url">Publiczny adres kanału HTTPS</string>
     <string name="discover_add_source">Dodaj źródło</string>
-    <string name="discover_feed_security">Obsługiwane są tylko publiczne kanały HTTPS. Adresy sieci lokalnych i przekierowania są blokowane. Lista źródeł jest zapisana na tym urządzeniu, nie w zaszyfrowanej kopii zapasowej.</string>
+    <string name="discover_feed_security">Akceptowane są tylko publiczne kanały HTTPS. Adresy sieci lokalnych i przekierowania są blokowane. Publiczne źródła są uwzględniane w zaszyfrowanych kopiach zapasowych Trader.</string>
     <string name="discover_sources">Twoje źródła</string>
     <string name="discover_reload">Odśwież listę</string>
     <string name="discover_no_sources">Nie dodano jeszcze kanałów. Dodaj publiczny RSS lub Atom.</string>
