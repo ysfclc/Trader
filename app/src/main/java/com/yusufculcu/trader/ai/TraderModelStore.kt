@@ -32,12 +32,12 @@ class TraderModelStore(context: Context) {
     fun activeModelId(): String? = prefs.getString("active_model", null)?.takeIf { installedFile(TraderModelCatalog.find(it) ?: return null) != null }
 
     fun outputTokenLimit(spec: TraderModelSpec): Int =
-        prefs.getInt("output_tokens_\${spec.id}", spec.maxOutputTokens)
+        prefs.getInt("output_tokens_${spec.id}", spec.maxOutputTokens)
             .coerceIn(MIN_OUTPUT_TOKENS, spec.maxOutputTokens)
 
     fun setOutputTokenLimit(spec: TraderModelSpec, value: Int): Int {
         val safe = value.coerceIn(MIN_OUTPUT_TOKENS, spec.maxOutputTokens)
-        prefs.edit().putInt("output_tokens_\${spec.id}", safe).apply()
+        prefs.edit().putInt("output_tokens_${spec.id}", safe).apply()
         return safe
     }
     fun setActiveModel(id: String): Boolean {
