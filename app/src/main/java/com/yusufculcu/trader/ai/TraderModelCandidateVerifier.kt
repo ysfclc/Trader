@@ -37,6 +37,7 @@ class TraderModelCandidateVerifier(context: Context) {
     private val stagingDir = File(app.cacheDir, "trader-candidate-verification").apply { mkdirs() }
     private val executor = Executors.newSingleThreadExecutor { Thread(it, "trader-candidate-verifier") }
     private val cancellation = ConcurrentHashMap<String, Boolean>()
+    private val activeConnections = ConcurrentHashMap<String, HttpURLConnection>()
     private val mutableStates = MutableStateFlow<Map<String, CandidateVerificationState>>(emptyMap())
     val states: StateFlow<Map<String, CandidateVerificationState>> = mutableStates
 
@@ -101,6 +102,7 @@ class TraderModelCandidateVerifier(context: Context) {
 
     fun cancel(modelId: String) {
         cancellation[modelId] = true
+        activeConnections[modelId]?.disconnect()
     }
 
     private fun downloadAndVerify(spec: TraderModelSpec, candidate: ModelUpdateResult, expectedBytes: Long, expectedSha256: String) {
@@ -111,24 +113,32 @@ class TraderModelCandidateVerifier(context: Context) {
             if (temporaryFile.exists() && !temporaryFile.delete()) {
                 throw IllegalStateException("Could not clear a previous temporary candidate file.")
             }
-            connection = (URL(candidateUrl(spec, candidate.latestRevision)).openConnection() as HttpURLConnection).apply {
+            val activeConnection = (URL(candidateUrl(spec, candidate.latestRevision)).openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 20_000
                 readTimeout = 60_000
                 instanceFollowRedirects = true
                 setRequestProperty("Accept", "application/octet-stream")
+                setRequestProperty("Accept-Encoding", "identity")
                 setRequestProperty("User-Agent", "Trader-Android-CandidateVerifier/1")
             }
-            val responseCode = connection.responseCode
+            connection = activeConnection
+            activeConnections[spec.id] = activeConnection
+            if (cancellation[spec.id] == true) activeConnection.disconnect()
+            val responseCode = activeConnection.responseCode
             if (responseCode != HttpURLConnection.HTTP_OK) {
+                if (cancellation[spec.id] == true) throw CandidateVerificationCancelledException()
                 throw IllegalStateException("Candidate source returned HTTP $responseCode.")
             }
-            val declaredLength = connection.contentLengthLong
+            require(activeConnection.url.protocol.equals("https", ignoreCase = true)) {
+                "Candidate download redirected away from HTTPS."
+            }
+            val declaredLength = activeConnection.contentLengthLong
             if (declaredLength >= 0L && declaredLength != expectedBytes) {
                 throw IllegalStateException("Candidate Content-Length differs from the metadata-checked byte size.")
             }
 
-            val actualSha256 = connection.inputStream.use { input ->
+            val actualSha256 = activeConnection.inputStream.use { input ->
                 FileOutputStream(temporaryFile).use { output ->
                     val hash = copyCandidateAndHash(
                         input = input,
@@ -164,13 +174,22 @@ class TraderModelCandidateVerifier(context: Context) {
                 revision = candidate.latestRevision
             ))
         } catch (error: Exception) {
-            publish(spec.id, CandidateVerificationState(
-                CandidateVerificationStatus.FAILED,
-                detail = error.message ?: "Candidate byte verification failed. Temporary candidate data was discarded.",
-                revision = candidate.latestRevision
-            ))
+            if (cancellation[spec.id] == true) {
+                publish(spec.id, CandidateVerificationState(
+                    CandidateVerificationStatus.CANCELLED,
+                    detail = "Verification cancelled. Temporary candidate data was discarded.",
+                    revision = candidate.latestRevision
+                ))
+            } else {
+                publish(spec.id, CandidateVerificationState(
+                    CandidateVerificationStatus.FAILED,
+                    detail = error.message ?: "Candidate byte verification failed. Temporary candidate data was discarded.",
+                    revision = candidate.latestRevision
+                ))
+            }
         } finally {
             connection?.disconnect()
+            activeConnections.remove(spec.id)
             val cleanupSucceeded = !temporaryFile.exists() || temporaryFile.delete()
             cancellation.remove(spec.id)
             if (!cleanupSucceeded) {

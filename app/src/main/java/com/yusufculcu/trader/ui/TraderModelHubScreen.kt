@@ -58,6 +58,9 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
     var candidateToVerify by remember { mutableStateOf<Pair<com.yusufculcu.trader.ai.TraderModelSpec, ModelUpdateResult>?>(null) }
     var sourceChecks by remember { mutableStateOf(TraderModelCatalog.entries.associate { it.id to updateChecker.cachedResult(it) }) }
     var checkingSources by remember { mutableStateOf(false) }
+    val candidateVerificationActive = candidateStates.values.any {
+        it.status == CandidateVerificationStatus.DOWNLOADING || it.status == CandidateVerificationStatus.VERIFYING
+    }
     LazyColumn(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -96,7 +99,14 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                         Text(check.detail, style = MaterialTheme.typography.bodySmall)
                         Text("Checked: " + java.text.DateFormat.getDateTimeInstance().format(java.util.Date(check.checkedAtEpochMs)), style = MaterialTheme.typography.labelSmall)
                     }
-                    candidateStates[model.id]?.let { verification ->
+                    val currentCandidate = sourceChecks[model.id]?.takeIf {
+                        it.status == ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED &&
+                            it.latestRevision.matches(Regex("[a-fA-F0-9]{40}"))
+                    }
+                    val currentVerification = currentCandidate?.let { candidate ->
+                        candidateStates[model.id]?.takeIf { it.revision == candidate.latestRevision }
+                    }
+                    currentVerification?.let { verification ->
                         val verificationColor = when (verification.status) {
                             CandidateVerificationStatus.BYTES_VERIFIED -> MaterialTheme.colorScheme.primary
                             CandidateVerificationStatus.FAILED -> MaterialTheme.colorScheme.error
@@ -108,21 +118,19 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                             Text("Downloaded SHA-256: " + verification.actualSha256, style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                    if (sourceChecks[model.id]?.status == ModelSourceStatus.CANDIDATE_REVIEW_REQUIRED) {
-                        val verification = candidateStates[model.id]
-                        val activeVerification = verification?.status == CandidateVerificationStatus.DOWNLOADING ||
-                            verification?.status == CandidateVerificationStatus.VERIFYING
+                    currentCandidate?.let { candidate ->
+                        val activeVerification = currentVerification?.status == CandidateVerificationStatus.DOWNLOADING ||
+                            currentVerification?.status == CandidateVerificationStatus.VERIFYING
                         if (activeVerification) {
                             LinearProgressIndicator(
-                                progress = { verification!!.progress },
+                                progress = { currentVerification!!.progress },
                                 modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedButton(onClick = { candidateVerifier.cancel(model.id) }) { Text("Cancel byte verification") }
-                        } else if (verification?.status != CandidateVerificationStatus.BYTES_VERIFIED) {
-                            val candidate = sourceChecks[model.id]!!
+                        } else if (currentVerification?.status != CandidateVerificationStatus.BYTES_VERIFIED) {
                             val enoughCandidateStorage = candidateVerifier.hasEnoughStorage(candidate)
                             OutlinedButton(
-                                enabled = enoughCandidateStorage,
+                                enabled = enoughCandidateStorage && !checkingSources,
                                 onClick = { candidateToVerify = model to candidate }
                             ) { Text("Verify candidate bytes") }
                             if (!enoughCandidateStorage) {
@@ -158,7 +166,7 @@ fun TraderModelHubScreen(modifier: Modifier = Modifier) {
                     Text("Runtime settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text("Backend: CPU. Cloud fallback: disabled. Models are stored in private app storage.", style = MaterialTheme.typography.bodyMedium)
                     Text("Updates: checks the upstream immutable revision, artifact byte size and source-declared SHA-256. Changed artifacts remain review-only; Trader never installs them automatically.", style = MaterialTheme.typography.bodyMedium)
-                    Button(enabled = !checkingSources, onClick = {
+                    Button(enabled = !checkingSources && !candidateVerificationActive && candidateToVerify == null, onClick = {
                         checkingSources = true
                         scope.launch {
                             sourceChecks = updateChecker.checkAll()
