@@ -56,6 +56,10 @@ class TraderBackupManagerTest {
             assertEquals(1, target.workflowStepDao().getAll().size)
             assertEquals("approval-hash", target.workflowStepDao().getAll().single().approvedPayloadHash)
             assertEquals(1, target.workflowEventDao().getAll().size)
+            assertEquals(1, target.discoveryRunDao().getAll().size)
+            assertEquals("COMPLETED", target.discoveryRunDao().getAll().single().status)
+            assertEquals(1, target.sourceRunDao().getForRun("discovery-run-1").size)
+            assertEquals(3, target.sourceRunDao().getForRun("discovery-run-1").single().resultCount)
         } finally {
             source.close()
             target.close()
@@ -261,6 +265,8 @@ class TraderBackupManagerTest {
         database.workflowEventDao().insert(
             WorkflowEventEntity("workflow-event-1", "run-1", "workflow-step-1", "approval_granted", null, null, "Approved", "Exact payload", now + 6)
         )
+        database.discoveryRunDao().insert(DiscoveryRunEntity("discovery-run-1", null, "Find buyer requirements", "COMPLETED", now + 7, now + 8, now + 10, null, null))
+        database.sourceRunDao().insert(SourceRunEntity("source-run-1", "discovery-run-1", "source-1", "rss.atom", "SUCCEEDED", now + 8, now + 9, 3, null, null))
     }
 
     private fun problem(id: String, title: String) = ProblemEntity(
