@@ -151,3 +151,15 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - A byte-hash match is not publisher trust or release approval. Never promote a candidate automatically.
 - If cleanup fails, the UI reports failure and requires app-cache cleanup; it does not claim the candidate is safely discarded.
 - Stable APK signing secrets must be present in GitHub Actions before CI can publish an installable update. Never put the private keystore or password in chat or commit either to Git.
+
+
+## Session 20 handoff — discovery strategy prompt construction
+
+**Implemented:** `TraderDiscoveryStrategyPromptBuilder` on `feature/discovery-run-persistence`, commit `d0406ae8ffcdee5bbff96cf39294e1c4a56ef1a0`.
+
+- Bounded task, context and proof asset sections; only caller-supplied registered source-adapter IDs are exposed.
+- Prompt explicitly treats captured context and proof content as untrusted data, prohibits following embedded instructions, and prohibits contacting people or executing workflows.
+- Requires a strict schema and limits; no IDs or timestamps are model-authored.
+- Unit tests added for prompt assembly, untrusted context retention, allowed adapter listing, size bounds and empty adapter rejection.
+- This is prompt construction only; it is not yet wired to an inference action or user-facing strategy review/save flow.
+- CI run 45058592503 for commit d0406ae was pending when the checkpoint was recorded. No build/test pass claimed.
