@@ -205,13 +205,35 @@
 
 
     <string name="discover_nav">Odkrywaj</string>
+    <string name="discover_run_help">Każdy przebieg zapisuje swój postęp. Trader wykonuje jedno ograniczone wyszukiwanie w publicznej sieci dla tego celu, a następnie sprawdza każde włączone źródło RSS / Atom. Elementy kanałów nie muszą pasować do celu — przed uznaniem wyniku za fakt otwórz oryginalne źródło.</string>
+    <string name="discover_run_now">Uruchom wyszukiwanie</string>
+    <string name="discover_stop">Zatrzymaj przebieg</string>
+    <string name="discover_run_complete">Zakończono: %1$d wyników z %2$d źródeł.</string>
+    <string name="discover_run_partial">Zakończono z błędami źródeł: %1$d wyników; %2$d źródeł działało, %3$d nie.</string>
+    <string name="discover_run_cancelled">Przebieg anulowano. Zachowano ukończone wyniki i historię.</string>
+    <string name="discover_runs">Ostatnie przebiegi wyszukiwania</string>
+    <string name="discover_no_runs">Brak przebiegów. Tutaj zapisywany będzie każdy przebieg, także częściowy i nieudany.</string>
+    <string name="discover_run_source_result">%1$s · %2$s · %3$d wyników</string>
+    <string name="discover_run_status_created">Utworzono</string>
+    <string name="discover_run_status_running">W toku</string>
+    <string name="discover_run_status_completed">Zakończono</string>
+    <string name="discover_run_status_partial">Częściowo</string>
+    <string name="discover_run_status_failed">Niepowodzenie</string>
+    <string name="discover_run_status_cancelled">Anulowano</string>
+    <string name="discover_run_status_unknown">Nieznany status</string>
+    <string name="discover_source_run_pending">Oczekuje</string>
+    <string name="discover_source_run_running">W toku</string>
+    <string name="discover_source_run_succeeded">Powodzenie</string>
+    <string name="discover_source_run_failed">Niepowodzenie</string>
+    <string name="discover_source_run_skipped">Pominięto</string>
+    <string name="discover_source_run_cancelled">Anulowano</string>
     <string name="discover_title">Odkrywaj przydatne sygnały</string>
     <string name="discover_subtitle">Przeszukuj publiczne źródła i zapisuj konkretne dowody w swojej przestrzeni.</string>
-    <string name="discover_web_search">Jednorazowe wyszukiwanie w sieci</string>
-    <string name="discover_search_hint">Czego szukasz?</string>
+    <string name="discover_web_search">Uruchom wyszukiwanie sygnałów</string>
+    <string name="discover_search_hint">Jakiego problemu, potrzeby lub szansy mamy szukać?</string>
     <string name="discover_query_too_short">Wpisz co najmniej dwa znaki.</string>
     <string name="discover_public_web">Publiczne wyszukiwanie</string>
-    <string name="discover_search_now">Szukaj teraz</string>
+    <string name="discover_search_now">Uruchom wyszukiwanie</string>
     <string name="discover_search_disclaimer">Wyniki to tropy, nie zweryfikowane fakty. Otwórz źródło przed podjęciem działania.</string>
     <string name="discover_add_feed">Dodaj publiczny kanał RSS / Atom</string>
     <string name="discover_source_name">Nazwa źródła</string>
@@ -230,7 +252,7 @@
     <string name="discover_remove">Usuń</string>
     <string name="discover_results">Zebrane wyniki</string>
     <string name="discover_result_count">%1$d elementów</string>
-    <string name="discover_no_results">Wyszukaj w sieci lub sprawdź kanał, aby zobaczyć wyniki ze źródeł.</string>
+    <string name="discover_no_results">Uruchom wyszukiwanie lub odśwież kanał, aby zobaczyć wyniki źródłowe.</string>
     <string name="discover_unverified_note">Treść źródła · nie została jeszcze sprawdzona</string>
     <string name="discover_save">Zapisz w Work</string>
     <string name="discover_saved_button">Zapisano w Work</string>

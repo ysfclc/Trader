@@ -7,6 +7,7 @@ import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.DiscoveryRunStatus
 import com.yusufculcu.trader.data.SourceRunStatus
 import com.yusufculcu.trader.data.TraderDatabase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -37,7 +38,7 @@ class DiscoveryExecutionCoordinatorTest {
         assertEquals(source.name, sourceStore.list().single().name)
     }
 
-    @Test fun sourceFailureIsRecordedAndReturnedAsPartialFailure() = runBlocking {
+    @Test fun sourceFailureIsRecordedAndReturnedAsFailure() = runBlocking {
         val source = sourceStore.add("Failing", "https://example.org/fail.xml")
         val adapter = FakeAdapter(failure = IllegalStateException("provider unavailable"))
         val coordinator = DiscoveryExecutionCoordinator(sourceStore, DiscoveryAdapterRegistry(listOf(adapter)), runRepository, clock = { 200L })
@@ -45,6 +46,66 @@ class DiscoveryExecutionCoordinatorTest {
         assertEquals(listOf(source.name), summary.failedSourceNames)
         assertEquals(DiscoveryRunStatus.FAILED, database.discoveryRunDao().getById(summary.runId)?.status)
         assertEquals("SOURCE_FAILURE", database.sourceRunDao().getForRun(summary.runId).single().errorCode)
+    }
+
+    @Test fun timeoutIsRecordedAsSourceFailureAndDoesNotCancelTheRun() = runBlocking {
+        val slow = sourceStore.add("Slow source", "https://example.org/slow.xml")
+        val fast = sourceStore.add("Fast source", "https://example.org/fast.xml")
+        val adapter = object : DiscoverySourceAdapter {
+            override val adapterId = RssAtomFeedAdapter.ADAPTER_ID
+            override suspend fun fetch(source: DiscoverySourceConfig): List<DiscoveryDocument> {
+                if (source.id == slow.id) delay(100)
+                return listOf(document(source.id, "https://example.org/" + source.name.replace(" ", "-")))
+            }
+        }
+        val coordinator = DiscoveryExecutionCoordinator(
+            sourceStore, DiscoveryAdapterRegistry(listOf(adapter)), runRepository,
+            clock = { 300L }, sourceTimeoutMs = 10L
+        )
+        val summary = coordinator.execute("Find relevant suppliers")
+        assertEquals(listOf(slow.name), summary.failedSourceNames)
+        assertEquals(listOf(fast.name), summary.succeededSourceNames)
+        assertEquals(DiscoveryRunStatus.PARTIAL, database.discoveryRunDao().getById(summary.runId)?.status)
+        val rows = database.sourceRunDao().getForRun(summary.runId)
+        assertEquals(SourceRunStatus.FAILED, rows.first { it.sourceId == slow.id }.status)
+        assertEquals("TIMEOUT", rows.first { it.sourceId == slow.id }.errorCode)
+        assertEquals(SourceRunStatus.SUCCEEDED, rows.first { it.sourceId == fast.id }.status)
+    }
+
+    @Test fun includesObjectiveSearchAndDeduplicatesAcrossSources() = runBlocking {
+        val feed = sourceStore.add("Supplier updates", "https://example.org/feed.xml")
+        val searchAdapter = object : DiscoverySourceAdapter {
+            override val adapterId = DuckDuckGoDiscoveryAdapter.ADAPTER_ID
+            override suspend fun fetch(source: DiscoverySourceConfig) = emptyList<DiscoveryDocument>()
+            override suspend fun search(source: DiscoverySourceConfig, query: String): List<DiscoveryDocument> {
+                assertEquals("Polish importers seeking carbide tools", query)
+                return listOf(
+                    document(source.id, "https://example.org/company"),
+                    document(source.id, "https://example.org/tender")
+                )
+            }
+        }
+        val feedAdapter = object : DiscoverySourceAdapter {
+            override val adapterId = RssAtomFeedAdapter.ADAPTER_ID
+            override suspend fun fetch(source: DiscoverySourceConfig) = listOf(
+                document(source.id, "https://example.org/company"),
+                document(source.id, "https://example.org/feed-item")
+            )
+        }
+        val coordinator = DiscoveryExecutionCoordinator(
+            sourceStore, DiscoveryAdapterRegistry(listOf(searchAdapter, feedAdapter)), runRepository, clock = { 400L }
+        )
+        val forwarded = mutableListOf<DiscoveryDocument>()
+        val summary = coordinator.execute(
+            "Polish importers seeking carbide tools",
+            includePublicSearch = true,
+            onDocument = { forwarded += it }
+        )
+        assertEquals(2, summary.sourcesAttempted)
+        assertEquals(3, summary.documentsReceived)
+        assertEquals(3, forwarded.size)
+        assertEquals(DiscoveryRunStatus.COMPLETED, database.discoveryRunDao().getById(summary.runId)?.status)
+        assertEquals(2, database.sourceRunDao().getForRun(summary.runId).size)
     }
 
     private fun document(sourceId: String, url: String) = DiscoveryDocument(

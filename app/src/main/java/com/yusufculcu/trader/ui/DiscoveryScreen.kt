@@ -25,10 +25,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,39 +39,108 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
+import com.yusufculcu.trader.data.DiscoveryRunEntity
+import com.yusufculcu.trader.data.DiscoveryRunRepository
+import com.yusufculcu.trader.data.DiscoveryRunStatus
+import com.yusufculcu.trader.data.SourceRunStatus
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.discovery.DiscoveryAdapterRegistry
+import com.yusufculcu.trader.discovery.DiscoveryExecutionCoordinator
+import com.yusufculcu.trader.discovery.DiscoverySourceConfig
 import com.yusufculcu.trader.discovery.DiscoverySourceStore
-import com.yusufculcu.trader.discovery.DuckDuckGoHtmlSearch
-import com.yusufculcu.trader.discovery.PublicSearchRequest
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlinx.coroutines.launch
 
 @Composable
 fun DiscoveryScreen(
     repository: TraderRepository,
     sourceStore: DiscoverySourceStore,
+    runRepository: DiscoveryRunRepository,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val adapterRegistry = remember { DiscoveryAdapterRegistry.builtIns() }
+    val coordinator = remember(sourceStore, runRepository, adapterRegistry) {
+        DiscoveryExecutionCoordinator(sourceStore, adapterRegistry, runRepository)
+    }
     val scope = rememberCoroutineScope()
+    val runs by runRepository.observeRuns().collectAsState(initial = emptyList())
     var sources by remember { mutableStateOf(sourceStore.list()) }
     var results by remember { mutableStateOf(emptyList<DiscoveryDocument>()) }
-    var searchQuery by remember { mutableStateOf("") }
-    var feedName by remember { mutableStateOf("") }
-    var feedUrl by remember { mutableStateOf("") }
+    var objective by rememberSaveable { mutableStateOf("") }
+    var feedName by rememberSaveable { mutableStateOf("") }
+    var feedUrl by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var checkingSourceId by remember { mutableStateOf<String?>(null) }
+    var activeJob by remember { mutableStateOf<Job?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
     var savedIds by remember { mutableStateOf(emptySet<String>()) }
 
     fun reloadSources() { sources = sourceStore.list() }
+
+    fun startExecution(
+        objectiveText: String,
+        sourceIds: Set<String>? = null,
+        includePublicSearch: Boolean = true,
+        checkingId: String? = null
+    ) {
+        if (busy) return
+        val cleanObjective = objectiveText.trim()
+        if (cleanObjective.length < 2) {
+            error = context.getString(R.string.discover_query_too_short)
+            return
+        }
+        busy = true
+        checkingSourceId = checkingId
+        error = null
+        notice = null
+        results = emptyList()
+        savedIds = emptySet()
+        val job = scope.launch {
+            val collected = mutableListOf<DiscoveryDocument>()
+            try {
+                val summary = coordinator.execute(
+                    objective = cleanObjective,
+                    sourceIds = sourceIds,
+                    includePublicSearch = includePublicSearch
+                ) { document ->
+                    val normalized = document.url.trim().trimEnd('/').lowercase(Locale.ROOT)
+                    if (collected.none { it.url.trim().trimEnd('/').lowercase(Locale.ROOT) == normalized }) {
+                        collected += document
+                        results = collected.toList()
+                    }
+                }
+                notice = if (summary.failedSourceNames.isEmpty()) {
+                    context.getString(R.string.discover_run_complete, summary.documentsReceived, summary.sourcesAttempted)
+                } else {
+                    context.getString(
+                        R.string.discover_run_partial,
+                        summary.documentsReceived,
+                        summary.succeededSourceNames.size,
+                        summary.failedSourceNames.size
+                    )
+                }
+            } catch (cancelled: CancellationException) {
+                notice = context.getString(R.string.discover_run_cancelled)
+            } catch (failure: Exception) {
+                error = failure.message ?: context.getString(R.string.discover_source_failed)
+            } finally {
+                results = collected.toList()
+                reloadSources()
+                busy = false
+                checkingSourceId = null
+                activeJob = null
+            }
+        }
+        activeJob = job
+    }
 
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 14.dp),
@@ -87,53 +158,35 @@ fun DiscoveryScreen(
                     Text(stringResource(R.string.discover_web_search), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 }
                 OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it.take(300); error = null },
+                    value = objective,
+                    onValueChange = { objective = it.take(DiscoveryExecutionCoordinator.MAX_OBJECTIVE_LENGTH); error = null },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.discover_search_hint)) },
-                    singleLine = true
+                    minLines = 2,
+                    maxLines = 4,
+                    enabled = !busy
                 )
+                Text(stringResource(R.string.discover_run_help), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(
-                    onClick = {
-                        if (searchQuery.trim().length < 2) {
-                            error = context.getString(R.string.discover_query_too_short)
-                        } else {
-                            busy = true
-                            error = null
-                            notice = null
-                            scope.launch {
-                                runCatching { DuckDuckGoHtmlSearch().search(PublicSearchRequest(searchQuery)) }
-                                    .onSuccess { response ->
-                                        results = response.results.map { result ->
-                                            DiscoveryDocument(
-                                                id = "duckduckgo:${result.url}",
-                                                sourceId = response.sourceId,
-                                                sourceName = context.getString(R.string.discover_public_web),
-                                                nativeId = result.url,
-                                                title = result.title,
-                                                url = result.url,
-                                                summary = result.snippet,
-                                                publishedAt = null,
-                                                retrievedAt = response.retrievedAt
-                                            )
-                                        }
-                                        notice = context.getString(R.string.discover_search_complete, results.size)
-                                    }
-                                    .onFailure { error = it.message ?: context.getString(R.string.discover_source_failed) }
-                                busy = false
-                            }
-                        }
-                    },
-                    enabled = !busy,
+                    onClick = { startExecution(objective, includePublicSearch = true) },
+                    enabled = !busy && objective.trim().length >= 2,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (busy && checkingSourceId == null) CircularProgressIndicator(
-                        modifier = Modifier.height(18.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    ) else Text(stringResource(R.string.discover_search_now))
+                    if (busy && checkingSourceId == null) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.height(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(stringResource(R.string.discover_run_now))
+                    }
                 }
-                Text(stringResource(R.string.discover_search_disclaimer), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (busy) {
+                    OutlinedButton(onClick = { activeJob?.cancel() }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.discover_stop))
+                    }
+                }
             }
         }
 
@@ -145,14 +198,16 @@ fun DiscoveryScreen(
                     onValueChange = { feedName = it.take(100); error = null },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.discover_source_name)) },
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !busy
                 )
                 OutlinedTextField(
                     value = feedUrl,
                     onValueChange = { feedUrl = it.take(2_048); error = null },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.discover_feed_url)) },
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !busy
                 )
                 OutlinedButton(
                     onClick = {
@@ -166,7 +221,8 @@ fun DiscoveryScreen(
                             }
                             .onFailure { error = it.message ?: context.getString(R.string.discover_source_failed) }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !busy
                 ) {
                     androidx.compose.material3.Icon(Icons.Rounded.Add, contentDescription = null)
                     Spacer(Modifier.padding(start = 4.dp))
@@ -185,10 +241,9 @@ fun DiscoveryScreen(
                             notice = context.getString(R.string.discover_source_added, saved.name)
                         }.onFailure { error = it.message ?: context.getString(R.string.discover_source_failed) }
                     },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.discover_add_hn_example))
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !busy
+                ) { Text(stringResource(R.string.discover_add_hn_example)) }
                 Text(stringResource(R.string.discover_feed_security), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -214,39 +269,25 @@ fun DiscoveryScreen(
                             FilterChip(
                                 selected = source.enabled,
                                 onClick = { sourceStore.setEnabled(source.id, !source.enabled); reloadSources() },
-                                label = { Text(if (source.enabled) stringResource(R.string.discover_enabled) else stringResource(R.string.discover_paused)) }
+                                label = { Text(if (source.enabled) stringResource(R.string.discover_enabled) else stringResource(R.string.discover_paused)) },
+                                enabled = !busy
                             )
                         }
                         val checkText = when {
-                            source.lastError != null -> stringResource(R.string.discover_last_error, source.lastError)
-                            source.lastCheckedAt != null -> stringResource(R.string.discover_last_checked, formatDiscoveryDate(source.lastCheckedAt))
-                            else -> stringResource(R.string.discover_never_checked)
+                            source.lastError != null -> context.getString(R.string.discover_last_error, source.lastError)
+                            source.lastCheckedAt != null -> context.getString(R.string.discover_last_checked, formatDiscoveryDate(source.lastCheckedAt))
+                            else -> context.getString(R.string.discover_never_checked)
                         }
                         Text(checkText, style = MaterialTheme.typography.labelSmall, color = if (source.lastError != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
                                 onClick = {
-                                    checkingSourceId = source.id
-                                    busy = true
-                                    error = null
-                                    notice = null
-                                    scope.launch {
-                                        val checkedAt = System.currentTimeMillis()
-                                        runCatching { adapterRegistry.adapterFor(source).fetch(source) }
-                                            .onSuccess { found ->
-                                                results = found
-                                                notice = context.getString(R.string.discover_feed_complete, found.size, source.name)
-                                                sourceStore.markChecked(source.id, checkedAt)
-                                            }
-                                            .onFailure { failure ->
-                                                val message = failure.message ?: context.getString(R.string.discover_source_failed)
-                                                sourceStore.markChecked(source.id, checkedAt, message)
-                                                error = message
-                                            }
-                                        reloadSources()
-                                        checkingSourceId = null
-                                        busy = false
-                                    }
+                                    startExecution(
+                                        objectiveText = "Manual refresh: " + source.name,
+                                        sourceIds = setOf(source.id),
+                                        includePublicSearch = false,
+                                        checkingId = source.id
+                                    )
                                 },
                                 enabled = source.enabled && !busy
                             ) {
@@ -263,6 +304,15 @@ fun DiscoveryScreen(
                     }
                 }
             }
+        }
+
+        if (runs.isNotEmpty()) {
+            Text(stringResource(R.string.discover_runs), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            runs.take(6).forEach { run ->
+                DiscoveryRunCard(run = run, runRepository = runRepository, sources = sources)
+            }
+        } else {
+            Text(stringResource(R.string.discover_no_runs), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
 
         notice?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall) }
@@ -288,25 +338,27 @@ fun DiscoveryScreen(
                                 Text(stringResource(R.string.discover_open_source))
                             }
                             OutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    val saved = repository.captureDiscoveryItem(
-                                        sourceName = item.sourceName,
-                                        title = item.title,
-                                        sourceUrl = item.url,
-                                        summary = item.summary,
-                                        publishedAt = item.publishedAt
-                                    )
-                                    if (saved != null) {
-                                        savedIds = savedIds + item.id
-                                        notice = context.getString(R.string.discover_saved)
-                                    } else {
-                                        error = context.getString(R.string.discover_save_failed)
+                                onClick = {
+                                    scope.launch {
+                                        val saved = repository.captureDiscoveryItem(
+                                            sourceName = item.sourceName,
+                                            title = item.title,
+                                            sourceUrl = item.url,
+                                            summary = item.summary,
+                                            publishedAt = item.publishedAt
+                                        )
+                                        if (saved != null) {
+                                            savedIds = savedIds + item.id
+                                            notice = context.getString(R.string.discover_saved)
+                                        } else {
+                                            error = context.getString(R.string.discover_save_failed)
+                                        }
                                     }
-                                }
-                            },
-                            enabled = item.id !in savedIds
-                        ) { Text(stringResource(if (item.id in savedIds) R.string.discover_saved_button else R.string.discover_save)) }
+                                },
+                                enabled = item.id !in savedIds
+                            ) {
+                                Text(stringResource(if (item.id in savedIds) R.string.discover_saved_button else R.string.discover_save))
+                            }
                         }
                     }
                 }
@@ -315,6 +367,70 @@ fun DiscoveryScreen(
         Spacer(Modifier.height(24.dp))
     }
 }
+
+@Composable
+private fun DiscoveryRunCard(
+    run: DiscoveryRunEntity,
+    runRepository: DiscoveryRunRepository,
+    sources: List<DiscoverySourceConfig>
+) {
+    val context = LocalContext.current
+    val sourceRuns by remember(run.id) { runRepository.observeSources(run.id) }.collectAsState(initial = emptyList())
+    val configuredSources = remember(sources) { sources.associateBy { it.id } }
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(run.objective, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(runStatusLabel(context, run.status), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text(formatDiscoveryDate(run.createdAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            sourceRuns.forEach { sourceRun ->
+                val sourceName = if (sourceRun.sourceId == com.yusufculcu.trader.discovery.DuckDuckGoDiscoveryAdapter.PUBLIC_SEARCH_SOURCE_ID) {
+                    context.getString(R.string.discover_public_web)
+                } else {
+                    configuredSources[sourceRun.sourceId]?.name ?: sourceRun.sourceId
+                }
+                Text(
+                    context.getString(
+                        R.string.discover_run_source_result,
+                        sourceName,
+                        sourceRunStatusLabel(context, sourceRun.status),
+                        sourceRun.resultCount
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (sourceRun.status == SourceRunStatus.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                sourceRun.errorMessage?.let {
+                    Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+}
+
+private fun runStatusLabel(context: android.content.Context, status: String): String = context.getString(
+    when (status) {
+        DiscoveryRunStatus.CREATED -> R.string.discover_run_status_created
+        DiscoveryRunStatus.RUNNING -> R.string.discover_run_status_running
+        DiscoveryRunStatus.COMPLETED -> R.string.discover_run_status_completed
+        DiscoveryRunStatus.PARTIAL -> R.string.discover_run_status_partial
+        DiscoveryRunStatus.FAILED -> R.string.discover_run_status_failed
+        DiscoveryRunStatus.CANCELLED -> R.string.discover_run_status_cancelled
+        else -> R.string.discover_run_status_unknown
+    }
+)
+
+private fun sourceRunStatusLabel(context: android.content.Context, status: String): String = context.getString(
+    when (status) {
+        SourceRunStatus.PENDING -> R.string.discover_source_run_pending
+        SourceRunStatus.RUNNING -> R.string.discover_source_run_running
+        SourceRunStatus.SUCCEEDED -> R.string.discover_source_run_succeeded
+        SourceRunStatus.FAILED -> R.string.discover_source_run_failed
+        SourceRunStatus.SKIPPED -> R.string.discover_source_run_skipped
+        SourceRunStatus.CANCELLED -> R.string.discover_source_run_cancelled
+        else -> R.string.discover_run_status_unknown
+    }
+)
 
 private fun formatDiscoveryDate(value: Long): String =
     SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault()).format(Date(value))
