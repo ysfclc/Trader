@@ -27,7 +27,7 @@ class TraderDiscoveryStrategyDraftGenerator(
         val prompt = try {
             TraderDiscoveryStrategyPromptBuilder.build(
                 task = task,
-                context = context.render(TraderContextPacket.MAX_CHARS),
+                context = context.render(TraderDiscoveryStrategyPromptBuilder.MAX_CONTEXT_CHARS),
                 proofAsset = proofAsset,
                 allowedAdapterIds = allowedAdapterIds
             )
