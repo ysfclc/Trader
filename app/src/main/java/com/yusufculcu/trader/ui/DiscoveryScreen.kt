@@ -109,14 +109,15 @@ fun DiscoveryScreen(
                 val summary = coordinator.execute(
                     objective = cleanObjective,
                     sourceIds = sourceIds,
-                    includePublicSearch = includePublicSearch
-                ) { document ->
+                    includePublicSearch = includePublicSearch,
+                    onDocument = { document ->
                     val normalized = document.url.trim().trimEnd('/').lowercase(Locale.ROOT)
                     if (collected.none { it.url.trim().trimEnd('/').lowercase(Locale.ROOT) == normalized }) {
                         collected += document
                         results = collected.toList()
                     }
-                }
+                    }
+                )
                 notice = if (summary.failedSourceNames.isEmpty()) {
                     context.getString(R.string.discover_run_complete, summary.documentsReceived, summary.sourcesAttempted)
                 } else {
