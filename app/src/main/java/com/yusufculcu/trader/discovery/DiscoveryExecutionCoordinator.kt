@@ -76,7 +76,6 @@ class DiscoveryExecutionCoordinator(
                         .toList()
 
                     documents.forEach { document ->
-                        runs.saveDocument(run.id, document)
                         onDocument(document)
                         resultCount++
                     }

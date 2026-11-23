@@ -463,39 +463,6 @@ data class SourceRunEntity(
     val errorCode: String?, val errorMessage: String?
 )
 
-
-@Entity(
-    tableName = "discovery_documents",
-    foreignKeys = [ForeignKey(entity = DiscoveryRunEntity::class, parentColumns = ["id"], childColumns = ["discoveryRunId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index(value = ["discoveryRunId"]), Index(value = ["sourceId"]), Index(value = ["url"])]
-)
-data class DiscoveryDocumentEntity(
-    @PrimaryKey val id: String,
-    val discoveryRunId: String,
-    val sourceId: String,
-    val sourceName: String,
-    val nativeId: String,
-    val title: String,
-    val url: String,
-    val summary: String,
-    val publishedAt: Long?,
-    val retrievedAt: Long
-)
-
-@Dao
-interface DiscoveryDocumentDao {
-    @Query("SELECT * FROM discovery_documents WHERE discoveryRunId = :runId ORDER BY retrievedAt DESC, rowid ASC")
-    fun observeForRun(runId: String): Flow<List<DiscoveryDocumentEntity>>
-    @Query("SELECT * FROM discovery_documents")
-    suspend fun getAll(): List<DiscoveryDocumentEntity>
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(document: DiscoveryDocumentEntity)
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertAll(documents: List<DiscoveryDocumentEntity>)
-    @Query("DELETE FROM discovery_documents")
-    suspend fun deleteAll()
-}
-
 @Dao
 interface DiscoveryRunDao {
     @Query("SELECT * FROM discovery_runs ORDER BY createdAt DESC")
@@ -553,10 +520,9 @@ interface SourceRunDao {
         ProofAssetEntity::class,
         DiscoveryStrategyEntity::class,
         DiscoveryRunEntity::class,
-        SourceRunEntity::class,
-        DiscoveryDocumentEntity::class
+        SourceRunEntity::class
     ],
-    version = 7,
+    version = 6,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -572,7 +538,6 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun discoveryStrategyDao(): DiscoveryStrategyDao
     abstract fun discoveryRunDao(): DiscoveryRunDao
     abstract fun sourceRunDao(): SourceRunDao
-    abstract fun discoveryDocumentDao(): DiscoveryDocumentDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -765,24 +730,5 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_discoveryRunId ON source_runs (discoveryRunId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_sourceId ON source_runs (sourceId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_source_runs_status ON source_runs (status)")
-    }
-}
-
-
-/** Adds durable, source-attributed discovery findings while preserving existing run history. */
-val MIGRATION_6_7 = object : Migration(6, 7) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("""
-            CREATE TABLE IF NOT EXISTS discovery_documents (
-                id TEXT NOT NULL, discoveryRunId TEXT NOT NULL, sourceId TEXT NOT NULL,
-                sourceName TEXT NOT NULL, nativeId TEXT NOT NULL, title TEXT NOT NULL,
-                url TEXT NOT NULL, summary TEXT NOT NULL, publishedAt INTEGER,
-                retrievedAt INTEGER NOT NULL, PRIMARY KEY(id),
-                FOREIGN KEY(discoveryRunId) REFERENCES discovery_runs(id) ON UPDATE NO ACTION ON DELETE CASCADE
-            )
-        """.trimIndent())
-        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_discoveryRunId ON discovery_documents (discoveryRunId)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_sourceId ON discovery_documents (sourceId)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_url ON discovery_documents (url)")
     }
 }

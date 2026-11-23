@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
+import com.yusufculcu.trader.data.DiscoveryDocumentEntity
 import com.yusufculcu.trader.data.DiscoveryRunEntity
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
@@ -54,6 +56,7 @@ import com.yusufculcu.trader.discovery.DiscoverySourceStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -78,6 +81,13 @@ fun DiscoveryScreen(
     val strategies = remember(strategyRows) { strategyRows.mapNotNull { row -> runCatching { DiscoveryStrategyCodec.decodeStrategy(row.payloadJson) }.getOrNull() } }
     var sources by remember { mutableStateOf(sourceStore.list()) }
     var results by remember { mutableStateOf(emptyList<DiscoveryDocument>()) }
+    var selectedRunId by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedDocuments by remember(selectedRunId) {
+        selectedRunId?.let { runRepository.observeDocuments(it) } ?: flowOf<List<DiscoveryDocumentEntity>>(emptyList())
+    }.collectAsState(initial = emptyList())
+    val visibleResults = if (selectedRunId == null) results else selectedDocuments.map { row ->
+        DiscoveryDocument(row.id, row.sourceId, row.sourceName, row.nativeId, row.title, row.url, row.summary, row.publishedAt, row.retrievedAt)
+    }
     var objective by rememberSaveable { mutableStateOf("") }
     var feedName by rememberSaveable { mutableStateOf("") }
     var feedUrl by rememberSaveable { mutableStateOf("") }
@@ -97,6 +107,7 @@ fun DiscoveryScreen(
         error = null
         notice = null
         results = emptyList()
+        selectedRunId = null
         savedIds = emptySet()
         val job = scope.launch {
             val collected = mutableListOf<DiscoveryDocument>()
@@ -150,6 +161,7 @@ fun DiscoveryScreen(
         error = null
         notice = null
         results = emptyList()
+        selectedRunId = null
         savedIds = emptySet()
         val job = scope.launch {
             val collected = mutableListOf<DiscoveryDocument>()
@@ -166,6 +178,7 @@ fun DiscoveryScreen(
                     }
                     }
                 )
+                selectedRunId = summary.runId
                 notice = if (summary.failedSourceNames.isEmpty()) {
                     context.getString(R.string.discover_run_complete, summary.documentsReceived, summary.sourcesAttempted)
                 } else {
@@ -378,7 +391,7 @@ fun DiscoveryScreen(
         if (runs.isNotEmpty()) {
             Text(stringResource(R.string.discover_runs), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
             runs.take(6).forEach { run ->
-                DiscoveryRunCard(run = run, runRepository = runRepository, sources = sources)
+                DiscoveryRunCard(run = run, runRepository = runRepository, sources = sources, onOpenResults = { selectedRunId = run.id })
             }
         } else {
             Text(stringResource(R.string.discover_no_runs), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -388,13 +401,14 @@ fun DiscoveryScreen(
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.discover_results), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.discover_result_count, results.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(if (selectedRunId == null) stringResource(R.string.discover_results) else "Saved run results", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            if (selectedRunId != null) TextButton(onClick = { selectedRunId = null }) { Text("Show current results") }
+            Text(stringResource(R.string.discover_result_count, visibleResults.size), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (results.isEmpty()) {
+        if (visibleResults.isEmpty()) {
             Text(stringResource(R.string.discover_no_results), color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            results.forEach { item ->
+            visibleResults.forEach { item ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
                         Text(item.sourceName.uppercase(Locale.getDefault()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
@@ -441,10 +455,12 @@ fun DiscoveryScreen(
 private fun DiscoveryRunCard(
     run: DiscoveryRunEntity,
     runRepository: DiscoveryRunRepository,
-    sources: List<DiscoverySourceConfig>
+    sources: List<DiscoverySourceConfig>,
+    onOpenResults: () -> Unit
 ) {
     val context = LocalContext.current
     val sourceRuns by remember(run.id) { runRepository.observeSources(run.id) }.collectAsState(initial = emptyList())
+    val documents by remember(run.id) { runRepository.observeDocuments(run.id) }.collectAsState(initial = emptyList())
     val configuredSources = remember(sources) { sources.associateBy { it.id } }
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -452,6 +468,9 @@ private fun DiscoveryRunCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(runStatusLabel(context, run.status), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 Text(formatDiscoveryDate(run.createdAt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            TextButton(onClick = onOpenResults, enabled = documents.isNotEmpty()) {
+                Text("Open ${documents.size} findings")
             }
             sourceRuns.forEach { sourceRun ->
                 val sourceName = if (sourceRun.sourceId == com.yusufculcu.trader.discovery.DuckDuckGoDiscoveryAdapter.PUBLIC_SEARCH_SOURCE_ID) {

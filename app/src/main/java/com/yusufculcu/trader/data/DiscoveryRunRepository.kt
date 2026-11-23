@@ -2,7 +2,6 @@ package com.yusufculcu.trader.data
 
 import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
-import com.yusufculcu.trader.discovery.DiscoveryDocument
 import java.util.UUID
 
 object DiscoveryRunStatus {
@@ -28,25 +27,6 @@ data class SourceRunDraft(val sourceId: String, val adapterId: String, val start
 class DiscoveryRunRepository(private val database: TraderDatabase) {
     fun observeRuns(): Flow<List<DiscoveryRunEntity>> = database.discoveryRunDao().observeAll()
     fun observeSources(runId: String): Flow<List<SourceRunEntity>> = database.sourceRunDao().observeForRun(runId)
-    fun observeDocuments(runId: String): Flow<List<DiscoveryDocumentEntity>> = database.discoveryDocumentDao().observeForRun(runId)
-
-    suspend fun saveDocument(runId: String, document: DiscoveryDocument): DiscoveryDocumentEntity {
-        require(document.id.isNotBlank() && document.id.length <= 4096)
-        require(document.sourceId.isNotBlank() && document.sourceId.length <= 128)
-        require(document.sourceName.isNotBlank() && document.sourceName.length <= 200)
-        require(document.title.length <= 300 && document.url.length <= 2048 && document.summary.length <= 4000)
-        require(document.retrievedAt >= 0 && (document.publishedAt == null || document.publishedAt >= 0))
-        require(database.discoveryRunDao().getById(runId) != null) { "Discovery run does not exist." }
-        val row = DiscoveryDocumentEntity(
-            id = UUID.randomUUID().toString(), discoveryRunId = runId,
-            sourceId = document.sourceId, sourceName = document.sourceName,
-            nativeId = document.nativeId.take(4096), title = document.title,
-            url = document.url, summary = document.summary,
-            publishedAt = document.publishedAt, retrievedAt = document.retrievedAt
-        )
-        database.discoveryDocumentDao().insert(row)
-        return row
-    }
 
     suspend fun create(draft: DiscoveryRunDraft): DiscoveryRunEntity {
         require(draft.objective.isNotBlank() && draft.objective.length <= 2000)
