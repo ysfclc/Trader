@@ -3,6 +3,9 @@ package com.yusufculcu.trader.discovery
 import com.yusufculcu.trader.data.DiscoveryRunDraft
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.SourceRunDraft
+import com.yusufculcu.trader.domain.DiscoveryStrategy
+import com.yusufculcu.trader.domain.DiscoveryStrategyRules
+import com.yusufculcu.trader.domain.ProofAsset
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.TimeoutCancellationException
@@ -30,7 +33,8 @@ class DiscoveryExecutionCoordinator(
         objective: String,
         sourceIds: Set<String>? = null,
         includePublicSearch: Boolean = false,
-        onDocument: suspend (DiscoveryDocument) -> Unit = {}
+        onDocument: suspend (DiscoveryDocument) -> Unit = {},
+        strategyId: String? = null
     ): ExecutionSummary {
         val cleanObjective = objective.trim().replace(Regex("\\s+"), " ").take(MAX_OBJECTIVE_LENGTH)
         require(cleanObjective.length >= 2) { "Describe what this discovery run is looking for." }
@@ -42,7 +46,7 @@ class DiscoveryExecutionCoordinator(
             val availableFeedSlots = maxSourcesPerRun - size
             if (availableFeedSlots > 0) addAll(configuredSources.take(availableFeedSlots))
         }
-        val run = runs.create(DiscoveryRunDraft(null, cleanObjective, clock()))
+        val run = runs.create(DiscoveryRunDraft(strategyId, cleanObjective, clock()))
         if (!runs.start(run.id, clock())) error("Could not start discovery run.")
 
         val successes = mutableListOf<String>()
@@ -109,6 +113,62 @@ class DiscoveryExecutionCoordinator(
             withContext(NonCancellable) { runs.requestCancellation(run.id, clock()) }
             throw cancelled
         }
+    }
+
+
+    /**
+     * Executes each approved query in a saved strategy as its own durable run, linked
+     * back to the strategy. RSS/Atom query entries select configured feeds; public-search
+     * entries execute their query text. No contact or external action is performed.
+     */
+    suspend fun executeStrategy(
+        strategy: DiscoveryStrategy,
+        proofAsset: ProofAsset,
+        sourceIds: Set<String>? = null,
+        onDocument: suspend (DiscoveryDocument) -> Unit = {}
+    ): List<ExecutionSummary> {
+        val validation = DiscoveryStrategyRules.validate(strategy, listOf(proofAsset))
+        require(validation.isEmpty()) { validation.joinToString(" ") }
+        val enabledFeeds = sourceStore.list().filter { it.enabled && (sourceIds == null || it.id in sourceIds) }
+        val summaries = mutableListOf<ExecutionSummary>()
+        strategy.queries.forEach { query ->
+            when (query.sourceAdapterId) {
+                DuckDuckGoDiscoveryAdapter.ADAPTER_ID -> {
+                    require(query.resultLimit in 1..DuckDuckGoDiscoveryAdapter.MAX_RESULTS) {
+                        "Public search supports at most ${DuckDuckGoDiscoveryAdapter.MAX_RESULTS} results per query."
+                    }
+                    summaries += execute(
+                        objective = query.query,
+                        includePublicSearch = true,
+                        onDocument = onDocument,
+                        strategyId = strategy.id
+                    )
+                }
+                RssAtomFeedAdapter.ADAPTER_ID -> {
+                    val feedIds = enabledFeeds.filter { it.adapterId == RssAtomFeedAdapter.ADAPTER_ID }
+                        .take(maxSourcesPerRun).map { it.id }.toSet()
+                    if (feedIds.isEmpty()) {
+                        // Record the query against a run even when no feed is configured, so
+                        // the user sees a durable failed attempt rather than a silent skip.
+                        summaries += execute(
+                            objective = query.query,
+                            sourceIds = emptySet(),
+                            onDocument = onDocument,
+                            strategyId = strategy.id
+                        )
+                    } else {
+                        summaries += execute(
+                            objective = query.query,
+                            sourceIds = feedIds,
+                            onDocument = onDocument,
+                            strategyId = strategy.id
+                        )
+                    }
+                }
+                else -> error("Strategy references an unregistered discovery adapter: ${query.sourceAdapterId}")
+            }
+        }
+        return summaries
     }
 
     private fun canonicalUrl(value: String): String = runCatching {
