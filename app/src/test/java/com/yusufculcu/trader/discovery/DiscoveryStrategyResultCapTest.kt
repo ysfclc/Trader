@@ -39,7 +39,7 @@ class DiscoveryStrategyResultCapTest {
         assertTrue(repository.saveProofAsset(proof).isEmpty())
         val strategy = DiscoveryStrategy(
             id = "cap-strategy", proofAssetId = proof.id,
-            signatures = listOf(ProblemSignature("sig", "Capacity need")),
+            signatures = listOf(ProblemSignature("sig", "Capacity need", observableSignals = listOf("CNC outsourcing request"))),
             queries = listOf(DiscoveryQuery(DuckDuckGoDiscoveryAdapter.ADAPTER_ID, "CNC Poland", resultLimit = 5)),
             maxResultsPerSource = 2, createdAt = 2, updatedAt = 2
         )
