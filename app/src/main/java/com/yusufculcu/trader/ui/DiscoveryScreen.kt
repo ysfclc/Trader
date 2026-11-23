@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
 import com.yusufculcu.trader.data.DiscoveryRunEntity
 import com.yusufculcu.trader.data.DiscoveryRunRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyCodec
 import com.yusufculcu.trader.data.DiscoveryRunStatus
 import com.yusufculcu.trader.data.SourceRunStatus
 import com.yusufculcu.trader.data.TraderRepository
@@ -61,6 +63,7 @@ fun DiscoveryScreen(
     repository: TraderRepository,
     sourceStore: DiscoverySourceStore,
     runRepository: DiscoveryRunRepository,
+    strategyRepository: DiscoveryStrategyRepository,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -71,6 +74,8 @@ fun DiscoveryScreen(
     }
     val scope = rememberCoroutineScope()
     val runs by runRepository.observeRuns().collectAsState(initial = emptyList())
+    val strategyRows by strategyRepository.observeStrategies().collectAsState(initial = emptyList())
+    val strategies = remember(strategyRows) { strategyRows.mapNotNull { row -> runCatching { DiscoveryStrategyCodec.decodeStrategy(row.payloadJson) }.getOrNull() } }
     var sources by remember { mutableStateOf(sourceStore.list()) }
     var results by remember { mutableStateOf(emptyList<DiscoveryDocument>()) }
     var objective by rememberSaveable { mutableStateOf("") }
@@ -84,6 +89,49 @@ fun DiscoveryScreen(
     var savedIds by remember { mutableStateOf(emptySet<String>()) }
 
     fun reloadSources() { sources = sourceStore.list() }
+
+    fun startStrategyExecution(strategyId: String) {
+        if (busy) return
+        busy = true
+        checkingSourceId = null
+        error = null
+        notice = null
+        results = emptyList()
+        savedIds = emptySet()
+        val job = scope.launch {
+            val collected = mutableListOf<DiscoveryDocument>()
+            try {
+                val strategy = strategyRepository.getStrategy(strategyId) ?: error("The saved strategy could not be loaded.")
+                val proofAsset = strategyRepository.getProofAsset(strategy.proofAssetId)
+                    ?: error("The strategy's proof asset is missing. Review the strategy before running it.")
+                val summaries = coordinator.executeStrategy(strategy, proofAsset) { document ->
+                    val normalized = document.url.trim().trimEnd('/').lowercase(Locale.ROOT)
+                    if (collected.none { it.url.trim().trimEnd('/').lowercase(Locale.ROOT) == normalized }) {
+                        collected += document
+                        results = collected.toList()
+                    }
+                }
+                val received = summaries.sumOf { it.documentsReceived }
+                val failed = summaries.sumOf { it.failedSourceNames.size }
+                notice = if (failed == 0) {
+                    "Strategy completed: $received source-backed results across ${summaries.size} query runs."
+                } else {
+                    "Strategy partially completed: $received results; $failed source failures across ${summaries.size} query runs."
+                }
+            } catch (cancelled: CancellationException) {
+                notice = context.getString(R.string.discover_run_cancelled)
+            } catch (failure: Exception) {
+                error = failure.message ?: context.getString(R.string.discover_source_failed)
+            } finally {
+                results = collected.toList()
+                reloadSources()
+                busy = false
+                checkingSourceId = null
+                activeJob = null
+            }
+        }
+        activeJob = job
+    }
 
     fun startExecution(
         objectiveText: String,
@@ -150,6 +198,26 @@ fun DiscoveryScreen(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.discover_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.discover_subtitle), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
+        if (strategies.isNotEmpty()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Approved discovery strategies", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Run the reviewed queries against their configured sources. Results remain unverified until you inspect their original sources.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    strategies.forEach { strategy ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(strategy.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text("${strategy.queries.size} saved queries · ${strategy.target.countries.joinToString().ifBlank { "No country filter" }}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Button(onClick = { startStrategyExecution(strategy.id) }, enabled = !busy) {
+                                Text("Run")
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
