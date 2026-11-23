@@ -174,3 +174,27 @@ Implemented on `feature/discovery-run-persistence`:
 - Strategy generation does not run Discover, send communications, or create contacts. Other draft fields remain unchanged in this first review UI; full field-by-field editing remains future work.
 - Generator rethrows coroutine cancellation rather than converting cancellation into a normal inference error.
 - CI run 45058633990 failed three parser acceptance tests (valid JSON, fenced JSON, adapter error detail). Diagnostic assertions were added; later runs were superseded before completing. No build/test success or installable APK is claimed.
+
+
+## Session 22 handoff — complete discovery-strategy review surface
+
+**Implemented on** `feature/discovery-run-persistence`, commit `cbc12eb03ca4479558029e644499cce3a810a2f1`.
+
+- Replaced the partial first-signature/first-query editor with full review of every generated problem signature: problem statement, observable signals, buyer roles, search phrases and must-have conditions.
+- Added editing for every target constraint: countries, regions, languages, organization types, company size and excluded domains.
+- Exposed all query fields: registered source adapter ID, query text, language, region and per-query result limit; users can add and remove queries.
+- Exposed editable disqualifiers and the per-source result cap. Signature and query collections support add/remove; list editors support adding/removing individual lines.
+- Approval now runs deterministic strategy validation and checks each query against the currently registered adapter allowlist before materialization and repository save. No discovery run or communication is triggered by approval.
+- Added a round-trip regression test for multiple signatures, all target constraints, multiple query fields, disqualifiers and limits through draft materialization and the persistence codec.
+
+**Verification status**
+- CI run [45091643997](https://github.com/ysfclc/Trader/actions/runs/45091643997) was in progress when this handoff was written. Do not claim this editor change passes until the run completes.
+- Prior commit [6ba28d1](https://github.com/ysfclc/Trader/commit/6ba28d1c3780f521b170afc45398f02d5f11103c) is green: run [45064444679](https://github.com/ysfclc/Trader/actions/runs/45064444679), 122 tests passed, zero failures/errors/skips; build, lint and APK package/signature checks passed.
+- No physical-device UI test or stable-signed APK is claimed. The persistent signing key bundle is not available in this session and Actions signing secrets remain unconfigured; CI-only APKs must not be treated as update-compatible installs.
+
+**Next**
+1. Finish CI verification of the full review editor and round-trip test.
+2. Add ProofAsset claim evidence selection and verification-state editing; keep unverified claims visibly unverified.
+3. Connect a reviewed saved strategy to the discovery coordinator and persist its strategy ID on the run.
+4. Continue normalized Organization/Person records, source-linked dossiers and explainable proof-to-organization fit.
+5. Obtain the existing private Trader signing bundle and configure the two repository Actions secrets; then publish a stable-signed APK and perform backup-first Redmi installation/update acceptance.
