@@ -60,6 +60,9 @@ class TraderBackupManagerTest {
             assertEquals("COMPLETED", target.discoveryRunDao().getAll().single().status)
             assertEquals(1, target.sourceRunDao().getForRun("discovery-run-1").size)
             assertEquals(3, target.sourceRunDao().getForRun("discovery-run-1").single().resultCount)
+            assertEquals(1, target.discoveryDocumentDao().getAll().size)
+            assertEquals("Example tooling requirement", target.discoveryDocumentDao().getAll().single().title)
+            assertEquals("source-1", target.discoveryDocumentDao().getAll().single().sourceId)
         } finally {
             source.close()
             target.close()
@@ -124,6 +127,7 @@ class TraderBackupManagerTest {
             val decoded = TraderBackupManager(database).decodeSnapshot(legacy.toString())
             assertTrue(decoded.opportunities.isEmpty())
             assertTrue(decoded.discoverySources.isEmpty())
+            assertTrue(decoded.discoveryDocuments.isEmpty())
         } finally {
             database.close()
         }
@@ -267,6 +271,11 @@ class TraderBackupManagerTest {
         )
         database.discoveryRunDao().insert(DiscoveryRunEntity("discovery-run-1", null, "Find buyer requirements", "COMPLETED", now + 7, now + 8, now + 10, null, null))
         database.sourceRunDao().insert(SourceRunEntity("source-run-1", "discovery-run-1", "source-1", "rss.atom", "SUCCEEDED", now + 8, now + 9, 3, null, null))
+        database.discoveryDocumentDao().insert(
+            DiscoveryDocumentEntity("document-1", "discovery-run-1", "source-1", "Hacker News", "native-1",
+                "Example tooling requirement", "https://example.test/requirement", "A buyer is seeking a CNC supplier.",
+                now + 8, now + 9)
+        )
     }
 
     private fun problem(id: String, title: String) = ProblemEntity(
