@@ -147,23 +147,13 @@ class DiscoveryExecutionCoordinator(
                 RssAtomFeedAdapter.ADAPTER_ID -> {
                     val feedIds = enabledFeeds.filter { it.adapterId == RssAtomFeedAdapter.ADAPTER_ID }
                         .take(maxSourcesPerRun).map { it.id }.toSet()
-                    if (feedIds.isEmpty()) {
-                        // Record the query against a run even when no feed is configured, so
-                        // the user sees a durable failed attempt rather than a silent skip.
-                        summaries += execute(
-                            objective = query.query,
-                            sourceIds = emptySet(),
-                            onDocument = onDocument,
-                            strategyId = strategy.id
-                        )
-                    } else {
-                        summaries += execute(
-                            objective = query.query,
-                            sourceIds = feedIds,
-                            onDocument = onDocument,
-                            strategyId = strategy.id
-                        )
-                    }
+                    require(feedIds.isNotEmpty()) { "This strategy has an RSS/Atom query, but no enabled feed source is configured." }
+                    summaries += execute(
+                        objective = query.query,
+                        sourceIds = feedIds,
+                        onDocument = onDocument,
+                        strategyId = strategy.id
+                    )
                 }
                 else -> error("Strategy references an unregistered discovery adapter: ${query.sourceAdapterId}")
             }
