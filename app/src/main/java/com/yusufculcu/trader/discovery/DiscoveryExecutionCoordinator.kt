@@ -34,7 +34,8 @@ class DiscoveryExecutionCoordinator(
         sourceIds: Set<String>? = null,
         includePublicSearch: Boolean = false,
         onDocument: suspend (DiscoveryDocument) -> Unit = {},
-        strategyId: String? = null
+        strategyId: String? = null,
+        resultLimitOverride: Int? = null
     ): ExecutionSummary {
         val cleanObjective = objective.trim().replace(Regex("\\s+"), " ").take(MAX_OBJECTIVE_LENGTH)
         require(cleanObjective.length >= 2) { "Describe what this discovery run is looking for." }
@@ -71,7 +72,7 @@ class DiscoveryExecutionCoordinator(
                     }
                     val documents = fetched.asSequence()
                         .filter { it.url.isNotBlank() && seenUrls.add(canonicalUrl(it.url)) }
-                        .take(maxResultsPerSource)
+                        .take(minOf(maxResultsPerSource, resultLimitOverride ?: maxResultsPerSource))
                         .toList()
 
                     documents.forEach { document ->
@@ -141,7 +142,8 @@ class DiscoveryExecutionCoordinator(
                         objective = query.query,
                         includePublicSearch = true,
                         onDocument = onDocument,
-                        strategyId = strategy.id
+                        strategyId = strategy.id,
+                        resultLimitOverride = query.resultLimit
                     )
                 }
                 RssAtomFeedAdapter.ADAPTER_ID -> {
@@ -152,7 +154,8 @@ class DiscoveryExecutionCoordinator(
                         objective = query.query,
                         sourceIds = feedIds,
                         onDocument = onDocument,
-                        strategyId = strategy.id
+                        strategyId = strategy.id,
+                        resultLimitOverride = query.resultLimit
                     )
                 }
                 else -> error("Strategy references an unregistered discovery adapter: ${query.sourceAdapterId}")
