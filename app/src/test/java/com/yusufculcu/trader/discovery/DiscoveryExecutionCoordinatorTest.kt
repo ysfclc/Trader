@@ -7,6 +7,12 @@ import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.DiscoveryRunStatus
 import com.yusufculcu.trader.data.SourceRunStatus
 import com.yusufculcu.trader.data.TraderDatabase
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.domain.DiscoveryStrategy
+import com.yusufculcu.trader.domain.DiscoveryQuery
+import com.yusufculcu.trader.domain.ProblemSignature
+import com.yusufculcu.trader.domain.ProofAsset
+import com.yusufculcu.trader.domain.ProofAssetKind
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -106,6 +112,59 @@ class DiscoveryExecutionCoordinatorTest {
         assertEquals(3, forwarded.size)
         assertEquals(DiscoveryRunStatus.COMPLETED, database.discoveryRunDao().getById(summary.runId)?.status)
         assertEquals(2, database.sourceRunDao().getForRun(summary.runId).size)
+    }
+
+
+    @Test fun executesApprovedStrategyQueriesAndLinksEveryRun() = runBlocking {
+        val proof = ProofAsset(
+            id = "strategy-proof",
+            kind = ProofAssetKind.SERVICE_CAPABILITY,
+            name = "Precision manufacturing",
+            description = "Machining and inspection",
+            capabilities = listOf("CNC", "inspection"),
+            claims = emptyList(),
+            createdAt = 1,
+            updatedAt = 1
+        )
+        val strategyRepository = DiscoveryStrategyRepository(database)
+        assertTrue(strategyRepository.saveProofAsset(proof).isEmpty())
+        val strategy = DiscoveryStrategy(
+            id = "approved-strategy",
+            proofAssetId = proof.id,
+            signatures = listOf(ProblemSignature("signature", "Capacity or quality need", listOf("long lead time"))),
+            queries = listOf(
+                DiscoveryQuery(DuckDuckGoDiscoveryAdapter.ADAPTER_ID, "precision machining Poland", resultLimit = 2),
+                DiscoveryQuery(DuckDuckGoDiscoveryAdapter.ADAPTER_ID, "CNC overflow capacity Poland", resultLimit = 1)
+            ),
+            createdAt = 2,
+            updatedAt = 2
+        )
+        assertTrue(strategyRepository.saveStrategy(strategy).isEmpty())
+        val queries = mutableListOf<String>()
+        val searchAdapter = object : DiscoverySourceAdapter {
+            override val adapterId = DuckDuckGoDiscoveryAdapter.ADAPTER_ID
+            override suspend fun fetch(source: DiscoverySourceConfig) = emptyList<DiscoveryDocument>()
+            override suspend fun search(source: DiscoverySourceConfig, query: String): List<DiscoveryDocument> {
+                queries += query
+                return listOf(
+                    document(source.id, "https://example.org/a"),
+                    document(source.id, "https://example.org/b"),
+                    document(source.id, "https://example.org/c")
+                )
+            }
+        }
+        val coordinator = DiscoveryExecutionCoordinator(
+            sourceStore, DiscoveryAdapterRegistry(listOf(searchAdapter)), runRepository, clock = { 50L }
+        )
+        val summaries = coordinator.executeStrategy(strategy, proof)
+        assertEquals(listOf("precision machining Poland", "CNC overflow capacity Poland"), queries)
+        assertEquals(2, summaries.size)
+        assertEquals(listOf(2, 1), summaries.map { it.documentsReceived })
+        val runRows = database.discoveryRunDao().getAll()
+        assertEquals(2, runRows.size)
+        assertTrue(runRows.all { it.strategyId == strategy.id })
+        assertEquals(2, database.sourceRunDao().getForRun(runRows.first().id).single().resultCount)
+        assertEquals(1, database.sourceRunDao().getForRun(runRows.last().id).single().resultCount)
     }
 
     private fun document(sourceId: String, url: String) = DiscoveryDocument(
