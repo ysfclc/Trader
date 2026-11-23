@@ -143,7 +143,7 @@ class DiscoveryExecutionCoordinator(
                         includePublicSearch = true,
                         onDocument = onDocument,
                         strategyId = strategy.id,
-                        resultLimitOverride = query.resultLimit
+                        resultLimitOverride = minOf(query.resultLimit, strategy.maxResultsPerSource)
                     )
                 }
                 RssAtomFeedAdapter.ADAPTER_ID -> {
