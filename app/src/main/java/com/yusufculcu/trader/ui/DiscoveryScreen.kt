@@ -208,7 +208,7 @@ fun DiscoveryScreen(
                     strategies.forEach { strategy ->
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(strategy.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text("Strategy " + strategy.id.take(8), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                 Text("${strategy.queries.size} saved queries · ${strategy.target.countries.joinToString().ifBlank { "No country filter" }}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Button(onClick = { startStrategyExecution(strategy.id) }, enabled = !busy) {
