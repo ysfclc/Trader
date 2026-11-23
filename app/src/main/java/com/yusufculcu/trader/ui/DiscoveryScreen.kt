@@ -101,9 +101,9 @@ fun DiscoveryScreen(
         val job = scope.launch {
             val collected = mutableListOf<DiscoveryDocument>()
             try {
-                val strategy = strategyRepository.getStrategy(strategyId) ?: error("The saved strategy could not be loaded.")
+                val strategy = strategyRepository.getStrategy(strategyId) ?: throw IllegalStateException("The saved strategy could not be loaded.")
                 val proofAsset = strategyRepository.getProofAsset(strategy.proofAssetId)
-                    ?: error("The strategy's proof asset is missing. Review the strategy before running it.")
+                    ?: throw IllegalStateException("The strategy's proof asset is missing. Review the strategy before running it.")
                 val summaries = coordinator.executeStrategy(strategy, proofAsset) { document ->
                     val normalized = document.url.trim().trimEnd('/').lowercase(Locale.ROOT)
                     if (collected.none { it.url.trim().trimEnd('/').lowercase(Locale.ROOT) == normalized }) {
