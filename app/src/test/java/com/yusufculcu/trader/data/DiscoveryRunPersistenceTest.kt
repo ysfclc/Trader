@@ -34,6 +34,20 @@ class DiscoveryRunPersistenceTest {
         assertEquals(2, repo.observeSources(run.id).first().size)
     }
 
+    @Test fun findingsAreDurablePerRunAndCascadeWhenRunIsDeleted() = runBlocking {
+        val run = repo.create(DiscoveryRunDraft(null, "Find machining buyers", 10))
+        val row = DiscoveryDocumentEntity(
+            id = "finding-1", discoveryRunId = run.id, sourceId = "public-search",
+            sourceName = "Public search", nativeId = "https://example.com/item",
+            title = "Buyer requirement", url = "https://example.com/item", summary = "CNC machining",
+            publishedAt = null, retrievedAt = 20
+        )
+        db.discoveryDocumentDao().insert(row)
+        assertEquals(listOf(row), repo.observeDocuments(run.id).first())
+        db.discoveryRunDao().deleteAll()
+        assertTrue(db.discoveryDocumentDao().getAll().isEmpty())
+    }
+
     @Test fun interruptedRunsBecomePartialAndActiveSourcesNeedReview() = runBlocking {
         val run = repo.create(DiscoveryRunDraft(null, "Find suppliers", 1))
         repo.start(run.id, 2)
