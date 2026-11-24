@@ -141,3 +141,11 @@ Do not treat trade, services and careers as an exhaustive list of supported prob
 ## Current execution rule
 
 Do not start broad scraping, bulk outreach, cloud sync or large AI integrations before the local data/evidence workflow is reliable. Build one complete vertical slice at a time. Code presence is not verification. Use `docs/COVERAGE.md` for requirement traceability and `docs/RISKS.md` for unresolved acceptance/security risks. A checked implementation task does not imply physical-device acceptance.
+
+
+## Discovery run continuity increment (2026-11-24)
+
+- [x] Restore durable findings under their originating run with Room v6→v7 migration and cascading deletion.
+- [x] Persist findings from both direct and saved-strategy execution; expose saved findings from run history.
+- [x] Include findings in encrypted snapshot v4 with bounded-field and parent-run validation; restore in FK-safe order.
+- [ ] CI and physical-device migration/backup acceptance remain open until verified.

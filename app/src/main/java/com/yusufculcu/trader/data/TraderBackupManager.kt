@@ -52,7 +52,8 @@ class TraderBackupManager(
                     proofAssets = database.proofAssetDao().getAll(),
                     discoveryStrategies = database.discoveryStrategyDao().getAll(),
                     discoveryRuns = database.discoveryRunDao().getAll(),
-                    sourceRuns = database.sourceRunDao().getAll()
+                    sourceRuns = database.sourceRunDao().getAll(),
+                    discoveryDocuments = database.discoveryDocumentDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -118,6 +119,7 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.discoveryDocumentDao().deleteAll()
                         database.sourceRunDao().deleteAll()
                         database.discoveryRunDao().deleteAll()
                         database.discoveryStrategyDao().deleteAll()
@@ -142,6 +144,7 @@ class TraderBackupManager(
                         database.discoveryStrategyDao().insertAll(snapshot.discoveryStrategies)
                         database.discoveryRunDao().insertAll(snapshot.discoveryRuns)
                         database.sourceRunDao().insertAll(snapshot.sourceRuns)
+                        database.discoveryDocumentDao().insertAll(snapshot.discoveryDocuments)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -209,6 +212,7 @@ class TraderBackupManager(
             .put("discoveryStrategies", jsonArray(snapshot.discoveryStrategies, ::encodeDiscoveryStrategy))
             .put("discoveryRuns", jsonArray(snapshot.discoveryRuns, ::encodeDiscoveryRun))
             .put("sourceRuns", jsonArray(snapshot.sourceRuns, ::encodeSourceRun))
+            .put("discoveryDocuments", jsonArray(snapshot.discoveryDocuments, ::encodeDiscoveryDocument))
         return root.toString()
     }
 
@@ -239,14 +243,15 @@ class TraderBackupManager(
             proofAssets = if (backupSchemaVersion >= 5) decodeArray(root, "proofAssets", ::decodeProofAsset) else emptyList(),
             discoveryStrategies = if (backupSchemaVersion >= 5) decodeArray(root, "discoveryStrategies", ::decodeDiscoveryStrategy) else emptyList(),
             discoveryRuns = if (backupSchemaVersion >= 6 && root.has("discoveryRuns")) decodeArray(root, "discoveryRuns", ::decodeDiscoveryRun) else emptyList(),
-            sourceRuns = if (backupSchemaVersion >= 6 && root.has("sourceRuns")) decodeArray(root, "sourceRuns", ::decodeSourceRun) else emptyList()
+            sourceRuns = if (backupSchemaVersion >= 6 && root.has("sourceRuns")) decodeArray(root, "sourceRuns", ::decodeSourceRun) else emptyList(),
+            discoveryDocuments = if (backupSchemaVersion >= 7 && root.has("discoveryDocuments")) decodeArray(root, "discoveryDocuments", ::decodeDiscoveryDocument) else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -267,6 +272,7 @@ class TraderBackupManager(
         unique(snapshot.discoveryStrategies.map { it.id }, "discovery strategy")
         unique(snapshot.discoveryRuns.map { it.id }, "discovery run")
         unique(snapshot.sourceRuns.map { it.id }, "source run")
+        unique(snapshot.discoveryDocuments.map { it.id }, "discovery document")
         unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
         require(snapshot.discoverySources.all {
             it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
@@ -295,6 +301,7 @@ class TraderBackupManager(
         require(snapshot.discoveryRuns.all { it.id.isNotBlank() && it.objective.isNotBlank() && it.objective.length <= 2000 && (it.strategyId == null || it.strategyId in strategyIds) && it.status in setOf(DiscoveryRunStatus.CREATED, DiscoveryRunStatus.RUNNING, DiscoveryRunStatus.COMPLETED, DiscoveryRunStatus.PARTIAL, DiscoveryRunStatus.FAILED, DiscoveryRunStatus.CANCELLED) }) { "Backup contains an invalid discovery run." }
         val discoveryRuns = snapshot.discoveryRuns.associateBy { it.id }
         require(snapshot.sourceRuns.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.adapterId.isNotBlank() && it.resultCount >= 0 && it.status in setOf(SourceRunStatus.PENDING, SourceRunStatus.RUNNING, SourceRunStatus.SUCCEEDED, SourceRunStatus.FAILED, SourceRunStatus.SKIPPED, SourceRunStatus.CANCELLED) && (it.errorCode == null || it.errorCode.length <= 80) && (it.errorMessage == null || it.errorMessage.length <= 2000) }) { "Backup contains an invalid source run." }
+        require(snapshot.discoveryDocuments.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.sourceId.length <= 128 && it.sourceName.isNotBlank() && it.sourceName.length <= 200 && it.nativeId.length <= 4096 && it.title.length <= 300 && it.url.startsWith("https://") && it.url.length <= 2048 && it.summary.length <= 4000 && it.retrievedAt >= 0 && (it.publishedAt == null || it.publishedAt >= 0) }) { "Backup contains an invalid discovery document." }
         val evidenceIds = snapshot.evidence.map { it.id }.toSet()
         require(proofAssets.flatMap { it.claims }.flatMap { it.evidenceIds }.all { it in evidenceIds }) {
             "A proof claim points to a missing evidence record."
@@ -475,6 +482,9 @@ class TraderBackupManager(
         createdAt = o.getLong("createdAt"), startedAt = o.longOrNull("startedAt"), finishedAt = o.longOrNull("finishedAt"),
         cancellationRequestedAt = o.longOrNull("cancellationRequestedAt"), lastError = o.stringOrNull("lastError")
     )
+    private fun encodeDiscoveryDocument(row: DiscoveryDocumentEntity) = json("id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "sourceName" to row.sourceName, "nativeId" to row.nativeId, "title" to row.title, "url" to row.url, "summary" to row.summary, "publishedAt" to row.publishedAt, "retrievedAt" to row.retrievedAt)
+    private fun decodeDiscoveryDocument(o: JSONObject) = DiscoveryDocumentEntity(o.getString("id"), o.getString("discoveryRunId"), o.getString("sourceId"), o.getString("sourceName"), o.getString("nativeId"), o.getString("title"), o.getString("url"), o.getString("summary"), o.longOrNull("publishedAt"), o.getLong("retrievedAt"))
+
     private fun encodeSourceRun(row: SourceRunEntity) = json(
         "id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "adapterId" to row.adapterId,
         "status" to row.status, "startedAt" to row.startedAt, "finishedAt" to row.finishedAt, "resultCount" to row.resultCount,
@@ -531,13 +541,14 @@ class TraderBackupManager(
         val proofAssets: List<ProofAssetEntity> = emptyList(),
         val discoveryStrategies: List<DiscoveryStrategyEntity> = emptyList(),
         val discoveryRuns: List<DiscoveryRunEntity> = emptyList(),
-        val sourceRuns: List<SourceRunEntity> = emptyList()
+        val sourceRuns: List<SourceRunEntity> = emptyList(),
+        val discoveryDocuments: List<DiscoveryDocumentEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 3
-        private const val DATABASE_SCHEMA_VERSION = 6
+        private const val SNAPSHOT_VERSION = 4
+        private const val DATABASE_SCHEMA_VERSION = 7
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
