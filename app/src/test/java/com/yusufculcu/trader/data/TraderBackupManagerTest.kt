@@ -60,6 +60,8 @@ class TraderBackupManagerTest {
             assertEquals("COMPLETED", target.discoveryRunDao().getAll().single().status)
             assertEquals(1, target.sourceRunDao().getForRun("discovery-run-1").size)
             assertEquals(3, target.sourceRunDao().getForRun("discovery-run-1").single().resultCount)
+            assertEquals(1, target.discoveryDocumentDao().getAll().size)
+            assertEquals("Buyer requirement", target.discoveryDocumentDao().getAll().single().title)
         } finally {
             source.close()
             target.close()
@@ -267,6 +269,7 @@ class TraderBackupManagerTest {
         )
         database.discoveryRunDao().insert(DiscoveryRunEntity("discovery-run-1", null, "Find buyer requirements", "COMPLETED", now + 7, now + 8, now + 10, null, null))
         database.sourceRunDao().insert(SourceRunEntity("source-run-1", "discovery-run-1", "source-1", "rss.atom", "SUCCEEDED", now + 8, now + 9, 3, null, null))
+        database.discoveryDocumentDao().insert(DiscoveryDocumentEntity("finding-1", "discovery-run-1", "source-1", "Example Feed", "native-1", "Buyer requirement", "https://example.test/requirement", "CNC machining requirement", now + 7, now + 9))
     }
 
     private fun problem(id: String, title: String) = ProblemEntity(
