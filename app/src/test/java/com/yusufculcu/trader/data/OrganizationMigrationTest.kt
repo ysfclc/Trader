@@ -41,6 +41,16 @@ class OrganizationMigrationTest {
         }
     }
 
+    @Test
+    fun migration8To9CreatesCompanyScopedContactsWithCascadeDelete() {
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context).name(null).callback(object : SupportSQLiteOpenHelper.Callback(8) { override fun onCreate(db: SupportSQLiteDatabase) = Unit; override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit }).build())
+        try { val db = helper.writableDatabase; db.setForeignKeyConstraintsEnabled(true); MIGRATION_7_8.migrate(db); MIGRATION_8_9.migrate(db)
+            db.execSQL("INSERT INTO organizations (id, canonicalName, websiteUrl, domain, country, city, industry, notes, createdAt, updatedAt) VALUES ('org-1', 'Acme', NULL, NULL, NULL, NULL, NULL, NULL, 1, 2)")
+            db.execSQL("INSERT INTO organization_people (id, organizationId, fullName, role, email, phone, profileUrl, notes, createdAt, updatedAt) VALUES ('person-1', 'org-1', 'Ada', 'Buyer', 'ada@example.com', NULL, NULL, NULL, 3, 3)")
+            assertEquals(1, scalar(db, "SELECT COUNT(*) FROM organization_people")); db.execSQL("DELETE FROM organizations WHERE id = 'org-1'"); assertEquals(0, scalar(db, "SELECT COUNT(*) FROM organization_people"))
+        } finally { helper.close() }
+    }
+
     private fun scalar(db: SupportSQLiteDatabase, sql: String): Int {
         val cursor = db.query(sql)
         return try {
