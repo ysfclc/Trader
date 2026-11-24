@@ -4,7 +4,8 @@
 - Discovery adapters must return findings tagged with the source currently being executed; a mismatched source identity fails that source instead of silently misattributing evidence.
 - A discovery request with no enabled/selected source is rejected before a run record is created, so an empty execution cannot appear as COMPLETED.
 - Added regression tests for mismatched and finished source runs, adapter source-ID mismatch and empty source selection.
-- Bumped the stable-signed debug build to 0.4.0 / versionCode 4 without changing the application ID or signing configuration. CI verification pending.
+- Bumped the stable-signed debug build to 0.4.0 / versionCode 4 without changing the application ID or signing configuration.
+- CI run [45394348906](https://github.com/ysfclc/Trader/actions/runs/45394348906) passed `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug` in 4m45s. APK signature, persistent certificate fingerprint and exact package/version checks passed. Installable debug APK: [14919883504](https://github.com/ysfclc/Trader/actions/runs/45394348906/artifacts/14919883504); test reports: [14920726257](https://github.com/ysfclc/Trader/actions/runs/45394348906/artifacts/14920726257).
 
 ## 2026-11-24 — Company dossiers and durable discovery findings
 
