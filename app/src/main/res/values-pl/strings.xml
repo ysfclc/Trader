@@ -270,6 +270,7 @@
     <string name="pipeline_opportunities">Szanse</string>
     <string name="companies_nav">Firmy</string>
     <string name="companies_title">Dossier firm</string>
+    <string name="company_contacts">OSOBY I KONTAKTY</string><string name="company_add_contact">Dodaj kontakt</string><string name="company_edit_contact">Edytuj kontakt</string><string name="company_no_contacts">Brak kontaktów przypisanych do tej firmy.</string><string name="company_contact_name">Imię i nazwisko</string><string name="company_contact_role">Stanowisko / zakres odpowiedzialności</string><string name="company_contact_email">E-mail</string><string name="company_contact_phone">Telefon</string><string name="company_contact_profile">Adres profilu LinkedIn</string><string name="company_contact_notes">Notatki (wprowadzone przez operatora)</string><string name="company_contact_identity_notice">Kontakt jest przypisany tylko do tej firmy. Trader nie łączy automatycznie osób o podobnych nazwiskach ani adresach e-mail.</string><string name="company_delete_contact">Usuń</string>
     <string name="companies_intro">Łącz tożsamość firmy, materiały źródłowe i sprawdzone twierdzenia. Wynik wyszukiwania nigdy nie jest automatycznie uznawany za fakt.</string>
     <string name="companies_create">Nowe dossier firmy</string>
     <string name="companies_empty">Nie ma jeszcze dossier firm. Utwórz je ręcznie lub zacznij od wyniku Odkrywania.</string>

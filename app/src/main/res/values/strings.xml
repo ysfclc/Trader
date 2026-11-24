@@ -270,6 +270,7 @@
     <string name="pipeline_opportunities">Opportunities</string>
     <string name="companies_nav">Companies</string>
     <string name="companies_title">Company dossiers</string>
+    <string name="company_contacts">PEOPLE &amp; CONTACTS</string><string name="company_add_contact">Add contact</string><string name="company_edit_contact">Edit contact</string><string name="company_no_contacts">No contacts recorded for this company yet.</string><string name="company_contact_name">Full name</string><string name="company_contact_role">Role / responsibility</string><string name="company_contact_email">Email</string><string name="company_contact_phone">Phone</string><string name="company_contact_profile">LinkedIn profile URL</string><string name="company_contact_notes">Notes (operator-entered)</string><string name="company_contact_identity_notice">A contact is attached only to this company. Trader does not automatically merge people with similar names or email addresses.</string><string name="company_delete_contact">Delete</string>
     <string name="companies_intro">Keep company identity, source material and reviewed claims together. A discovery result is never treated as a verified fact.</string>
     <string name="companies_create">New company dossier</string>
     <string name="companies_empty">No company dossiers yet. Create one manually or start from a discovery result.</string>

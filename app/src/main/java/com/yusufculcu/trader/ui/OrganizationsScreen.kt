@@ -48,6 +48,8 @@ import com.yusufculcu.trader.data.OrganizationClaimState
 import com.yusufculcu.trader.data.OrganizationDraft
 import com.yusufculcu.trader.data.OrganizationEntity
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.OrganizationPersonDraft
+import com.yusufculcu.trader.data.OrganizationPersonEntity
 import com.yusufculcu.trader.data.OrganizationSourceDraft
 import com.yusufculcu.trader.data.OrganizationSourceEntity
 import com.yusufculcu.trader.data.OrganizationSourceKind
@@ -182,9 +184,12 @@ private fun OrganizationDossierScreen(
     val organization by repository.observeOrganization(organizationId).collectAsState(initial = null)
     val sources by repository.observeSources(organizationId).collectAsState(initial = emptyList())
     val claims by repository.observeClaims(organizationId).collectAsState(initial = emptyList())
+    val people by repository.observePeople(organizationId).collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     var showSourceDialog by remember { mutableStateOf(false) }
+    var showPersonDialog by remember { mutableStateOf(false) }
+    var editingPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
     var claimSource by remember { mutableStateOf<OrganizationSourceEntity?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
@@ -242,6 +247,25 @@ private fun OrganizationDossierScreen(
                 current.notes?.let {
                     Text(stringResource(R.string.company_notes_unverified), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(it, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.company_contacts), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            TextButton(onClick = { editingPerson = null; showPersonDialog = true }) { Text(stringResource(R.string.company_add_contact)) }
+        }
+        if (people.isEmpty()) Text(stringResource(R.string.company_no_contacts), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        else people.forEach { person ->
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(person.fullName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    person.role?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary) }
+                    person.email?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    person.phone?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    person.profileUrl?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary) }
+                    person.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    TextButton(onClick = { editingPerson = person; showPersonDialog = true }) { Text(stringResource(R.string.company_edit_contact)) }
                 }
             }
         }
@@ -311,6 +335,15 @@ private fun OrganizationDossierScreen(
             }
         )
     }
+    if (showPersonDialog) {
+        OrganizationPersonDialog(
+            initial = editingPerson,
+            onDismiss = { showPersonDialog = false; editingPerson = null },
+            onSave = { draft -> val selected = editingPerson; if (selected == null) repository.addPerson(organizationId, draft).id else repository.updatePerson(selected.id, draft).id },
+            onDelete = { personId -> repository.deletePerson(personId) },
+            onSaved = { showPersonDialog = false; editingPerson = null; notice = "Contact saved. No identity merge was performed." }
+        )
+    }
     if (showSourceDialog) {
         OrganizationSourceDialog(
             onDismiss = { showSourceDialog = false },
@@ -334,6 +367,34 @@ private fun OrganizationDossierScreen(
             }
         )
     }
+}
+
+@Composable
+private fun OrganizationPersonDialog(initial: OrganizationPersonEntity?, onDismiss: () -> Unit, onSave: suspend (OrganizationPersonDraft) -> String, onDelete: suspend (String) -> Boolean, onSaved: (String) -> Unit) {
+    val scope = rememberCoroutineScope()
+    var name by remember(initial) { mutableStateOf(initial?.fullName.orEmpty()) }
+    var role by remember(initial) { mutableStateOf(initial?.role.orEmpty()) }
+    var email by remember(initial) { mutableStateOf(initial?.email.orEmpty()) }
+    var phone by remember(initial) { mutableStateOf(initial?.phone.orEmpty()) }
+    var profile by remember(initial) { mutableStateOf(initial?.profileUrl.orEmpty()) }
+    var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(onDismissRequest = { if (!saving) onDismiss() }, title = { Text(stringResource(if (initial == null) R.string.company_add_contact else R.string.company_edit_contact)) }, text = {
+        Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(name, { name = it.take(160); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_name)) }, singleLine = true)
+            OutlinedTextField(role, { role = it.take(160) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_role)) }, singleLine = true)
+            OutlinedTextField(email, { email = it.take(254) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_email)) }, singleLine = true)
+            OutlinedTextField(phone, { phone = it.take(64) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_phone)) }, singleLine = true)
+            OutlinedTextField(profile, { profile = it.take(2048) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_profile)) }, singleLine = true)
+            OutlinedTextField(notes, { notes = it.take(2000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_notes)) }, minLines = 2, maxLines = 4)
+            Text(stringResource(R.string.company_contact_identity_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
+    }, confirmButton = { Row {
+        if (initial != null) TextButton(enabled = !saving, onClick = { scope.launch { saving = true; val result = runCatching { onDelete(initial.id) }; saving = false; result.onSuccess { onSaved(initial.id) }.onFailure { error = it.message ?: "Could not delete contact." } } }) { Text(stringResource(R.string.company_delete_contact)) }
+        Button(enabled = !saving && name.isNotBlank(), onClick = { scope.launch { saving = true; val result = runCatching { onSave(OrganizationPersonDraft(name, role, email, phone, profile, notes)) }; saving = false; result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save contact." } } }) { Text(stringResource(R.string.company_save)) }
+    } }, dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } })
 }
 
 @Composable

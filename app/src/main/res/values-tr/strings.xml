@@ -270,6 +270,7 @@
     <string name="pipeline_opportunities">Fırsatlar</string>
     <string name="companies_nav">Şirketler</string>
     <string name="companies_title">Şirket dosyaları</string>
+    <string name="company_contacts">KİŞİLER VE İLETİŞİM</string><string name="company_add_contact">Kişi ekle</string><string name="company_edit_contact">Kişiyi düzenle</string><string name="company_no_contacts">Bu şirkete henüz kişi eklenmedi.</string><string name="company_contact_name">Ad soyad</string><string name="company_contact_role">Görev / sorumluluk</string><string name="company_contact_email">E-posta</string><string name="company_contact_phone">Telefon</string><string name="company_contact_profile">LinkedIn profil bağlantısı</string><string name="company_contact_notes">Notlar (kullanıcı girişi)</string><string name="company_contact_identity_notice">Kişi yalnızca bu şirkete bağlanır. Trader benzer isimleri veya e-posta adreslerini otomatik birleştirmez.</string><string name="company_delete_contact">Sil</string>
     <string name="companies_intro">Şirket kimliğini, kaynak materyallerini ve incelenmiş iddiaları birlikte tut. Keşif sonucu hiçbir zaman otomatik olarak doğrulanmış gerçek sayılmaz.</string>
     <string name="companies_create">Yeni şirket dosyası</string>
     <string name="companies_empty">Henüz şirket dosyası yok. Elle oluştur veya bir keşif sonucundan başla.</string>
