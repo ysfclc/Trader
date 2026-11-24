@@ -344,7 +344,7 @@ class WorkflowPersistenceTest {
     }
 
     @Test
-    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() = runBlocking {
+    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsAllCurrentTables() = runBlocking {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)
         file.parentFile?.mkdirs()
@@ -400,7 +400,7 @@ class WorkflowPersistenceTest {
         old.close()
 
         val migrated = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
             .allowMainThreadQueries()
             .build()
         try {
@@ -446,7 +446,7 @@ class WorkflowPersistenceTest {
                 "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_strategies'"
             )
             try { assertTrue(discoveryStrategyTable.moveToFirst()) } finally { discoveryStrategyTable.close() }
-            listOf("discovery_runs", "source_runs").forEach { table ->
+            listOf("discovery_runs", "source_runs", "discovery_documents", "organizations", "organization_sources", "organization_claims").forEach { table ->
                 val cursor = migrated.openHelper.readableDatabase.query(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='$table'"
                 )
