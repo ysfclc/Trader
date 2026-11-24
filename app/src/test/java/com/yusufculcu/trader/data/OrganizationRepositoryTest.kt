@@ -81,6 +81,22 @@ class OrganizationRepositoryTest {
     }
 
     @Test
+    fun companyContactsAreValidatedEditableAndNeverAutoMerged() = runBlocking {
+        val company = repository.createOrganization(OrganizationDraft("Northstar Precision"))
+        val person = repository.addPerson(company.id, OrganizationPersonDraft("Ada Example", "Purchasing Manager", "ada@example.com", "+48 600 000 000", "https://www.linkedin.com/in/ada-example", "Met at trade fair."))
+        assertEquals(company.id, person.organizationId); assertEquals(1, repository.observePeople(company.id).first().size)
+        val updated = repository.updatePerson(person.id, OrganizationPersonDraft("Ada Example", "Head of Procurement"))
+        assertEquals("Head of Procurement", updated.role); assertEquals(null, updated.email)
+        assertTrue(repository.deletePerson(person.id)); assertTrue(repository.observePeople(company.id).first().isEmpty())
+        var invalidEmail = false
+        try { repository.addPerson(company.id, OrganizationPersonDraft("Bad", email = "not-an-email")) } catch (_: IllegalArgumentException) { invalidEmail = true }
+        assertTrue(invalidEmail)
+        var invalidProfile = false
+        try { repository.addPerson(company.id, OrganizationPersonDraft("Bad", profileUrl = "https://example.com/person")) } catch (_: IllegalArgumentException) { invalidProfile = true }
+        assertTrue(invalidProfile)
+    }
+
+    @Test
     fun claimCannotBorrowAnotherOrganizationSourceAndUnsafeUrlsAreRejected() = runBlocking {
         val first = repository.createOrganization(OrganizationDraft("First Company"))
         val second = repository.createOrganization(OrganizationDraft("Second Company"))

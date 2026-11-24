@@ -520,6 +520,21 @@ data class OrganizationClaimEntity(
     val updatedAt: Long
 )
 
+@Entity(tableName = "organization_people", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)], indices = [Index(value = ["organizationId"]), Index(value = ["email"])])
+data class OrganizationPersonEntity(@PrimaryKey val id: String, val organizationId: String, val fullName: String, val role: String?, val email: String?, val phone: String?, val profileUrl: String?, val notes: String?, val createdAt: Long, val updatedAt: Long)
+
+@Dao
+interface OrganizationPersonDao {
+ @Query("SELECT * FROM organization_people WHERE organizationId = :organizationId ORDER BY fullName COLLATE NOCASE ASC, createdAt ASC") fun observeForOrganization(organizationId: String): Flow<List<OrganizationPersonEntity>>
+ @Query("SELECT * FROM organization_people") suspend fun getAll(): List<OrganizationPersonEntity>
+ @Query("SELECT * FROM organization_people WHERE id = :id LIMIT 1") suspend fun getById(id: String): OrganizationPersonEntity?
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(person: OrganizationPersonEntity)
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(items: List<OrganizationPersonEntity>)
+ @Update suspend fun update(person: OrganizationPersonEntity)
+ @Query("DELETE FROM organization_people WHERE id = :id") suspend fun deleteById(id: String): Int
+ @Query("DELETE FROM organization_people") suspend fun deleteAll()
+}
+
 @Dao
 interface OrganizationDao {
     @Query("SELECT * FROM organizations ORDER BY updatedAt DESC, canonicalName COLLATE NOCASE ASC")
@@ -657,9 +672,10 @@ interface SourceRunDao {
         DiscoveryDocumentEntity::class,
         OrganizationEntity::class,
         OrganizationSourceEntity::class,
-        OrganizationClaimEntity::class
+        OrganizationClaimEntity::class,
+        OrganizationPersonEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -679,6 +695,7 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun organizationDao(): OrganizationDao
     abstract fun organizationSourceDao(): OrganizationSourceDao
     abstract fun organizationClaimDao(): OrganizationClaimDao
+    abstract fun organizationPersonDao(): OrganizationPersonDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -913,4 +930,12 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_claims_sourceId ON organization_claims (sourceId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_claims_reviewState ON organization_claims (reviewState)")
     }
+}
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+ override fun migrate(db: SupportSQLiteDatabase) {
+  db.execSQL("""CREATE TABLE IF NOT EXISTS organization_people (id TEXT NOT NULL, organizationId TEXT NOT NULL, fullName TEXT NOT NULL, role TEXT, email TEXT, phone TEXT, profileUrl TEXT, notes TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+  db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_people_organizationId ON organization_people (organizationId)")
+  db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_people_email ON organization_people (email)")
+ }
 }
