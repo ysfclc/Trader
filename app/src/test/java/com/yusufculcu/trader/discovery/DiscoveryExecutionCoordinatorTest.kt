@@ -44,6 +44,37 @@ class DiscoveryExecutionCoordinatorTest {
         assertEquals(source.name, sourceStore.list().single().name)
     }
 
+    @Test fun refusesToCreateACompletedRunWhenNoEnabledSourceMatchesSelection() = runBlocking {
+        val coordinator = DiscoveryExecutionCoordinator(
+            sourceStore, DiscoveryAdapterRegistry(listOf(FakeAdapter())), runRepository, clock = { 150L }
+        )
+        val failure = runCatching {
+            coordinator.execute(
+                objective = "Find relevant suppliers",
+                sourceIds = emptySet(),
+                includePublicSearch = false
+            )
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+        assertTrue(database.discoveryRunDao().getAll().isEmpty())
+    }
+
+    @Test fun rejectsAdapterFindingsThatClaimAnotherSourceIdentity() = runBlocking {
+        val source = sourceStore.add("Feed A", "https://example.org/feed.xml")
+        val adapter = FakeAdapter(listOf(document("different-source", "https://example.org/unrelated")))
+        val coordinator = DiscoveryExecutionCoordinator(
+            sourceStore, DiscoveryAdapterRegistry(listOf(adapter)), runRepository, clock = { 175L }
+        )
+
+        val summary = coordinator.execute("Find relevant suppliers")
+        assertEquals(listOf(source.name), summary.failedSourceNames)
+        assertEquals(0, summary.documentsReceived)
+        assertEquals(DiscoveryRunStatus.FAILED, database.discoveryRunDao().getById(summary.runId)?.status)
+        assertEquals("SOURCE_FAILURE", database.sourceRunDao().getForRun(summary.runId).single().errorCode)
+        assertTrue(database.discoveryDocumentDao().getAll().isEmpty())
+    }
+
     @Test fun sourceFailureIsRecordedAndReturnedAsFailure() = runBlocking {
         val source = sourceStore.add("Failing", "https://example.org/fail.xml")
         val adapter = FakeAdapter(failure = IllegalStateException("provider unavailable"))

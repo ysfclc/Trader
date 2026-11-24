@@ -47,6 +47,9 @@ class DiscoveryExecutionCoordinator(
             val availableFeedSlots = maxSourcesPerRun - size
             if (availableFeedSlots > 0) addAll(configuredSources.take(availableFeedSlots))
         }
+        require(sources.isNotEmpty()) {
+            "No enabled source is available for this discovery run. Select an enabled feed or include public search."
+        }
         val run = runs.create(DiscoveryRunDraft(strategyId, cleanObjective, clock()))
         if (!runs.start(run.id, clock())) error("Could not start discovery run.")
 
@@ -69,6 +72,9 @@ class DiscoveryExecutionCoordinator(
                         } else {
                             adapter.fetch(source)
                         }
+                    }
+                    require(fetched.all { it.sourceId == source.id }) {
+                        "Discovery adapter returned a finding for a different source."
                     }
                     val documents = fetched.asSequence()
                         .filter { it.url.isNotBlank() && seenUrls.add(canonicalUrl(it.url)) }

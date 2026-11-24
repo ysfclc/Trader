@@ -29,15 +29,27 @@ class DiscoveryRunRepository(private val database: TraderDatabase) {
     fun observeSources(runId: String): Flow<List<SourceRunEntity>> = database.sourceRunDao().observeForRun(runId)
     fun observeDocuments(runId: String): Flow<List<DiscoveryDocumentEntity>> = database.discoveryDocumentDao().observeForRun(runId)
 
-    suspend fun saveDocument(runId: String, document: com.yusufculcu.trader.discovery.DiscoveryDocument): DiscoveryDocumentEntity {
+    suspend fun saveDocument(runId: String, document: com.yusufculcu.trader.discovery.DiscoveryDocument): DiscoveryDocumentEntity = database.withTransaction {
         require(document.id.isNotBlank() && document.id.length <= 4096 && document.sourceId.isNotBlank() && document.sourceId.length <= 128)
         require(document.sourceName.isNotBlank() && document.sourceName.length <= 200 && document.nativeId.length <= 4096)
         require(document.title.length <= 300 && document.url.startsWith("https://") && document.url.length <= 2048 && document.summary.length <= 4000)
         require(document.retrievedAt >= 0 && (document.publishedAt == null || document.publishedAt >= 0))
-        require(database.discoveryRunDao().getById(runId) != null) { "Discovery run does not exist." }
+
+        val run = database.discoveryRunDao().getById(runId)
+            ?: throw IllegalArgumentException("Discovery run does not exist.")
+        require(run.status == DiscoveryRunStatus.RUNNING) {
+            "Discovery findings can only be saved while their run is active."
+        }
+        val sourceRun = database.sourceRunDao().getForRun(runId).firstOrNull {
+            it.sourceId == document.sourceId && it.status == SourceRunStatus.RUNNING
+        }
+        require(sourceRun != null) {
+            "Discovery finding must belong to an active source run in this discovery run."
+        }
+
         val row = DiscoveryDocumentEntity(UUID.randomUUID().toString(), runId, document.sourceId, document.sourceName, document.nativeId.take(4096), document.title, document.url, document.summary, document.publishedAt, document.retrievedAt)
         database.discoveryDocumentDao().insert(row)
-        return row
+        row
     }
 
     suspend fun create(draft: DiscoveryRunDraft): DiscoveryRunEntity {

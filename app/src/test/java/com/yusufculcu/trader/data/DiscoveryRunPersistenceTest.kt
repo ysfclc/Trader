@@ -34,6 +34,37 @@ class DiscoveryRunPersistenceTest {
         assertEquals(2, repo.observeSources(run.id).first().size)
     }
 
+    @Test fun findingsMustMatchAnActiveSourceRunInTheSameDiscoveryRun() = runBlocking {
+        val run = repo.create(DiscoveryRunDraft(null, "Research this feed", 1))
+        assertTrue(repo.start(run.id, 2))
+        val source = repo.addSource(run.id, SourceRunDraft("feed-a", "rss.atom", 3))
+        assertTrue(repo.startSource(source.id, 4))
+        val finding = com.yusufculcu.trader.discovery.DiscoveryDocument(
+            id = "provider-item",
+            sourceId = "other-feed",
+            sourceName = "Other feed",
+            nativeId = "https://example.org/item",
+            title = "Evidence",
+            url = "https://example.org/item",
+            summary = "Source excerpt",
+            publishedAt = null,
+            retrievedAt = 5
+        )
+
+        val mismatched = runCatching { repo.saveDocument(run.id, finding) }.exceptionOrNull()
+        assertTrue(mismatched is IllegalArgumentException)
+        assertTrue(repo.observeDocuments(run.id).first().isEmpty())
+
+        val saved = repo.saveDocument(run.id, finding.copy(sourceId = "feed-a", sourceName = "Feed A"))
+        assertEquals("feed-a", saved.sourceId)
+        assertEquals(1, repo.observeDocuments(run.id).first().size)
+        assertTrue(repo.finishSource(source.id, 1, 6))
+
+        val late = runCatching { repo.saveDocument(run.id, finding.copy(sourceId = "feed-a")) }.exceptionOrNull()
+        assertTrue(late is IllegalArgumentException)
+        assertEquals(1, repo.observeDocuments(run.id).first().size)
+    }
+
     @Test fun findingsAreDurablePerRunAndCascadeWhenRunIsDeleted() = runBlocking {
         val run = repo.create(DiscoveryRunDraft(null, "Find machining buyers", 10))
         val row = DiscoveryDocumentEntity(
