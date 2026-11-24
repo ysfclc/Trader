@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-22 — session 19 (candidate model byte verification and lifecycle hardening; CI run 45052932934 pending)_
+_Last updated: 2026-11-24 — session 23 (release continuity incident and product direction reset; CI run 45345752081 passed)_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -7,21 +7,21 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 ## Current implementation
 | Area | State | Verified boundary |
 |---|---|---|
-| Android identity | 🟡 CI-verified candidate; device/update acceptance open | Package `com.yusufculcu.trader.debug`; version `0.2.0-debug`, versionCode 2. Adaptive launcher/round icon wired. CI verified APK signature and exact package/version. Persistent signing secrets were absent, so run 44998620615 emitted a CI-only debug-signed APK. |
+| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; version `0.2.0-debug`, versionCode 2. Adaptive launcher/round icon wired. CI run 45345752081 loaded the dedicated Trader keystore, verified the APK signature against that keystore and uploaded installable artifact 14898566003. No on-device install-over-existing test has been completed. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
-| Local data | 🟡 partial | Room schema v7 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs and source runs. Encrypted backup snapshot v6 includes all current records plus public feed settings; legacy v1–v5 snapshots remain readable. Physical-device migration/restore acceptance open. |
-| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; no stable-signed in-place update has been device-tested. Encrypted backup snapshot v6 includes cases, evidence, workflows, opportunities, proof assets, strategies, discovery runs/source runs/findings and public feed settings; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
+| Local data | 🟡 partial | Room schema v7 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs and discovery findings. Encrypted backup snapshot v4 includes all current records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
+| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; this has not yet been proven on the Redmi. The move from the earlier CI-debug signing identity to the dedicated persistent Trader key caused the user to uninstall the previous app. That one-time migration was not preceded by a confirmed encrypted export; if no .traderbackup exists, the old app-private workspace cannot be recovered by a new APK. Snapshot v4 includes cases, evidence, workflows, opportunities, proof assets, strategies, discovery runs/source runs/findings and public feed settings; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first execution slice CI-verified | Objective-driven DuckDuckGo search plus all enabled local RSS/Atom feeds run through one bounded coordinator. Per-source run history/status, timeout isolation, cancellation, cross-source URL dedupe, manual feed checks, browser handoff and save-to-Work as UNREVIEWED evidence. CI run 44998620615: 115 tests passed, 0 failures/errors/skips; build, lint, signature and package/version checks passed. No live-source or physical-device acceptance. |
-| Company / people graph | 🟡 foundation only | ProofAsset/DiscoveryStrategy models, validation, Room migration, repository, codec and encrypted backup are CI-verified. There is no editor UI, strategy-driven execution, normalized Organization/Person record, dossier, identity review or explainable fit engine yet. |
+| Company / people graph | 🟡 foundation only | ProofAsset/DiscoveryStrategy models, validation, Room migration, repository, codec and encrypted backup are CI-verified. A Discovery Strategy Workshop is available under Models, including review/edit of generated signatures, target constraints, queries and disqualifiers. Strategy-to-run linkage, normalized Organization/Person records, dossiers, identity review and explainable fit assessment remain incomplete. |
 | Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub. Curated source metadata checks and consent-gated immutable candidate downloads with exact-size/SHA-256 verification, cancellation, temporary-file cleanup and no automatic install are implemented; current feature CI is pending. No verified on-device model inference or durable WorkManager executor. |
 | Social/community sources | ⚪ not implemented | Reddit OAuth, Bluesky/Mastodon APIs, authorized groups and Facebook browser-assisted research remain future provider-specific adapters. |
 | Outreach | ⚪ not implemented | Drafting/approval/handoff contracts remain planned; no autonomous send. |
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; latest feature commit `3e85b2aff2046939caa3384fe0f5977beb806cde` (candidate verification transport/UI lifecycle hardening).
+- Current branch: `feature/discovery-run-persistence`; latest commit `a4950eb17a606b9f89520ec4f78b6fcb7e4f2505`.
 - Candidate package/version: `com.yusufculcu.trader.debug`, versionCode 2, versionName `0.2.0-debug`.
 - CI run 44998620615 validated versionCode 2 / `0.2.0-debug`; artifact SHA-256 `dd3b28aa150c360584abc67a273129bab627b665c7c22ecda3a84124abb463d5` (69,554,096 bytes). It was signed with the runner debug key because persistent signing secrets were not configured; do not assume upgrade compatibility with any previous APK.
 - A dedicated PKCS12 development keystore has been generated outside Git for the next stable signing setup. Its SHA-256 certificate fingerprint is pinned in `.github/workflows/android.yml`; the private bundle contains the key, base64 secret value and password. Repository Actions secrets `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` remain absent until GitHub sign-in is completed. CI labels builds without the key as CI-only and not for installation.
@@ -203,3 +203,20 @@ Implemented on `feature/discovery-run-persistence`:
 ## 2026-11-24 execution note
 
 The prior findings-persistence implementation was inadvertently reverted while the run-history UI still referenced it, causing CI compilation failure. Repair restores the Room v7 findings entity/DAO and 6→7 migration, persists each accepted finding from the coordinator, registers the migration, and includes findings in encrypted backup format v4. CI verification is pending; device migration/restore acceptance remains open.
+
+
+## Session 23 handoff — signing transition, CI recovery and product reset (2026-11-24)
+
+**Verified in repository/CI**
+- Stable Trader signing secrets are now present in Actions. Run 45345752081 passed the full test/build/lint/signature/package pipeline and uploaded installable artifact trader-installable-apk (artifact ID 14898566003).
+- The failed predecessor run 45344874970 exposed a missing MIGRATION_6_7 registration in a legacy migration test. Commit a4950eb17a606b9f89520ec4f78b6fcb7e4f2505 fixed it; the subsequent run passed.
+- Discovery findings now persist under their originating run and are included in encrypted backup snapshot v4. This is infrastructure, not a user-visible feature milestone.
+
+**User-impact incident**
+- The earlier installed APK was from the ephemeral CI-signing period. Android cannot update an APK signed by that temporary key with the new persistent Trader key, even though the package ID is unchanged. The user had to uninstall the old app. The migration should have been gated on a confirmed encrypted export; that safeguard was not enforced. If no .traderbackup was exported before uninstall, the old app-private data is not recoverable from the new install.
+- From this point forward, stable signing is fixed. All subsequent updates must preserve com.yusufculcu.trader.debug, increment versionCode, use the same persistent certificate and be tested as in-place updates. Never advise uninstalling as a routine fix.
+
+**Product direction reset**
+- Stop treating green CI runs and invisible persistence work as user-facing progress. Next implementation milestone is the Organization dossier vertical slice: source-to-organization identity, evidence-backed company profile, buyer requirements/supplier capabilities, and explainable fit with unknowns/contradictions.
+- Each milestone must end with a visible, usable change in the installed app, a short before/after description, and a signed APK. Infrastructure-only changes are allowed only when they directly unblock or protect that slice.
+- No physical-device acceptance is claimed by CI.

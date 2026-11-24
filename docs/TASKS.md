@@ -149,3 +149,12 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] Persist findings from both direct and saved-strategy execution; expose saved findings from run history.
 - [x] Include findings in encrypted snapshot v4 with bounded-field and parent-run validation; restore in FK-safe order.
 - [ ] CI and physical-device migration/backup acceptance remain open until verified.
+
+
+## Release continuity and visible-delivery gate (2026-11-24)
+
+- [x] Persistent Trader development signing configured in GitHub Actions; CI run 45345752081 verified the APK against the configured keystore and uploaded the installable artifact.
+- [x] Repair legacy migration test to include Room migration 6→7; commit a4950eb; CI run 45345752081 passed.
+- [ ] On Redmi, prove the next APK updates the currently installed stable-signed app in place (adb install -r) without uninstalling or losing app data.
+- [ ] Do not call a phase complete based only on tests or schema work: ship a visible app capability and provide a concise before/after summary with every APK.
+- [ ] Next visible vertical slice: Organization dossier with evidence-backed identity, source-linked claims, contact records, buyer requirements/supplier capabilities, and explainable support/contradiction/unknown states.

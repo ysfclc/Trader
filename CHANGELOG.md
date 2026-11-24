@@ -1,3 +1,11 @@
+## 2026-11-24 — Discovery finding persistence and stable-signed APK
+
+- Restored durable discovery finding records, Room v6→v7 migration, per-run history observation and encrypted backup snapshot v4. This closes a data-retention gap; it does not materially change the visible Discover experience.
+- Fixed the legacy v1→v7 migration test to register the final 6→7 migration. Commit a4950eb17a606b9f89520ec4f78b6fcb7e4f2505.
+- CI run 45345752081 passed tests, lint, APK assembly, persistent-certificate verification and package/version assertions; artifact trader-installable-apk (14898566003) was uploaded.
+- Continuity incident: the older installed APK used an ephemeral CI signing certificate, while the new APK uses the persistent Trader key. Android rejects this signature change as an in-place update. The user had to uninstall; backup-before-transition was not enforced. Future releases must use the persistent key and must never require uninstalling.
+- Next user-visible milestone: Organization dossier and evidence-backed qualification, not another persistence-only phase.
+
 ## 2026-11-21 — Evidence-backed discovery foundation (PR #18 in progress)
 
 - Added versioned ProofAsset and DiscoveryStrategy models with fail-closed validation for claims, evidence references, target constraints, bounded query plans and disqualifiers.
