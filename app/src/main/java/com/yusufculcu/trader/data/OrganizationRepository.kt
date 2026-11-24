@@ -22,8 +22,6 @@ object OrganizationClaimState {
     val ALL = setOf(UNREVIEWED, SUPPORTED, CONTRADICTED, REJECTED)
 }
 
-data class OrganizationPersonDraft(val fullName: String, val role: String = "", val email: String = "", val phone: String = "", val profileUrl: String = "", val notes: String = "")
-
 data class OrganizationDraft(
     val canonicalName: String,
     val websiteUrl: String = "",
@@ -59,21 +57,6 @@ class OrganizationRepository(private val database: TraderDatabase) {
         database.organizationSourceDao().observeForOrganization(organizationId)
     fun observeClaims(organizationId: String): Flow<List<OrganizationClaimEntity>> =
         database.organizationClaimDao().observeForOrganization(organizationId)
-    fun observePeople(organizationId: String): Flow<List<OrganizationPersonEntity>> = database.organizationPersonDao().observeForOrganization(organizationId)
-    suspend fun addPerson(organizationId: String, draft: OrganizationPersonDraft): OrganizationPersonEntity = database.withTransaction {
-        require(database.organizationDao().getById(organizationId) != null) { "Company dossier does not exist." }
-        val now = System.currentTimeMillis(); val row = buildPerson(organizationId, draft, UUID.randomUUID().toString(), now)
-        database.organizationPersonDao().insert(row); database.organizationDao().touch(organizationId, now); row
-    }
-    suspend fun updatePerson(personId: String, draft: OrganizationPersonDraft): OrganizationPersonEntity = database.withTransaction {
-        val old = database.organizationPersonDao().getById(personId) ?: throw IllegalArgumentException("Contact no longer exists.")
-        val row = buildPerson(old.organizationId, draft, old.id, old.createdAt).copy(updatedAt = System.currentTimeMillis())
-        database.organizationPersonDao().update(row); database.organizationDao().touch(old.organizationId, row.updatedAt); row
-    }
-    suspend fun deletePerson(personId: String): Boolean = database.withTransaction {
-        val old = database.organizationPersonDao().getById(personId) ?: return@withTransaction false
-        database.organizationPersonDao().deleteById(personId); database.organizationDao().touch(old.organizationId, System.currentTimeMillis()); true
-    }
 
     suspend fun findByDomain(domain: String): List<OrganizationEntity> {
         val normalized = domain.trim().lowercase(Locale.ROOT).removePrefix("www.")
@@ -177,15 +160,6 @@ class OrganizationRepository(private val database: TraderDatabase) {
     }
 
     suspend fun deleteOrganization(id: String): Boolean = database.organizationDao().deleteById(id) > 0
-
-    private fun buildPerson(organizationId: String, draft: OrganizationPersonDraft, id: String, now: Long): OrganizationPersonEntity {
-        val name = cleanRequired(draft.fullName, 160, "Contact name")
-        val role = cleanOptional(draft.role, 160, "Role")
-        val email = cleanOptional(draft.email, 254, "Email")?.also { require(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(it)) { "Email address is invalid." } }
-        val phone = cleanOptional(draft.phone, 64, "Phone")
-        val profile = cleanOptional(draft.profileUrl, 2048, "Profile URL")?.also { val host = URI(normalizeHttpsUrl(it, "Profile URL")).host; require(host.equals("linkedin.com", true) || host.endsWith(".linkedin.com", true)) { "Profile URL must point to linkedin.com." } }
-        return OrganizationPersonEntity(id, organizationId, name, role, email, phone, profile, cleanOptional(draft.notes, 2000, "Contact notes"), now, now)
-    }
 
     private fun buildOrganization(draft: OrganizationDraft, id: String, now: Long): OrganizationEntity {
         val normalized = normalizeWebsite(draft.websiteUrl)

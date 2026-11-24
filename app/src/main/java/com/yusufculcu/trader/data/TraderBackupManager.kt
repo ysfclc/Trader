@@ -56,7 +56,8 @@ class TraderBackupManager(
                     discoveryDocuments = database.discoveryDocumentDao().getAll(),
                     organizations = database.organizationDao().getAll(),
                     organizationSources = database.organizationSourceDao().getAll(),
-                    organizationClaims = database.organizationClaimDao().getAll()
+                    organizationClaims = database.organizationClaimDao().getAll(),
+                    organizationPeople = database.organizationPersonDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -122,6 +123,7 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.organizationPersonDao().deleteAll()
                         database.organizationClaimDao().deleteAll()
                         database.organizationSourceDao().deleteAll()
                         database.organizationDao().deleteAll()
@@ -154,6 +156,7 @@ class TraderBackupManager(
                         database.organizationDao().insertAll(snapshot.organizations)
                         database.organizationSourceDao().insertAll(snapshot.organizationSources)
                         database.organizationClaimDao().insertAll(snapshot.organizationClaims)
+                        database.organizationPersonDao().insertAll(snapshot.organizationPeople)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -225,6 +228,7 @@ class TraderBackupManager(
             .put("organizations", jsonArray(snapshot.organizations, ::encodeOrganization))
             .put("organizationSources", jsonArray(snapshot.organizationSources, ::encodeOrganizationSource))
             .put("organizationClaims", jsonArray(snapshot.organizationClaims, ::encodeOrganizationClaim))
+            .put("organizationPeople", jsonArray(snapshot.organizationPeople, ::encodeOrganizationPerson))
         return root.toString()
     }
 
@@ -259,14 +263,15 @@ class TraderBackupManager(
             discoveryDocuments = if (backupSchemaVersion >= 7 && root.has("discoveryDocuments")) decodeArray(root, "discoveryDocuments", ::decodeDiscoveryDocument) else emptyList(),
             organizations = if (backupSchemaVersion >= 8 && root.has("organizations")) decodeArray(root, "organizations", ::decodeOrganization) else emptyList(),
             organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
-            organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList()
+            organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList(),
+            organizationPeople = if (backupSchemaVersion >= 9 && root.has("organizationPeople")) decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -292,6 +297,7 @@ class TraderBackupManager(
         unique(snapshot.organizationSources.map { it.id }, "organization source")
         unique(snapshot.organizationSources.map { it.organizationId + "|" + it.url }, "organization source URL")
         unique(snapshot.organizationClaims.map { it.id }, "organization claim")
+        unique(snapshot.organizationPeople.map { it.id }, "organization person")
         unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
         require(snapshot.discoverySources.all {
             it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
@@ -323,6 +329,12 @@ class TraderBackupManager(
         require(snapshot.discoveryDocuments.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.sourceId.length <= 128 && it.sourceName.isNotBlank() && it.sourceName.length <= 200 && it.nativeId.length <= 4096 && it.title.length <= 300 && it.url.startsWith("https://") && it.url.length <= 2048 && it.summary.length <= 4000 && it.retrievedAt >= 0 && (it.publishedAt == null || it.publishedAt >= 0) }) { "Backup contains an invalid discovery document." }
         val organizationIds = snapshot.organizations.map { it.id }.toSet()
         val organizationSources = snapshot.organizationSources.associateBy { it.id }
+        require(snapshot.organizationPeople.all { person ->
+            person.id.isNotBlank() && person.organizationId in organizationIds && person.fullName.isNotBlank() && person.fullName.length <= 160 &&
+                (person.role == null || person.role.length <= 160) && (person.email == null || (person.email.length <= 254 && Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(person.email))) &&
+                (person.phone == null || person.phone.length <= 64) && (person.profileUrl == null || (person.profileUrl.startsWith("https://") && person.profileUrl.length <= 2048 && runCatching { java.net.URI(person.profileUrl).host?.let { it.equals("linkedin.com", true) || it.endsWith(".linkedin.com", true) } == true }.getOrDefault(false))) &&
+                (person.notes == null || person.notes.length <= 2000) && person.createdAt >= 0 && person.updatedAt >= person.createdAt
+        }) { "Backup contains an invalid organization contact or missing company relationship." }
         require(snapshot.organizations.all {
             it.id.isNotBlank() && it.canonicalName.isNotBlank() && it.canonicalName.length <= 200 &&
                 (it.websiteUrl == null || (it.websiteUrl.startsWith("https://") && it.websiteUrl.length <= 2_048)) &&
@@ -564,6 +576,9 @@ class TraderBackupManager(
         createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
     )
 
+    private fun encodeOrganizationPerson(row: OrganizationPersonEntity) = json("id" to row.id, "organizationId" to row.organizationId, "fullName" to row.fullName, "role" to row.role, "email" to row.email, "phone" to row.phone, "profileUrl" to row.profileUrl, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
+    private fun decodeOrganizationPerson(o: JSONObject) = OrganizationPersonEntity(o.getString("id"), o.getString("organizationId"), o.getString("fullName"), o.stringOrNull("role"), o.stringOrNull("email"), o.stringOrNull("phone"), o.stringOrNull("profileUrl"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"))
+
     private fun encodeSourceRun(row: SourceRunEntity) = json(
         "id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "adapterId" to row.adapterId,
         "status" to row.status, "startedAt" to row.startedAt, "finishedAt" to row.finishedAt, "resultCount" to row.resultCount,
@@ -624,13 +639,14 @@ class TraderBackupManager(
         val discoveryDocuments: List<DiscoveryDocumentEntity> = emptyList(),
         val organizations: List<OrganizationEntity> = emptyList(),
         val organizationSources: List<OrganizationSourceEntity> = emptyList(),
-        val organizationClaims: List<OrganizationClaimEntity> = emptyList()
+        val organizationClaims: List<OrganizationClaimEntity> = emptyList(),
+        val organizationPeople: List<OrganizationPersonEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 5
-        private const val DATABASE_SCHEMA_VERSION = 8
+        private const val SNAPSHOT_VERSION = 6
+        private const val DATABASE_SCHEMA_VERSION = 9
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
