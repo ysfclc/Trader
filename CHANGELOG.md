@@ -1,9 +1,13 @@
-## 2026-11-24 — Company dossiers and evidence-backed claims
+## 2026-11-24 — Company dossiers and durable discovery findings
 
 - Added a Companies workspace inside Pipeline without removing the existing Opportunities view.
-- Create company dossiers manually or from a Discover result. The result is retained as source material and is not treated as proof of company identity.
-- Add source-linked claims. Every claim starts unreviewed and requires explicit user review before it can be marked supported, contradicted or rejected.
-- Added Room v7→v8 migration and encrypted backup snapshot v5 for organization profiles, sources and claims. Automated CI verification pending; no physical-device acceptance is claimed.
+- Create company dossiers manually or from a Discover result. The original result is retained as a source snapshot only; the operator confirms the canonical company name and website.
+- Add source-linked claims. Every claim starts unreviewed and requires explicit human review before it can be marked supported, contradicted or rejected.
+- Added Room v7→v8 migration and encrypted backup snapshot v5 for organization profiles, sources and claims.
+- Fixed the legacy v1→v8 migration test after CI run 45367079177 exposed that the test builder omitted `MIGRATION_7_8`. The corrected test now asserts all current tables.
+- CI run [45369038355](https://github.com/ysfclc/Trader/actions/runs/45369038355) passed: 134 tests, 0 failures/errors/skips; `assembleDebug`, `lintDebug`, APK signature, package and version checks all passed.
+- Verified APK identity: `com.yusufculcu.trader.debug`, `0.3.0-debug`, versionCode 3. Persistent installable artifact: [14908537777](https://github.com/ysfclc/Trader/actions/runs/45369038355/artifacts/14908537777).
+- Physical-device migration/restore, install-over-existing and live-source acceptance remain unverified.
 
 ## 2026-11-24 — Discovery finding persistence and stable-signed APK
 
