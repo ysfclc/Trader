@@ -57,6 +57,8 @@ import com.yusufculcu.trader.data.OpportunityEntity
 import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
+import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.domain.ContextPacketBuilder
 import com.yusufculcu.trader.domain.SharedBrowserCapture
 import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
@@ -84,6 +86,7 @@ fun TraderApp(
     val opportunities by viewModel.opportunities.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
     var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingDiscoveryDocument by remember { mutableStateOf<DiscoveryDocument?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showArchived by rememberSaveable { mutableStateOf(false) }
@@ -191,6 +194,7 @@ fun TraderApp(
                 runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
                 strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
+                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
@@ -203,9 +207,13 @@ fun TraderApp(
                 }
             )
             tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
-            tab == AppTab.PIPELINE -> OpportunityPipelineContent(
+            tab == AppTab.PIPELINE -> PipelineWorkspaceContent(
                 opportunities = opportunities,
-                onOpen = { selectedId = it.id },
+                onOpenOpportunity = { selectedId = it.id },
+                organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
+                incomingDocument = pendingDiscoveryDocument,
+                onIncomingDocumentHandled = { pendingDiscoveryDocument = null },
+                onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
                 modifier = Modifier.padding(padding)
             )
             else -> ActivityContent(events, Modifier.padding(padding))
@@ -525,6 +533,55 @@ private fun InboxContent(
     }
 }
 
+
+
+@Composable
+private fun PipelineWorkspaceContent(
+    opportunities: List<OpportunityListItem>,
+    onOpenOpportunity: (ProblemEntity) -> Unit,
+    organizationRepository: OrganizationRepository,
+    incomingDocument: DiscoveryDocument?,
+    onIncomingDocumentHandled: () -> Unit,
+    onOpenSource: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showCompanies by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(incomingDocument?.id, incomingDocument?.url) {
+        if (incomingDocument != null) showCompanies = true
+    }
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = !showCompanies,
+                onClick = { showCompanies = false },
+                label = { Text(stringResource(R.string.pipeline_opportunities)) }
+            )
+            FilterChip(
+                selected = showCompanies,
+                onClick = { showCompanies = true },
+                label = { Text(stringResource(R.string.companies_nav)) }
+            )
+        }
+        if (showCompanies) {
+            OrganizationsScreen(
+                repository = organizationRepository,
+                incomingDocument = incomingDocument,
+                onIncomingDocumentHandled = onIncomingDocumentHandled,
+                onOpenSource = onOpenSource,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            OpportunityPipelineContent(
+                opportunities = opportunities,
+                onOpen = onOpenOpportunity,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
 
 @Composable
 private fun OpportunityPipelineContent(

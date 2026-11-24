@@ -470,6 +470,118 @@ data class DiscoveryDocumentEntity(
     val publishedAt: Long?, val retrievedAt: Long
 )
 
+@Entity(tableName = "organizations", indices = [Index(value = ["updatedAt"]), Index(value = ["domain"])])
+data class OrganizationEntity(
+    @PrimaryKey val id: String,
+    val canonicalName: String,
+    val websiteUrl: String?,
+    val domain: String?,
+    val country: String?,
+    val city: String?,
+    val industry: String?,
+    val notes: String?,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
+@Entity(
+    tableName = "organization_sources",
+    foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["organizationId"]), Index(value = ["organizationId", "url"], unique = true), Index(value = ["capturedAt"])]
+)
+data class OrganizationSourceEntity(
+    @PrimaryKey val id: String,
+    val organizationId: String,
+    val sourceKind: String,
+    val title: String,
+    val url: String,
+    val excerpt: String,
+    val capturedAt: Long
+)
+
+@Entity(
+    tableName = "organization_claims",
+    foreignKeys = [
+        ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = OrganizationSourceEntity::class, parentColumns = ["id"], childColumns = ["sourceId"], onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [Index(value = ["organizationId"]), Index(value = ["sourceId"]), Index(value = ["reviewState"])]
+)
+data class OrganizationClaimEntity(
+    @PrimaryKey val id: String,
+    val organizationId: String,
+    val sourceId: String,
+    val field: String,
+    val statement: String,
+    val reviewState: String,
+    val reviewNote: String?,
+    val reviewedAt: Long?,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
+@Dao
+interface OrganizationDao {
+    @Query("SELECT * FROM organizations ORDER BY updatedAt DESC, canonicalName COLLATE NOCASE ASC")
+    fun observeAll(): Flow<List<OrganizationEntity>>
+    @Query("SELECT * FROM organizations WHERE id = :id LIMIT 1")
+    fun observeById(id: String): Flow<OrganizationEntity?>
+    @Query("SELECT * FROM organizations WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): OrganizationEntity?
+    @Query("SELECT * FROM organizations WHERE domain = :domain COLLATE NOCASE ORDER BY updatedAt DESC")
+    suspend fun findByDomain(domain: String): List<OrganizationEntity>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(organization: OrganizationEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<OrganizationEntity>)
+    @Update
+    suspend fun update(organization: OrganizationEntity)
+    @Query("UPDATE organizations SET updatedAt = :updatedAt WHERE id = :id")
+    suspend fun touch(id: String, updatedAt: Long)
+    @Query("DELETE FROM organizations WHERE id = :id")
+    suspend fun deleteById(id: String): Int
+    @Query("DELETE FROM organizations")
+    suspend fun deleteAll()
+    @Query("SELECT * FROM organizations")
+    suspend fun getAll(): List<OrganizationEntity>
+}
+
+@Dao
+interface OrganizationSourceDao {
+    @Query("SELECT * FROM organization_sources WHERE organizationId = :organizationId ORDER BY capturedAt DESC, id ASC")
+    fun observeForOrganization(organizationId: String): Flow<List<OrganizationSourceEntity>>
+    @Query("SELECT * FROM organization_sources WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): OrganizationSourceEntity?
+    @Query("SELECT * FROM organization_sources WHERE organizationId = :organizationId AND url = :url LIMIT 1")
+    suspend fun findByOrganizationAndUrl(organizationId: String, url: String): OrganizationSourceEntity?
+    @Query("SELECT * FROM organization_sources")
+    suspend fun getAll(): List<OrganizationSourceEntity>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(source: OrganizationSourceEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<OrganizationSourceEntity>)
+    @Query("DELETE FROM organization_sources")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface OrganizationClaimDao {
+    @Query("SELECT * FROM organization_claims WHERE organizationId = :organizationId ORDER BY createdAt DESC, id ASC")
+    fun observeForOrganization(organizationId: String): Flow<List<OrganizationClaimEntity>>
+    @Query("SELECT * FROM organization_claims WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): OrganizationClaimEntity?
+    @Query("SELECT * FROM organization_claims")
+    suspend fun getAll(): List<OrganizationClaimEntity>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(claim: OrganizationClaimEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<OrganizationClaimEntity>)
+    @Update
+    suspend fun update(claim: OrganizationClaimEntity)
+    @Query("DELETE FROM organization_claims")
+    suspend fun deleteAll()
+}
+
 @Dao
 interface DiscoveryDocumentDao {
     @Query("SELECT * FROM discovery_documents WHERE discoveryRunId = :runId ORDER BY retrievedAt DESC, id ASC")
@@ -542,9 +654,12 @@ interface SourceRunDao {
         DiscoveryStrategyEntity::class,
         DiscoveryRunEntity::class,
         SourceRunEntity::class,
-        DiscoveryDocumentEntity::class
+        DiscoveryDocumentEntity::class,
+        OrganizationEntity::class,
+        OrganizationSourceEntity::class,
+        OrganizationClaimEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -561,6 +676,9 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun discoveryRunDao(): DiscoveryRunDao
     abstract fun sourceRunDao(): SourceRunDao
     abstract fun discoveryDocumentDao(): DiscoveryDocumentDao
+    abstract fun organizationDao(): OrganizationDao
+    abstract fun organizationSourceDao(): OrganizationSourceDao
+    abstract fun organizationClaimDao(): OrganizationClaimDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -763,5 +881,36 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_discoveryRunId ON discovery_documents (discoveryRunId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_sourceId ON discovery_documents (sourceId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_discovery_documents_retrievedAt ON discovery_documents (retrievedAt)")
+    }
+}
+
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS organizations (
+            id TEXT NOT NULL, canonicalName TEXT NOT NULL, websiteUrl TEXT, domain TEXT,
+            country TEXT, city TEXT, industry TEXT, notes TEXT, createdAt INTEGER NOT NULL,
+            updatedAt INTEGER NOT NULL, PRIMARY KEY(id)
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organizations_updatedAt ON organizations (updatedAt)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organizations_domain ON organizations (domain)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS organization_sources (
+            id TEXT NOT NULL, organizationId TEXT NOT NULL, sourceKind TEXT NOT NULL,
+            title TEXT NOT NULL, url TEXT NOT NULL, excerpt TEXT NOT NULL, capturedAt INTEGER NOT NULL,
+            PRIMARY KEY(id), FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_sources_organizationId ON organization_sources (organizationId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_organization_sources_organizationId_url ON organization_sources (organizationId, url)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_sources_capturedAt ON organization_sources (capturedAt)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS organization_claims (
+            id TEXT NOT NULL, organizationId TEXT NOT NULL, sourceId TEXT NOT NULL,
+            field TEXT NOT NULL, statement TEXT NOT NULL, reviewState TEXT NOT NULL,
+            reviewNote TEXT, reviewedAt INTEGER, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL,
+            PRIMARY KEY(id),
+            FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(sourceId) REFERENCES organization_sources(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_claims_organizationId ON organization_claims (organizationId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_claims_sourceId ON organization_claims (sourceId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_claims_reviewState ON organization_claims (reviewState)")
     }
 }

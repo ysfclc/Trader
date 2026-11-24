@@ -26,8 +26,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T1.3a Add and verify Room v1→v2 migration for workflow tables, preserving existing ProblemCase/plan/activity rows (Robolectric test passed in CI runs 111 and 112).
 - [x] T1.3b Add Room v2→v3 migration for reversible case archiving and source-linked evidence records; migrate v1 through both migrations without losing existing records (33 tests passed in CI runs 225, 232 and post-merge 233).
 - [x] T1.3c Add Room v3→v4 optional opportunity profiles; legacy schema-v3 encrypted backups remain readable with an empty opportunity set. PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device migration acceptance remains open.
-- [x] T1.4 Implement passphrase-protected local backup/export and integrity-verified restore using AES-256-GCM and PBKDF2-HMAC-SHA256 (210,000 iterations, random 16-byte salt and 12-byte IV); validate the authenticated payload/schema/relationships and replace rows atomically. Current snapshot schema v6 contains all current Room groups; older v1–v5 snapshots remain backward-readable. CI and device acceptance are tracked separately; see `docs/COVERAGE.md` R-007 and `docs/RISKS.md`.
-- [x] T1.4a Extend encrypted workspace backup to include non-secret discovery source configurations and health; validate adapter/URL/identity bounds, restore full source lists and compensate preferences if the Room transaction fails. Never include signing secrets, browser cookies or provider credentials. CI run 405 passed source-settings round-trip; later snapshot v6 additionally contains durable discovery run/source-run history. Physical-device restore acceptance remains open.
+- [x] T1.4 Implement passphrase-protected local backup/export and integrity-verified restore using AES-256-GCM and PBKDF2-HMAC-SHA256 (210,000 iterations, random 16-byte salt and 12-byte IV); validate the authenticated payload/schema/relationships and replace rows atomically. Current snapshot schema v5 contains all current Room groups, including organization dossiers, source records and reviewable claims; older snapshots remain backward-readable. CI and device acceptance are tracked separately; see `docs/COVERAGE.md` R-007 and `docs/RISKS.md`.
+- [x] T1.4a Extend encrypted workspace backup to include non-secret discovery source configurations and health; validate adapter/URL/identity bounds, restore full source lists and compensate preferences if the Room transaction fails. Never include signing secrets, browser cookies or provider credentials. CI run 405 passed source-settings round-trip; snapshot v4 additionally contains durable discovery run/source-run/finding history; snapshot v5 adds organization dossiers, sources and claims. Physical-device restore acceptance remains open.
 - [x] T1.5 Implement manual problem capture and Android share URL/text intake. Incoming intent extraction now has Robolectric coverage for styled CharSequence text, VIEW URLs, blank/missing payloads and unrelated actions; Android chooser/device acceptance, quick-note shortcuts and document import remain open.
 - [x] T1.6 Preserve original text/URL, input kind, capture timestamp and source URI; add separate evidence records with captured content, source URL/type/time and user-controlled verification state. Language metadata, parser version, automatic extraction and file/screenshot/voice evidence remain open.
 - [ ] T1.7 Add deterministic deduplication and human-reviewed entity merging.
@@ -40,7 +40,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 ## T2 — Commercial records
 
 - [x] T2.0 Add an optional one-to-one OpportunityRecord per ProblemCase for a manually tracked trade/service/career/other opportunity: organization and contact labels, fit notes, explicit stage, next action and follow-up date; preserve source/evidence, log stage changes, include it in encrypted backup/restore, and allow scheme-restricted user handoff to browser/email composer/dialer. This does not implement normalized Organization/Person records, discovery, send, call, or background reminders. Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open.
-- [ ] T2.1 Implement Organization and Person records.
+- [~] T2.1 Organization dossier slice: canonical company profile, normalized website domain, source snapshots, source-linked claims and explicit unreviewed/supported/contradicted/rejected review states. Person records, aliases and reversible identity resolution remain open; CI/device verification tracked separately.
 - [ ] T2.2 Implement BuyerRequirement and line items: quantity, specification, target price when stated, destination, timing and evidence.
 - [ ] T2.3 Implement SupplierOffer: capability, capacity, MOQ, pricing basis, lead time, certifications and evidence.
 - [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
@@ -92,7 +92,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.5 Implement bounded context packets, redaction, prompt versioning and explicit remote-model consent.
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
-- [ ] T4.8 Add Organization and Person dossiers with aliases/domains, source-linked claims, identity-resolution state and reversible duplicate review.
+- [~] T4.8 Organization dossier foundation is implemented with source-linked claims and human review states. Person records, aliases, identity-resolution state and reversible duplicate review remain open.
 - [ ] T4.9 Add explainable ProofAsset-to-Organization fit assessments: supporting/contradicting evidence, unknowns, deterministic components and reviewer override.
 
 ## T5 — Outreach and deal execution
@@ -150,6 +150,14 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] Include findings in encrypted snapshot v4 with bounded-field and parent-run validation; restore in FK-safe order.
 - [ ] CI and physical-device migration/backup acceptance remain open until verified.
 
+
+## Organization dossier vertical slice (2026-11-24)
+
+- [x] Add Room v7→v8 organization, source and claim tables with cascading foreign keys and domain lookup.
+- [x] Add manual company dossier creation and creation from a Discover result; preserve the original result as a source snapshot without asserting it proves company identity.
+- [x] Add source-linked claims that start UNREVIEWED and can be explicitly marked SUPPORTED, CONTRADICTED or REJECTED by the operator; reset remains available.
+- [x] Include all dossier records in encrypted backup snapshot v5 with parent/source validation and FK-safe restore order.
+- [ ] CI and physical-device migration/backup acceptance remain open until verified.
 
 ## Release continuity and visible-delivery gate (2026-11-24)
 

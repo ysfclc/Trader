@@ -68,6 +68,7 @@ fun DiscoveryScreen(
     runRepository: DiscoveryRunRepository,
     strategyRepository: DiscoveryStrategyRepository,
     onOpenSource: (String) -> Unit,
+    onCreateOrganizationFromDiscovery: (DiscoveryDocument) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -442,6 +443,12 @@ fun DiscoveryScreen(
                             ) {
                                 Text(stringResource(if (item.id in savedIds) R.string.discover_saved_button else R.string.discover_save))
                             }
+                        }
+                        TextButton(
+                            onClick = { onCreateOrganizationFromDiscovery(item) },
+                            modifier = Modifier.align(Alignment.Start)
+                        ) {
+                            Text(stringResource(R.string.company_create_dossier_from_source))
                         }
                     }
                 }

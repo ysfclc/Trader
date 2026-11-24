@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-24 — session 23 (release continuity incident and product direction reset; CI run 45345752081 passed)_
+_Last updated: 2026-11-24 — organization dossier vertical slice implemented; automated CI verification pending_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -7,31 +7,30 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 ## Current implementation
 | Area | State | Verified boundary |
 |---|---|---|
-| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; version `0.2.0-debug`, versionCode 2. Adaptive launcher/round icon wired. CI run 45345752081 loaded the dedicated Trader keystore, verified the APK signature against that keystore and uploaded installable artifact 14898566003. No on-device install-over-existing test has been completed. |
+| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; next build `0.3.0-debug`, versionCode 3. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
-| Local data | 🟡 partial | Room schema v7 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs and discovery findings. Encrypted backup snapshot v4 includes all current records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
-| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; this has not yet been proven on the Redmi. The move from the earlier CI-debug signing identity to the dedicated persistent Trader key caused the user to uninstall the previous app. That one-time migration was not preceded by a confirmed encrypted export; if no .traderbackup exists, the old app-private workspace cannot be recovered by a new APK. Snapshot v4 includes cases, evidence, workflows, opportunities, proof assets, strategies, discovery runs/source runs/findings and public feed settings; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
+| Local data | 🟡 partial | Room schema v8 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs/findings, organizations, organization sources and source-linked claims. Encrypted backup snapshot v5 includes these records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
+| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; physical install-over-existing is still unverified. The earlier one-time signing transition required uninstalling the previous app; no recovery claim is made without an exported .traderbackup. Snapshot v5 includes all current records, including organizations, source snapshots and claims; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first execution slice CI-verified | Objective-driven DuckDuckGo search plus all enabled local RSS/Atom feeds run through one bounded coordinator. Per-source run history/status, timeout isolation, cancellation, cross-source URL dedupe, manual feed checks, browser handoff and save-to-Work as UNREVIEWED evidence. CI run 44998620615: 115 tests passed, 0 failures/errors/skips; build, lint, signature and package/version checks passed. No live-source or physical-device acceptance. |
-| Company / people graph | 🟡 foundation only | ProofAsset/DiscoveryStrategy models, validation, Room migration, repository, codec and encrypted backup are CI-verified. A Discovery Strategy Workshop is available under Models, including review/edit of generated signatures, target constraints, queries and disqualifiers. Strategy-to-run linkage, normalized Organization/Person records, dossiers, identity review and explainable fit assessment remain incomplete. |
+| Company / people graph | 🟡 first dossier slice implemented | Company dossier list and editor are available inside Pipeline. Users can create a dossier manually or from a Discover result, retain source snapshots, author source-linked claims and explicitly review them as supported, contradicted or rejected. Person records, alias/identity review, structured buyer requirements/supplier offers and explainable ProofAsset fit remain incomplete. |
 | Automation / AI | 🟡 foundations | Typed capability registry, workflow approval/recovery rules, LiteRT-LM adapter and Model Hub. Curated source metadata checks and consent-gated immutable candidate downloads with exact-size/SHA-256 verification, cancellation, temporary-file cleanup and no automatic install are implemented; current feature CI is pending. No verified on-device model inference or durable WorkManager executor. |
 | Social/community sources | ⚪ not implemented | Reddit OAuth, Bluesky/Mastodon APIs, authorized groups and Facebook browser-assisted research remain future provider-specific adapters. |
 | Outreach | ⚪ not implemented | Drafting/approval/handoff contracts remain planned; no autonomous send. |
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; latest commit `a4950eb17a606b9f89520ec4f78b6fcb7e4f2505`.
-- Candidate package/version: `com.yusufculcu.trader.debug`, versionCode 2, versionName `0.2.0-debug`.
-- CI run 44998620615 validated versionCode 2 / `0.2.0-debug`; artifact SHA-256 `dd3b28aa150c360584abc67a273129bab627b665c7c22ecda3a84124abb463d5` (69,554,096 bytes). It was signed with the runner debug key because persistent signing secrets were not configured; do not assume upgrade compatibility with any previous APK.
-- A dedicated PKCS12 development keystore has been generated outside Git for the next stable signing setup. Its SHA-256 certificate fingerprint is pinned in `.github/workflows/android.yml`; the private bundle contains the key, base64 secret value and password. Repository Actions secrets `TRADER_KEYSTORE_BASE64` and `TRADER_KEYSTORE_PASSWORD` remain absent until GitHub sign-in is completed. CI labels builds without the key as CI-only and not for installation.
+- Current branch: `feature/discovery-run-persistence`; latest commit is the organization dossier vertical-slice implementation recorded in the current handoff.
+- Candidate package/version: `com.yusufculcu.trader.debug`, versionCode 3, versionName `0.3.0-debug`.
+- Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
 ## Immediate next increments
-1. Build the user-facing ProofAsset and DiscoveryStrategy editors; attach real evidence to claims, define problem signatures/targets/queries/disqualifiers, and run a saved strategy through the coordinator.
-2. Add normalized Organization and Person records with source-linked claims, aliases/domains, reversible identity resolution and dossier UI.
+1. Add Person records, aliases and reversible duplicate/identity review without automatic merges.
+2. Add structured BuyerRequirement and SupplierOffer records with line items and evidence links.
 3. Add deterministic, explainable ProofAsset-to-Organization fit assessments: support, contradictions, unknowns and reviewer override.
-4. Capture browser evidence into dossiers, then build requirement/offer extraction and comparison for the Türkiye → Poland/EU industrial tooling pilot.
+4. Capture browser evidence into dossiers, then compare requirements and offers for the Türkiye → Poland/EU industrial tooling pilot.
 5. Add approved, recipient-bound draft/handoff and actual reply/outcome tracking; no false sent state.
 6. Only then add durable WorkManager automation, local AI orchestration and the Discover / Work / Live / Studio shell; scheduled polling remains gated by backoff/cursor/recovery design.
 7. Complete physical-device acceptance for migrations, encrypted backup/restore, signing continuity, browser session, source runs and the first end-to-end journey.
@@ -43,6 +42,14 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - Local Room database is not separately SQLCipher-encrypted; do not store provider credentials or highly sensitive secrets there.
 - Feed checks are manual; no scheduled monitoring, private group scraping, access-control bypass or auto-send.
 - Keep all original evidence/provenance; distinguish source facts, AI inference, assumptions and unknowns.
+
+## Organization dossier handoff (2026-11-24)
+
+- Added the first visible company dossier workspace inside Pipeline, preserving the existing Opportunities view as a sibling segment.
+- A Discover result can now start a new company dossier. The result is saved as source material only; the operator must confirm the canonical company name and website.
+- Company profiles retain name, HTTPS website/domain, country, city, industry and user notes. Sources are immutable snapshots; claims are separate records linked to a source and begin unreviewed.
+- Explicit user review can mark a claim supported, contradicted or rejected, and can be reset. No AI-generated or search-derived claim is automatically verified.
+- Room schema v7→v8 and encrypted backup snapshot v4→v5 preserve dossier/source/claim relationships. CI verification is pending; device migration and backup/restore acceptance remain open.
 
 ## Session Handoff
 

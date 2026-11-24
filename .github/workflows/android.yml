@@ -68,7 +68,7 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose "$APK"
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK" | grep "package: name='com.yusufculcu.trader.debug' versionCode='2' versionName='0.2.0-debug'"
+          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK" | grep "package: name='com.yusufculcu.trader.debug' versionCode='3' versionName='0.3.0-debug'"
           if [ "$STABLE_SIGNING_READY" = "true" ]; then
             keytool -exportcert -rfc -keystore "$TRADER_KEYSTORE_PATH" -storepass "$TRADER_KEYSTORE_PASSWORD" -alias trader-upload |
               openssl x509 -outform DER | sha256sum | awk '{print $1}' > "$RUNNER_TEMP/keystore-cert.sha256"

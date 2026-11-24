@@ -1,3 +1,10 @@
+## 2026-11-24 — Company dossiers and evidence-backed claims
+
+- Added a Companies workspace inside Pipeline without removing the existing Opportunities view.
+- Create company dossiers manually or from a Discover result. The result is retained as source material and is not treated as proof of company identity.
+- Add source-linked claims. Every claim starts unreviewed and requires explicit user review before it can be marked supported, contradicted or rejected.
+- Added Room v7→v8 migration and encrypted backup snapshot v5 for organization profiles, sources and claims. Automated CI verification pending; no physical-device acceptance is claimed.
+
 ## 2026-11-24 — Discovery finding persistence and stable-signed APK
 
 - Restored durable discovery finding records, Room v6→v7 migration, per-run history observation and encrypted backup snapshot v4. This closes a data-retention gap; it does not materially change the visible Discover experience.

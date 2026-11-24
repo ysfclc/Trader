@@ -53,7 +53,10 @@ class TraderBackupManager(
                     discoveryStrategies = database.discoveryStrategyDao().getAll(),
                     discoveryRuns = database.discoveryRunDao().getAll(),
                     sourceRuns = database.sourceRunDao().getAll(),
-                    discoveryDocuments = database.discoveryDocumentDao().getAll()
+                    discoveryDocuments = database.discoveryDocumentDao().getAll(),
+                    organizations = database.organizationDao().getAll(),
+                    organizationSources = database.organizationSourceDao().getAll(),
+                    organizationClaims = database.organizationClaimDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -119,6 +122,9 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.organizationClaimDao().deleteAll()
+                        database.organizationSourceDao().deleteAll()
+                        database.organizationDao().deleteAll()
                         database.discoveryDocumentDao().deleteAll()
                         database.sourceRunDao().deleteAll()
                         database.discoveryRunDao().deleteAll()
@@ -145,6 +151,9 @@ class TraderBackupManager(
                         database.discoveryRunDao().insertAll(snapshot.discoveryRuns)
                         database.sourceRunDao().insertAll(snapshot.sourceRuns)
                         database.discoveryDocumentDao().insertAll(snapshot.discoveryDocuments)
+                        database.organizationDao().insertAll(snapshot.organizations)
+                        database.organizationSourceDao().insertAll(snapshot.organizationSources)
+                        database.organizationClaimDao().insertAll(snapshot.organizationClaims)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -213,6 +222,9 @@ class TraderBackupManager(
             .put("discoveryRuns", jsonArray(snapshot.discoveryRuns, ::encodeDiscoveryRun))
             .put("sourceRuns", jsonArray(snapshot.sourceRuns, ::encodeSourceRun))
             .put("discoveryDocuments", jsonArray(snapshot.discoveryDocuments, ::encodeDiscoveryDocument))
+            .put("organizations", jsonArray(snapshot.organizations, ::encodeOrganization))
+            .put("organizationSources", jsonArray(snapshot.organizationSources, ::encodeOrganizationSource))
+            .put("organizationClaims", jsonArray(snapshot.organizationClaims, ::encodeOrganizationClaim))
         return root.toString()
     }
 
@@ -244,14 +256,17 @@ class TraderBackupManager(
             discoveryStrategies = if (backupSchemaVersion >= 5) decodeArray(root, "discoveryStrategies", ::decodeDiscoveryStrategy) else emptyList(),
             discoveryRuns = if (backupSchemaVersion >= 6 && root.has("discoveryRuns")) decodeArray(root, "discoveryRuns", ::decodeDiscoveryRun) else emptyList(),
             sourceRuns = if (backupSchemaVersion >= 6 && root.has("sourceRuns")) decodeArray(root, "sourceRuns", ::decodeSourceRun) else emptyList(),
-            discoveryDocuments = if (backupSchemaVersion >= 7 && root.has("discoveryDocuments")) decodeArray(root, "discoveryDocuments", ::decodeDiscoveryDocument) else emptyList()
+            discoveryDocuments = if (backupSchemaVersion >= 7 && root.has("discoveryDocuments")) decodeArray(root, "discoveryDocuments", ::decodeDiscoveryDocument) else emptyList(),
+            organizations = if (backupSchemaVersion >= 8 && root.has("organizations")) decodeArray(root, "organizations", ::decodeOrganization) else emptyList(),
+            organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
+            organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -273,6 +288,10 @@ class TraderBackupManager(
         unique(snapshot.discoveryRuns.map { it.id }, "discovery run")
         unique(snapshot.sourceRuns.map { it.id }, "source run")
         unique(snapshot.discoveryDocuments.map { it.id }, "discovery document")
+        unique(snapshot.organizations.map { it.id }, "organization")
+        unique(snapshot.organizationSources.map { it.id }, "organization source")
+        unique(snapshot.organizationSources.map { it.organizationId + "|" + it.url }, "organization source URL")
+        unique(snapshot.organizationClaims.map { it.id }, "organization claim")
         unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
         require(snapshot.discoverySources.all {
             it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
@@ -302,6 +321,31 @@ class TraderBackupManager(
         val discoveryRuns = snapshot.discoveryRuns.associateBy { it.id }
         require(snapshot.sourceRuns.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.adapterId.isNotBlank() && it.resultCount >= 0 && it.status in setOf(SourceRunStatus.PENDING, SourceRunStatus.RUNNING, SourceRunStatus.SUCCEEDED, SourceRunStatus.FAILED, SourceRunStatus.SKIPPED, SourceRunStatus.CANCELLED) && (it.errorCode == null || it.errorCode.length <= 80) && (it.errorMessage == null || it.errorMessage.length <= 2000) }) { "Backup contains an invalid source run." }
         require(snapshot.discoveryDocuments.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.sourceId.length <= 128 && it.sourceName.isNotBlank() && it.sourceName.length <= 200 && it.nativeId.length <= 4096 && it.title.length <= 300 && it.url.startsWith("https://") && it.url.length <= 2048 && it.summary.length <= 4000 && it.retrievedAt >= 0 && (it.publishedAt == null || it.publishedAt >= 0) }) { "Backup contains an invalid discovery document." }
+        val organizationIds = snapshot.organizations.map { it.id }.toSet()
+        val organizationSources = snapshot.organizationSources.associateBy { it.id }
+        require(snapshot.organizations.all {
+            it.id.isNotBlank() && it.canonicalName.isNotBlank() && it.canonicalName.length <= 200 &&
+                (it.websiteUrl == null || (it.websiteUrl.startsWith("https://") && it.websiteUrl.length <= 2_048)) &&
+                (it.domain == null || (it.domain.isNotBlank() && it.domain.length <= 253)) &&
+                (it.country == null || it.country.length <= 120) && (it.city == null || it.city.length <= 120) &&
+                (it.industry == null || it.industry.length <= 160) && (it.notes == null || it.notes.length <= 4_000) &&
+                it.createdAt >= 0 && it.updatedAt >= it.createdAt
+        }) { "Backup contains an invalid organization." }
+        require(snapshot.organizationSources.all {
+            it.id.isNotBlank() && it.organizationId in organizationIds && it.sourceKind in OrganizationSourceKind.ALL &&
+                it.title.isNotBlank() && it.title.length <= 300 && it.url.startsWith("https://") &&
+                it.url.length <= 2_048 && !it.url.contains("@") && it.excerpt.length <= 8_000 && it.capturedAt >= 0
+        }) { "Backup contains an invalid organization source." }
+        require(snapshot.organizationClaims.all {
+            val source = organizationSources[it.sourceId]
+            it.id.isNotBlank() && it.organizationId in organizationIds && source != null &&
+                source.organizationId == it.organizationId && it.field.isNotBlank() && it.field.length <= 80 &&
+                it.statement.isNotBlank() && it.statement.length <= 2_000 && it.reviewState in OrganizationClaimState.ALL &&
+                (it.reviewNote == null || it.reviewNote.length <= 1_000) &&
+                ((it.reviewState == OrganizationClaimState.UNREVIEWED && it.reviewedAt == null) ||
+                    (it.reviewState != OrganizationClaimState.UNREVIEWED && it.reviewedAt != null && it.reviewedAt >= 0)) &&
+                it.createdAt >= 0 && it.updatedAt >= it.createdAt
+        }) { "Backup contains an invalid organization claim or missing source relationship." }
         val evidenceIds = snapshot.evidence.map { it.id }.toSet()
         require(proofAssets.flatMap { it.claims }.flatMap { it.evidenceIds }.all { it in evidenceIds }) {
             "A proof claim points to a missing evidence record."
@@ -485,6 +529,41 @@ class TraderBackupManager(
     private fun encodeDiscoveryDocument(row: DiscoveryDocumentEntity) = json("id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "sourceName" to row.sourceName, "nativeId" to row.nativeId, "title" to row.title, "url" to row.url, "summary" to row.summary, "publishedAt" to row.publishedAt, "retrievedAt" to row.retrievedAt)
     private fun decodeDiscoveryDocument(o: JSONObject) = DiscoveryDocumentEntity(o.getString("id"), o.getString("discoveryRunId"), o.getString("sourceId"), o.getString("sourceName"), o.getString("nativeId"), o.getString("title"), o.getString("url"), o.getString("summary"), o.longOrNull("publishedAt"), o.getLong("retrievedAt"))
 
+    private fun encodeOrganization(row: OrganizationEntity) = json(
+        "id" to row.id, "canonicalName" to row.canonicalName, "websiteUrl" to row.websiteUrl,
+        "domain" to row.domain, "country" to row.country, "city" to row.city, "industry" to row.industry,
+        "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+    private fun decodeOrganization(o: JSONObject) = OrganizationEntity(
+        id = o.getString("id"), canonicalName = o.getString("canonicalName"),
+        websiteUrl = o.stringOrNull("websiteUrl"), domain = o.stringOrNull("domain"),
+        country = o.stringOrNull("country"), city = o.stringOrNull("city"),
+        industry = o.stringOrNull("industry"), notes = o.stringOrNull("notes"),
+        createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+    private fun encodeOrganizationSource(row: OrganizationSourceEntity) = json(
+        "id" to row.id, "organizationId" to row.organizationId, "sourceKind" to row.sourceKind,
+        "title" to row.title, "url" to row.url, "excerpt" to row.excerpt, "capturedAt" to row.capturedAt
+    )
+    private fun decodeOrganizationSource(o: JSONObject) = OrganizationSourceEntity(
+        id = o.getString("id"), organizationId = o.getString("organizationId"),
+        sourceKind = o.getString("sourceKind"), title = o.getString("title"),
+        url = o.getString("url"), excerpt = o.getString("excerpt"), capturedAt = o.getLong("capturedAt")
+    )
+    private fun encodeOrganizationClaim(row: OrganizationClaimEntity) = json(
+        "id" to row.id, "organizationId" to row.organizationId, "sourceId" to row.sourceId,
+        "field" to row.field, "statement" to row.statement, "reviewState" to row.reviewState,
+        "reviewNote" to row.reviewNote, "reviewedAt" to row.reviewedAt,
+        "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+    private fun decodeOrganizationClaim(o: JSONObject) = OrganizationClaimEntity(
+        id = o.getString("id"), organizationId = o.getString("organizationId"),
+        sourceId = o.getString("sourceId"), field = o.getString("field"),
+        statement = o.getString("statement"), reviewState = o.getString("reviewState"),
+        reviewNote = o.stringOrNull("reviewNote"), reviewedAt = o.longOrNull("reviewedAt"),
+        createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+
     private fun encodeSourceRun(row: SourceRunEntity) = json(
         "id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "adapterId" to row.adapterId,
         "status" to row.status, "startedAt" to row.startedAt, "finishedAt" to row.finishedAt, "resultCount" to row.resultCount,
@@ -542,13 +621,16 @@ class TraderBackupManager(
         val discoveryStrategies: List<DiscoveryStrategyEntity> = emptyList(),
         val discoveryRuns: List<DiscoveryRunEntity> = emptyList(),
         val sourceRuns: List<SourceRunEntity> = emptyList(),
-        val discoveryDocuments: List<DiscoveryDocumentEntity> = emptyList()
+        val discoveryDocuments: List<DiscoveryDocumentEntity> = emptyList(),
+        val organizations: List<OrganizationEntity> = emptyList(),
+        val organizationSources: List<OrganizationSourceEntity> = emptyList(),
+        val organizationClaims: List<OrganizationClaimEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 4
-        private const val DATABASE_SCHEMA_VERSION = 7
+        private const val SNAPSHOT_VERSION = 5
+        private const val DATABASE_SCHEMA_VERSION = 8
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
