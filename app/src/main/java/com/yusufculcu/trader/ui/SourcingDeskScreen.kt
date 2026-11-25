@@ -96,7 +96,8 @@ fun SourcingDeskScreen(
     }
     val buyerItems by buyerItemsFlow.collectAsState(initial = emptyList())
     val organizationById = remember(organizations) { organizations.associateBy { it.id } }
-    val shortlisted = reviews.filter { it.status == SourcingReviewStatus.SHORTLISTED }
+    val activeOfferIds = offers.mapTo(hashSetOf()) { it.id }
+    val shortlisted = reviews.filter { it.status == SourcingReviewStatus.SHORTLISTED && it.supplierOfferId in activeOfferIds }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
