@@ -79,4 +79,28 @@ class OrganizationMigrationTest {
         } finally { helper.close() }
     }
 
+
+    @Test
+    fun migration10To11CreatesSourcingTablesAndCascadesReviewAndEvidence() {
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context).name(null).callback(object : SupportSQLiteOpenHelper.Callback(10) { override fun onCreate(db: SupportSQLiteDatabase) = Unit; override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit }).build())
+        try {
+            val db=helper.writableDatabase; db.setForeignKeyConstraintsEnabled(true)
+            MIGRATION_7_8.migrate(db); MIGRATION_8_9.migrate(db); MIGRATION_9_10.migrate(db); MIGRATION_10_11.migrate(db)
+            db.execSQL("INSERT INTO organizations (id, canonicalName, websiteUrl, domain, country, city, industry, notes, createdAt, updatedAt) VALUES ('buyer', 'Buyer', NULL, NULL, NULL, NULL, NULL, NULL, 1, 2)")
+            db.execSQL("INSERT INTO organizations (id, canonicalName, websiteUrl, domain, country, city, industry, notes, createdAt, updatedAt) VALUES ('supplier', 'Supplier', NULL, NULL, NULL, NULL, NULL, NULL, 1, 2)")
+            db.execSQL("INSERT INTO organization_sources (id, organizationId, sourceKind, title, url, excerpt, capturedAt) VALUES ('src', 'supplier', 'MANUAL_REFERENCE', 'Capabilities', 'https://supplier.example', '', 3)")
+            db.execSQL("INSERT INTO buyer_requirements (id, organizationId, title, description, status, destinationCountry, destinationCity, requiredByText, currency, budgetMinorUnits, notes, createdAt, updatedAt) VALUES ('req', 'buyer', 'CNC parts', NULL, 'OPEN', NULL, NULL, NULL, NULL, NULL, NULL, 4, 4)")
+            db.execSQL("INSERT INTO supplier_offers (id, organizationId, title, description, status, currency, originCountry, originCity, notes, createdAt, updatedAt) VALUES ('offer', 'supplier', 'Machining', NULL, 'AVAILABLE', 'EUR', 'Türkiye', NULL, NULL, 5, 5)")
+            db.execSQL("INSERT INTO supplier_offer_items (id, offerId, productName, specification, material, quantityAvailable, quantityUnit, minimumOrderQuantity, unitPriceMinorUnits, currency, leadTimeDays, createdAt) VALUES ('item', 'offer', 'Housing', NULL, NULL, '100', 'pcs', '10', 2000, 'EUR', 20, 6)")
+            db.execSQL("INSERT INTO supplier_offer_evidence (id, offerId, sourceId, linkedAt) VALUES ('evidence', 'offer', 'src', 7)")
+            db.execSQL("INSERT INTO sourcing_reviews (id, buyerRequirementId, supplierOfferId, status, rationale, createdAt, updatedAt) VALUES ('review', 'req', 'offer', 'SHORTLISTED', 'Human review', 8, 8)")
+            assertEquals(1, scalar(db, "SELECT COUNT(*) FROM sourcing_reviews"))
+            db.execSQL("DELETE FROM organizations WHERE id='supplier'")
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM supplier_offers"))
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM supplier_offer_items"))
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM supplier_offer_evidence"))
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM sourcing_reviews"))
+        } finally { helper.close() }
+    }
+
 }
