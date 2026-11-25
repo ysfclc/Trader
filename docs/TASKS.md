@@ -11,6 +11,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T0.3 Pin JDK 17, Gradle 8.13 wrapper, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12 and SDK 36; clean CI build, unit tests, lint, APK signature and package identity passed at CI run 341. LiteRT-LM 0.18.0 requires Kotlin metadata 2.4; keep compiler/plugin and KSP versions aligned.
 - [x] T0.4 Add Gradle wrapper, reproducible CI build and signing-boundary instructions. Production release signing via GitHub secrets remains open.
 - [x] T0.5 Define no-fork/no-runtime-dependency boundaries for Memo, EBO, Unipile and other existing projects.
+- [ ] T0.8 Establish numerical debug unit-test line/branch coverage baseline and enforce a CI non-regression floor; retain HTML/XML evidence. Coverage reporting is implemented, baseline is pending first successful CI measurement.
+- [ ] T0.9 Run a complete transitive dependency vulnerability scan, document the tool/database freshness and triage all advisories before APK release.
 
 ## T1 — Android shell and local data
 

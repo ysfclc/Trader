@@ -57,7 +57,17 @@ jobs:
         env:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
           TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
-        run: ./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug
+        run: ./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+      - name: Summarize unit-test code coverage
+        run: python3 scripts/summarize_coverage.py --report app/build/reports/coverage/test/debug/report.xml --summary-file "$GITHUB_STEP_SUMMARY"
+      - name: Upload unit-test coverage report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-unit-test-coverage
+          path: app/build/reports/coverage/test/debug/
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload unit test reports
         if: always()
         uses: actions/upload-artifact@v4

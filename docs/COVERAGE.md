@@ -6,7 +6,14 @@ _Branch review: 2026-11-25 against `feature/discovery-run-persistence` commit `d
 
 `docs/PROJECT_LOCK.md` is the canonical product specification (there is no separate `docs/SPEC.md`). Architecture and constraints are refined in `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/OPERATING_RULES.md`, `docs/DECISIONS.md` and `docs/ROADMAP.md`.
 
-A row is not marked complete merely because a screen or class exists. The status distinguishes code presence, test coverage, CI verification and physical-device acceptance. Line references are anchors in the current main revision and must be refreshed when files move. This matrix is requirement coverage, not numerical code coverage; no coverage instrumentation or non-regression gate is currently configured, so code-coverage delta remains unverified and blocks APK publication.
+A row is not marked complete merely because a screen or class exists. The status distinguishes code presence, test coverage, CI verification and physical-device acceptance. Line references are anchors in the current main revision and must be refreshed when files move.
+
+## Numerical code coverage
+
+- The Android `debug` variant enables AGP-native unit-test coverage. CI runs `:app:createDebugUnitTestCoverageReport` and publishes the HTML/XML report as the `trader-unit-test-coverage` artifact.
+- `scripts/summarize_coverage.py` validates that the XML report contains a non-empty line counter and prints line, branch, instruction, method and class coverage into the Actions job summary.
+- The first successful report is the measurement baseline. A checked-in numerical non-regression threshold will be added only after inspecting that report; do not invent a threshold or treat the requirement matrix below as a code-coverage metric.
+- Coverage is JVM/Robolectric unit-test coverage of the debug variant. It is not instrumentation/device coverage and does not establish UI/device acceptance.
 
 | Req ID | Requirement | Implementation | Test evidence | Documentation | Status |
 |---|---|---|---|---|---|

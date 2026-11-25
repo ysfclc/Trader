@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-25 — Trader 0.12.0 recoverable sourcing records CI-verified; installable APK intentionally gated; physical-device acceptance remains open_
+_Last updated: 2026-11-25 — Trader 0.12.0 recovery CI-verified; AGP unit-coverage reporting added, baseline pending CI; APK remains gated_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -25,11 +25,11 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - PR audit: #19 is merged; older PR #5 remains draft, while #17 (`feature/discovery-browser-workspace` → `main`) and dependent #18 (`feature/public-search-adapter` → `feature/discovery-browser-workspace`) remain open. No merge/close action taken. Open GitHub issues: none.
 - Last verified installable baseline: versionCode 11 / `0.11.0-debug`; artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). Version 12 / `0.12.0-debug` was assembled and signature-verified in run 45642932647, but its installable artifact upload was intentionally skipped. Test report artifact [15035912637](https://github.com/ysfclc/Trader/actions/runs/45642932647/artifacts/15035912637) records 161 tests, 0 failures, 0 errors and 0 skipped.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
-- Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, Room 2.8.5, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`. CI's installable APK upload now requires manual `workflow_dispatch` input `approve_installable_apk=true`.
+- Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, Room 2.8.5, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug`. CI publishes the AGP HTML/XML unit-coverage report; first measured baseline and non-regression threshold are pending successful CI. Installable APK upload still requires manual `workflow_dispatch` input `approve_installable_apk=true`.
 
 ## Immediate next increments
-1. Establish the missing release evidence: add a numerical code-coverage baseline/non-regression gate and run a complete transitive dependency vulnerability scan. The repository's coverage matrix is requirement-based, not a code-coverage report; GitHub dependency-graph scanning is disabled and its alerts endpoint was not accessible during this audit.
-2. After those gates are green, manually dispatch the signed 0.12.0 build and verify in-place installation on the Redmi, Room 12→13 migration, process restart and encrypted backup/export/restore. Never downgrade Room 13 in place.
+1. Inspect the first AGP coverage report, record exact line/branch coverage and enforce a no-regression floor in CI; then complete a transitive dependency vulnerability scan.
+2. After release evidence is green, manually dispatch the signed 0.12.0 build and verify in-place installation on the Redmi, Room 12→13 migration, process restart and encrypted backup/export/restore. Never downgrade Room 13 in place.
 3. Complete the real buyer-to-shortlist journey on-device: multiple supplier offers, evidence reconciliation, revised decisions, Activity history, trash/restore and share handoff. Only then consider the next Product/SKU, Match, Quote and Deal increment.
 
 ## Known risks / constraints

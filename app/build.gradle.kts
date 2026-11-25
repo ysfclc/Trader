@@ -34,6 +34,7 @@ android {
     }
     buildTypes {
         debug {
+            enableUnitTestCoverage = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             if (stableDebugKeystore != null && !stableDebugPassword.isNullOrBlank()) {

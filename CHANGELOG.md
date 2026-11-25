@@ -1,3 +1,10 @@
+## 2026-11-25 — Trader numerical unit-test coverage instrumentation
+
+- Enabled Android Gradle Plugin native JaCoCo unit-test coverage for the debug variant; no additional coverage plugin or application dependency was introduced.
+- CI now generates `:app:createDebugUnitTestCoverageReport`, validates the machine-readable XML has a non-empty line counter, summarizes line/branch/instruction/method/class metrics and publishes the HTML/XML report artifact `trader-unit-test-coverage`.
+- The numerical baseline and non-regression threshold are deliberately pending inspection of the first successful report; no arbitrary percentage has been invented.
+- Coverage represents JVM/Robolectric unit tests, not Android instrumentation or physical-device acceptance. APK publication remains blocked.
+
 ## 2026-11-25 — Trader 0.12.0 recoverable sourcing records
 
 - Buyer requirements and supplier offers can be moved to recoverable trash and restored without losing line items, company-scoped evidence links or sourcing decisions. Active queries exclude trashed records.
