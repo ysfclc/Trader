@@ -84,6 +84,7 @@ fun TraderApp(
     val problems by viewModel.problems.collectAsState()
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
+    val businessEvents by viewModel.businessActivity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
     var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
@@ -225,7 +226,7 @@ fun TraderApp(
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
                 modifier = Modifier.padding(padding)
             )
-            else -> ActivityContent(events, Modifier.padding(padding))
+            else -> ActivityContent(events, businessEvents, Modifier.padding(padding))
         }
     }
 
@@ -991,38 +992,105 @@ private fun DetailSection(label: String, value: String) {
     }
 }
 
+private data class ActivityTimelineEntry(
+    val id: String,
+    val occurredAt: Long,
+    val problemEvent: com.yusufculcu.trader.data.ActivityEventEntity? = null,
+    val businessEvent: com.yusufculcu.trader.data.BusinessActivityEntity? = null
+)
+
+private fun businessEntityLabel(type: String): Int = when (type) {
+    "ORGANIZATION" -> R.string.business_entity_organization
+    "CONTACT" -> R.string.business_entity_contact
+    "CLAIM" -> R.string.business_entity_claim
+    "BUYER_REQUIREMENT" -> R.string.business_entity_buyer_requirement
+    "SUPPLIER_OFFER" -> R.string.business_entity_supplier_offer
+    "SOURCING_REVIEW" -> R.string.business_entity_sourcing_review
+    else -> R.string.business_entity_record
+}
+
+private fun businessActionLabel(type: String): Int = when (type) {
+    "CREATED" -> R.string.business_action_created
+    "UPDATED" -> R.string.business_action_updated
+    "STATUS_CHANGED" -> R.string.business_action_status_changed
+    "SOURCE_ADDED" -> R.string.business_action_source_added
+    "EVIDENCE_LINKED" -> R.string.business_action_evidence_linked
+    "CLAIM_REVIEWED" -> R.string.business_action_claim_reviewed
+    "LINE_ADDED" -> R.string.business_action_line_added
+    "DECISION_RECORDED" -> R.string.business_action_decision_recorded
+    "DELETED" -> R.string.business_action_deleted
+    else -> R.string.event_activity_recorded
+}
+
 @Composable
-private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEventEntity>, modifier: Modifier = Modifier) {
+private fun ActivityContent(
+    events: List<com.yusufculcu.trader.data.ActivityEventEntity>,
+    businessEvents: List<com.yusufculcu.trader.data.BusinessActivityEntity>,
+    modifier: Modifier = Modifier
+) {
+    val timeline = remember(events, businessEvents) {
+        (events.map { ActivityTimelineEntry("problem:${it.id}", it.occurredAt, problemEvent = it) } +
+            businessEvents.map { ActivityTimelineEntry("business:${it.id}", it.occurredAt, businessEvent = it) })
+            .sortedWith(compareByDescending<ActivityTimelineEntry> { it.occurredAt }.thenBy { it.id })
+            .take(250)
+    }
     Column(modifier.fillMaxSize().padding(20.dp)) {
         Text(stringResource(R.string.history), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.6.sp)
         Text(stringResource(R.string.activity), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
-        if (events.isEmpty()) Text(stringResource(R.string.activity_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        else LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(events, key = { it.id }) { event ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary)
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(when (event.eventType) {
-                                "created" -> R.string.event_problem_captured
-                                "plan_step_added" -> R.string.event_plan_step_added
-                                "plan_step_done" -> R.string.event_step_completed
-                                "plan_step_reopened" -> R.string.event_step_reopened
-                                "status_changed" -> R.string.event_status_updated
-                                "details_updated" -> R.string.event_details_updated
-                                "archived" -> R.string.event_archived
-                                "restored" -> R.string.event_restored
-                                "evidence_added" -> R.string.event_evidence_added
-                                "evidence_verified" -> R.string.event_evidence_verified
-                                "evidence_unreviewed" -> R.string.event_evidence_unreviewed
-                                "opportunity_created" -> R.string.event_opportunity_created
-                                "opportunity_stage_changed" -> R.string.event_opportunity_stage_changed
-                                "opportunity_updated" -> R.string.event_opportunity_updated
-                                else -> R.string.event_activity_recorded
-                            }), fontWeight = FontWeight.SemiBold)
-                            if (event.details.isNotBlank() && event.eventType != "created") Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+        if (timeline.isEmpty()) {
+            Text(stringResource(R.string.activity_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(timeline, key = { it.id }) { entry ->
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary)
+                            Column(Modifier.weight(1f)) {
+                                entry.problemEvent?.let { event ->
+                                    Text(stringResource(when (event.eventType) {
+                                        "created" -> R.string.event_problem_captured
+                                        "plan_step_added" -> R.string.event_plan_step_added
+                                        "plan_step_done" -> R.string.event_step_completed
+                                        "plan_step_reopened" -> R.string.event_step_reopened
+                                        "status_changed" -> R.string.event_status_updated
+                                        "details_updated" -> R.string.event_details_updated
+                                        "archived" -> R.string.event_archived
+                                        "restored" -> R.string.event_restored
+                                        "evidence_added" -> R.string.event_evidence_added
+                                        "evidence_verified" -> R.string.event_evidence_verified
+                                        "evidence_unreviewed" -> R.string.event_evidence_unreviewed
+                                        "opportunity_created" -> R.string.event_opportunity_created
+                                        "opportunity_stage_changed" -> R.string.event_opportunity_stage_changed
+                                        "opportunity_updated" -> R.string.event_opportunity_updated
+                                        else -> R.string.event_activity_recorded
+                                    }), fontWeight = FontWeight.SemiBold)
+                                    if (event.details.isNotBlank() && event.eventType != "created") {
+                                        Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                                }
+                                entry.businessEvent?.let { event ->
+                                    Text(
+                                        stringResource(R.string.business_activity_title, stringResource(businessEntityLabel(event.entityType)), stringResource(businessActionLabel(event.eventType))),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    val contextLabel = if (event.entityType == "ORGANIZATION") event.organizationName
+                                        else "${event.organizationName} · ${event.entityLabel}"
+                                    Text(contextLabel, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    if (event.fromStatus != null || (event.toStatus != null && event.eventType != "UPDATED")) {
+                                        Text(
+                                            stringResource(R.string.business_activity_transition, event.fromStatus ?: "—", event.toStatus ?: "—"),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                    if (event.details.isNotBlank()) {
+                                        Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
                         }
                     }
                 }
