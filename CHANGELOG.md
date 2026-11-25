@@ -1,3 +1,10 @@
+## 2026-11-25 — Trader 0.11.0 supplier-offer correction verification
+
+- Verified supplier-offer header and line-item correction, guarded removal, transactional evidence-link reconciliation and append-only business activity history.
+- CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208) passed all 157 unit tests (0 failures/errors/skipped), lint, APK assembly, exact package/version assertions and persistent signing-certificate equality.
+- Installable APK: `com.yusufculcu.trader.debug`, `0.11.0-debug`, versionCode 11; artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). Test reports: [15014332640](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014332640).
+- Physical-device install-over-existing, migration/restore and real buyer-to-shortlist acceptance remain open; CI success is not device acceptance.
+
 ## 2026-11-25 — Industrial Sourcing Desk 0.8.0
 
 - Delivered the first end-to-end sourcing workflow in Trader: buyer request → supplier offer → evidence-linked comparison → operator shortlist → shareable sourcing brief.
