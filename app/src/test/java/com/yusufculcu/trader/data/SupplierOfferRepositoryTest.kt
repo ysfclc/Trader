@@ -63,18 +63,19 @@ class SupplierOfferRepositoryTest {
     }
 
     @Test fun comparisonNeverTreatsMissingOrDifferentSpecificationsAsPass() {
+        val request = BuyerRequirementEntity("r", "buyer", "RFQ", null, "OPEN", null, null, null, "EUR", null, null, 1, 1)
         val buyer = BuyerRequirementLineItemEntity("b", "r", "Aluminium housing", "6082-T6 ±0.05mm", "100", "pcs", 2500, 1)
         val matching = SupplierOfferLineItemEntity("s", "o", "Aluminium housing", "6082-T6 ±0.05mm", "Aluminium", "150", "pcs", "50", 2200, "EUR", 21, 1)
-        val result = SourcingMatchEngine.compare(buyer, matching)
+        val result = SourcingMatchEngine.compare(request, buyer, matching)
         assertEquals("REVIEWABLE", result.disposition)
         assertTrue(result.checks.all { it.result == SourcingMatchEngine.SUPPORTED })
         val missing = matching.copy(specification = null)
-        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(buyer, missing).disposition)
+        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(request, buyer, missing).disposition)
         val insufficient = matching.copy(quantityAvailable = "20")
-        assertEquals("CONSTRAINT_CONFLICT", SourcingMatchEngine.compare(buyer, insufficient).disposition)
+        assertEquals("CONSTRAINT_CONFLICT", SourcingMatchEngine.compare(request, buyer, insufficient).disposition)
         val differentUnit = matching.copy(quantityUnit = "kg")
-        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(buyer, differentUnit).disposition)
+        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(request, buyer, differentUnit).disposition)
         val differentCurrency = matching.copy(currency = "TRY")
-        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(buyer, differentCurrency).disposition)
+        assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(request, buyer, differentCurrency).disposition)
     }
 }
