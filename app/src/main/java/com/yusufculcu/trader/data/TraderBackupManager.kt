@@ -60,7 +60,11 @@ class TraderBackupManager(
                     organizationPeople = database.organizationPersonDao().getAll(),
                     buyerRequirements = database.buyerRequirementDao().getAll(),
                     buyerRequirementItems = database.buyerRequirementLineItemDao().getAll(),
-                    buyerRequirementEvidence = database.buyerRequirementEvidenceDao().getAll()
+                    buyerRequirementEvidence = database.buyerRequirementEvidenceDao().getAll(),
+                    supplierOffers = database.supplierOfferDao().getAll(),
+                    supplierOfferItems = database.supplierOfferLineItemDao().getAll(),
+                    supplierOfferEvidence = database.supplierOfferEvidenceDao().getAll(),
+                    sourcingReviews = database.sourcingReviewDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -126,6 +130,10 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.sourcingReviewDao().deleteAll()
+                        database.supplierOfferEvidenceDao().deleteAll()
+                        database.supplierOfferLineItemDao().deleteAll()
+                        database.supplierOfferDao().deleteAll()
                         database.buyerRequirementEvidenceDao().deleteAll()
                         database.buyerRequirementLineItemDao().deleteAll()
                         database.buyerRequirementDao().deleteAll()
@@ -166,6 +174,10 @@ class TraderBackupManager(
                         database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)
                         database.buyerRequirementLineItemDao().insertAll(snapshot.buyerRequirementItems)
                         database.buyerRequirementEvidenceDao().insertAll(snapshot.buyerRequirementEvidence)
+                        database.supplierOfferDao().insertAll(snapshot.supplierOffers)
+                        database.supplierOfferLineItemDao().insertAll(snapshot.supplierOfferItems)
+                        database.supplierOfferEvidenceDao().insertAll(snapshot.supplierOfferEvidence)
+                        database.sourcingReviewDao().insertAll(snapshot.sourcingReviews)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -241,6 +253,10 @@ class TraderBackupManager(
             .put("buyerRequirements", jsonArray(snapshot.buyerRequirements, ::encodeBuyerRequirement))
             .put("buyerRequirementItems", jsonArray(snapshot.buyerRequirementItems, ::encodeBuyerRequirementItem))
             .put("buyerRequirementEvidence", jsonArray(snapshot.buyerRequirementEvidence, ::encodeBuyerRequirementEvidence))
+            .put("supplierOffers", jsonArray(snapshot.supplierOffers, ::encodeSupplierOffer))
+            .put("supplierOfferItems", jsonArray(snapshot.supplierOfferItems, ::encodeSupplierOfferItem))
+            .put("supplierOfferEvidence", jsonArray(snapshot.supplierOfferEvidence, ::encodeSupplierOfferEvidence))
+            .put("sourcingReviews", jsonArray(snapshot.sourcingReviews, ::encodeSourcingReview))
         return root.toString()
     }
 
@@ -279,14 +295,18 @@ class TraderBackupManager(
             organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList(),
             buyerRequirements = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirements")) { "Backup is missing buyer requirements." }; decodeArray(root, "buyerRequirements", ::decodeBuyerRequirement) } else emptyList(),
             buyerRequirementItems = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementItems")) { "Backup is missing buyer requirement line items." }; decodeArray(root, "buyerRequirementItems", ::decodeBuyerRequirementItem) } else emptyList(),
-            buyerRequirementEvidence = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementEvidence")) { "Backup is missing buyer requirement evidence links." }; decodeArray(root, "buyerRequirementEvidence", ::decodeBuyerRequirementEvidence) } else emptyList()
+            buyerRequirementEvidence = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementEvidence")) { "Backup is missing buyer requirement evidence links." }; decodeArray(root, "buyerRequirementEvidence", ::decodeBuyerRequirementEvidence) } else emptyList(),
+            supplierOffers = if (backupSchemaVersion >= 11) { require(root.has("supplierOffers")) { "Backup is missing supplier offers." }; decodeArray(root, "supplierOffers", ::decodeSupplierOffer) } else emptyList(),
+            supplierOfferItems = if (backupSchemaVersion >= 11) { require(root.has("supplierOfferItems")) { "Backup is missing supplier offer line items." }; decodeArray(root, "supplierOfferItems", ::decodeSupplierOfferItem) } else emptyList(),
+            supplierOfferEvidence = if (backupSchemaVersion >= 11) { require(root.has("supplierOfferEvidence")) { "Backup is missing supplier offer evidence links." }; decodeArray(root, "supplierOfferEvidence", ::decodeSupplierOfferEvidence) } else emptyList(),
+            sourcingReviews = if (backupSchemaVersion >= 11) { require(root.has("sourcingReviews")) { "Backup is missing sourcing review decisions." }; decodeArray(root, "sourcingReviews", ::decodeSourcingReview) } else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -317,6 +337,16 @@ class TraderBackupManager(
         unique(snapshot.buyerRequirementItems.map { it.id }, "buyer requirement line item")
         unique(snapshot.buyerRequirementEvidence.map { it.id }, "buyer requirement evidence link")
         unique(snapshot.buyerRequirementEvidence.map { it.requirementId + "|" + it.sourceId }, "buyer requirement evidence pair")
+        unique(snapshot.supplierOffers.map { it.id }, "supplier offer")
+        unique(snapshot.supplierOfferItems.map { it.id }, "supplier offer line item")
+        unique(snapshot.supplierOfferEvidence.map { it.id }, "supplier offer evidence link")
+        unique(snapshot.supplierOfferEvidence.map { it.offerId + "|" + it.sourceId }, "supplier offer evidence pair")
+        unique(snapshot.sourcingReviews.map { it.id }, "sourcing review")
+        unique(snapshot.sourcingReviews.map { it.buyerRequirementId + "|" + it.supplierOfferId }, "sourcing review pair")
+        require(snapshot.supplierOffers.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Supplier offer references a missing company." }
+        require(snapshot.supplierOfferItems.all { it.offerId in snapshot.supplierOffers.map(SupplierOfferEntity::id) }) { "Supplier offer item references a missing offer." }
+        require(snapshot.supplierOfferEvidence.all { link -> link.offerId in snapshot.supplierOffers.map(SupplierOfferEntity::id) && link.sourceId in snapshot.organizationSources.map(OrganizationSourceEntity::id) && snapshot.supplierOffers.first { it.id == link.offerId }.organizationId == snapshot.organizationSources.first { it.id == link.sourceId }.organizationId }) { "Supplier offer evidence link is invalid." }
+        require(snapshot.sourcingReviews.all { it.buyerRequirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) && it.supplierOfferId in snapshot.supplierOffers.map(SupplierOfferEntity::id) && it.status in SourcingReviewStatus.ALL }) { "Sourcing review decision is invalid." }
         require(snapshot.buyerRequirements.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Buyer requirement references a missing company." }
         require(snapshot.buyerRequirementItems.all { it.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) }) { "Buyer requirement line item references a missing requirement." }
         require(snapshot.buyerRequirementEvidence.all { link -> link.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) && link.sourceId in snapshot.organizationSources.map(OrganizationSourceEntity::id) && snapshot.buyerRequirements.first { it.id == link.requirementId }.organizationId == snapshot.organizationSources.first { it.id == link.sourceId }.organizationId }) { "Buyer requirement evidence link is invalid." }
@@ -598,6 +628,15 @@ class TraderBackupManager(
         createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
     )
 
+    private fun encodeSupplierOffer(row: SupplierOfferEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "currency" to row.currency, "originCountry" to row.originCountry, "originCity" to row.originCity, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
+    private fun decodeSupplierOffer(o: JSONObject) = SupplierOfferEntity(o.getString("id"), o.getString("organizationId"), o.getString("title"), o.stringOrNull("description"), o.getString("status"), o.stringOrNull("currency"), o.stringOrNull("originCountry"), o.stringOrNull("originCity"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"))
+    private fun encodeSupplierOfferItem(row: SupplierOfferLineItemEntity) = json("id" to row.id, "offerId" to row.offerId, "productName" to row.productName, "specification" to row.specification, "material" to row.material, "quantityAvailable" to row.quantityAvailable, "quantityUnit" to row.quantityUnit, "minimumOrderQuantity" to row.minimumOrderQuantity, "unitPriceMinorUnits" to row.unitPriceMinorUnits, "currency" to row.currency, "leadTimeDays" to row.leadTimeDays, "createdAt" to row.createdAt)
+    private fun decodeSupplierOfferItem(o: JSONObject) = SupplierOfferLineItemEntity(o.getString("id"), o.getString("offerId"), o.getString("productName"), o.stringOrNull("specification"), o.stringOrNull("material"), o.stringOrNull("quantityAvailable"), o.stringOrNull("quantityUnit"), o.stringOrNull("minimumOrderQuantity"), o.longOrNull("unitPriceMinorUnits"), o.stringOrNull("currency"), o.optInt("leadTimeDays").takeIf { !o.isNull("leadTimeDays") }, o.getLong("createdAt"))
+    private fun encodeSupplierOfferEvidence(row: SupplierOfferEvidenceEntity) = json("id" to row.id, "offerId" to row.offerId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt)
+    private fun decodeSupplierOfferEvidence(o: JSONObject) = SupplierOfferEvidenceEntity(o.getString("id"), o.getString("offerId"), o.getString("sourceId"), o.getLong("linkedAt"))
+    private fun encodeSourcingReview(row: SourcingReviewEntity) = json("id" to row.id, "buyerRequirementId" to row.buyerRequirementId, "supplierOfferId" to row.supplierOfferId, "status" to row.status, "rationale" to row.rationale, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
+    private fun decodeSourcingReview(o: JSONObject) = SourcingReviewEntity(o.getString("id"), o.getString("buyerRequirementId"), o.getString("supplierOfferId"), o.getString("status"), o.stringOrNull("rationale"), o.getLong("createdAt"), o.getLong("updatedAt"))
+
     private fun encodeBuyerRequirement(row: BuyerRequirementEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "destinationCountry" to row.destinationCountry, "destinationCity" to row.destinationCity, "requiredByText" to row.requiredByText, "currency" to row.currency, "budgetMinorUnits" to row.budgetMinorUnits, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
     private fun decodeBuyerRequirement(o: JSONObject) = BuyerRequirementEntity(o.getString("id"),o.getString("organizationId"),o.getString("title"),o.stringOrNull("description"),o.getString("status"),o.stringOrNull("destinationCountry"),o.stringOrNull("destinationCity"),o.stringOrNull("requiredByText"),o.stringOrNull("currency"),o.longOrNull("budgetMinorUnits"),o.stringOrNull("notes"),o.getLong("createdAt"),o.getLong("updatedAt"))
     private fun encodeBuyerRequirementItem(row: BuyerRequirementLineItemEntity) = json("id" to row.id, "requirementId" to row.requirementId, "productName" to row.productName, "specification" to row.specification, "quantity" to row.quantity, "unit" to row.unit, "targetUnitPriceMinorUnits" to row.targetUnitPriceMinorUnits, "createdAt" to row.createdAt)
@@ -672,13 +711,17 @@ class TraderBackupManager(
         val organizationPeople: List<OrganizationPersonEntity> = emptyList(),
         val buyerRequirements: List<BuyerRequirementEntity> = emptyList(),
         val buyerRequirementItems: List<BuyerRequirementLineItemEntity> = emptyList(),
-        val buyerRequirementEvidence: List<BuyerRequirementEvidenceEntity> = emptyList()
+        val buyerRequirementEvidence: List<BuyerRequirementEvidenceEntity> = emptyList(),
+        val supplierOffers: List<SupplierOfferEntity> = emptyList(),
+        val supplierOfferItems: List<SupplierOfferLineItemEntity> = emptyList(),
+        val supplierOfferEvidence: List<SupplierOfferEvidenceEntity> = emptyList(),
+        val sourcingReviews: List<SourcingReviewEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 7
-        private const val DATABASE_SCHEMA_VERSION = 10
+        private const val SNAPSHOT_VERSION = 8
+        private const val DATABASE_SCHEMA_VERSION = 11
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)

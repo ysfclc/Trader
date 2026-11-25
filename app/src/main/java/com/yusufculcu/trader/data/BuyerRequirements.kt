@@ -20,6 +20,7 @@ data class BuyerRequirementLineItemEntity(@PrimaryKey val id:String,val requirem
 data class BuyerRequirementEvidenceEntity(@PrimaryKey val id:String,val requirementId:String,val sourceId:String,val linkedAt:Long)
 
 @Dao interface BuyerRequirementDao {
+ @Query("SELECT * FROM buyer_requirements ORDER BY updatedAt DESC") fun observeAll(): Flow<List<BuyerRequirementEntity>>
  @Query("SELECT * FROM buyer_requirements WHERE organizationId=:organizationId ORDER BY updatedAt DESC") fun observeForOrganization(organizationId:String):Flow<List<BuyerRequirementEntity>>
  @Query("SELECT * FROM buyer_requirements") suspend fun getAll():List<BuyerRequirementEntity>
  @Query("SELECT * FROM buyer_requirements WHERE id=:id LIMIT 1") suspend fun getById(id:String):BuyerRequirementEntity?
