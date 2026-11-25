@@ -676,9 +676,13 @@ interface SourceRunDao {
         OrganizationPersonEntity::class,
         BuyerRequirementEntity::class,
         BuyerRequirementLineItemEntity::class,
-        BuyerRequirementEvidenceEntity::class
+        BuyerRequirementEvidenceEntity::class,
+        SupplierOfferEntity::class,
+        SupplierOfferLineItemEntity::class,
+        SupplierOfferEvidenceEntity::class,
+        SourcingReviewEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -702,6 +706,10 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun buyerRequirementDao(): BuyerRequirementDao
     abstract fun buyerRequirementLineItemDao(): BuyerRequirementLineItemDao
     abstract fun buyerRequirementEvidenceDao(): BuyerRequirementEvidenceDao
+    abstract fun supplierOfferDao(): SupplierOfferDao
+    abstract fun supplierOfferLineItemDao(): SupplierOfferLineItemDao
+    abstract fun supplierOfferEvidenceDao(): SupplierOfferEvidenceDao
+    abstract fun sourcingReviewDao(): SourcingReviewDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -944,4 +952,25 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
   db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_people_organizationId ON organization_people (organizationId)")
   db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_people_email ON organization_people (email)")
  }
+}
+
+
+/** Adds supplier offers and reviewable buyer-to-supplier shortlist decisions. */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS supplier_offers (id TEXT NOT NULL, organizationId TEXT NOT NULL, title TEXT NOT NULL, description TEXT, status TEXT NOT NULL, currency TEXT, originCountry TEXT, originCity TEXT, notes TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offers_organizationId ON supplier_offers (organizationId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offers_status ON supplier_offers (status)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offers_updatedAt ON supplier_offers (updatedAt)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS supplier_offer_items (id TEXT NOT NULL, offerId TEXT NOT NULL, productName TEXT NOT NULL, specification TEXT, material TEXT, quantityAvailable TEXT, quantityUnit TEXT, minimumOrderQuantity TEXT, unitPriceMinorUnits INTEGER, currency TEXT, leadTimeDays INTEGER, createdAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(offerId) REFERENCES supplier_offers(id) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offer_items_offerId ON supplier_offer_items (offerId)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS supplier_offer_evidence (id TEXT NOT NULL, offerId TEXT NOT NULL, sourceId TEXT NOT NULL, linkedAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(offerId) REFERENCES supplier_offers(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(sourceId) REFERENCES organization_sources(id) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offer_evidence_offerId ON supplier_offer_evidence (offerId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offer_evidence_sourceId ON supplier_offer_evidence (sourceId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_supplier_offer_evidence_offerId_sourceId ON supplier_offer_evidence (offerId, sourceId)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS sourcing_reviews (id TEXT NOT NULL, buyerRequirementId TEXT NOT NULL, supplierOfferId TEXT NOT NULL, status TEXT NOT NULL, rationale TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(buyerRequirementId) REFERENCES buyer_requirements(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(supplierOfferId) REFERENCES supplier_offers(id) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_sourcing_reviews_buyerRequirementId ON sourcing_reviews (buyerRequirementId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_sourcing_reviews_supplierOfferId ON sourcing_reviews (supplierOfferId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_sourcing_reviews_buyerRequirementId_supplierOfferId ON sourcing_reviews (buyerRequirementId, supplierOfferId)")
+    }
 }
