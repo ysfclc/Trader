@@ -12,18 +12,20 @@ object BuyerRequirementState {
     const val DRAFT="DRAFT"; const val OPEN="OPEN"; const val PAUSED="PAUSED"; const val FULFILLED="FULFILLED"; const val CLOSED="CLOSED"
     val ALL=setOf(DRAFT,OPEN,PAUSED,FULFILLED,CLOSED)
 }
-@Entity(tableName="buyer_requirements", foreignKeys=[ForeignKey(entity=OrganizationEntity::class,parentColumns=["id"],childColumns=["organizationId"],onDelete=ForeignKey.CASCADE)], indices=[Index("organizationId"),Index("status"),Index("updatedAt")])
-data class BuyerRequirementEntity(@PrimaryKey val id:String,val organizationId:String,val title:String,val description:String?,val status:String,val destinationCountry:String?,val destinationCity:String?,val requiredByText:String?,val currency:String?,val budgetMinorUnits:Long?,val notes:String?,val createdAt:Long,val updatedAt:Long)
+@Entity(tableName="buyer_requirements", foreignKeys=[ForeignKey(entity=OrganizationEntity::class,parentColumns=["id"],childColumns=["organizationId"],onDelete=ForeignKey.CASCADE)], indices=[Index("organizationId"),Index("status"),Index("updatedAt"),Index("deletedAt")])
+data class BuyerRequirementEntity(@PrimaryKey val id:String,val organizationId:String,val title:String,val description:String?,val status:String,val destinationCountry:String?,val destinationCity:String?,val requiredByText:String?,val currency:String?,val budgetMinorUnits:Long?,val notes:String?,val createdAt:Long,val updatedAt:Long,val deletedAt:Long?=null)
 @Entity(tableName="buyer_requirement_items", foreignKeys=[ForeignKey(entity=BuyerRequirementEntity::class,parentColumns=["id"],childColumns=["requirementId"],onDelete=ForeignKey.CASCADE)], indices=[Index("requirementId")])
 data class BuyerRequirementLineItemEntity(@PrimaryKey val id:String,val requirementId:String,val productName:String,val specification:String?,val quantity:String?,val unit:String?,val targetUnitPriceMinorUnits:Long?,val createdAt:Long)
 @Entity(tableName="buyer_requirement_evidence", foreignKeys=[ForeignKey(entity=BuyerRequirementEntity::class,parentColumns=["id"],childColumns=["requirementId"],onDelete=ForeignKey.CASCADE),ForeignKey(entity=OrganizationSourceEntity::class,parentColumns=["id"],childColumns=["sourceId"],onDelete=ForeignKey.CASCADE)],indices=[Index("requirementId"),Index("sourceId"),Index(value=["requirementId","sourceId"],unique=true)])
 data class BuyerRequirementEvidenceEntity(@PrimaryKey val id:String,val requirementId:String,val sourceId:String,val linkedAt:Long)
 
 @Dao interface BuyerRequirementDao {
- @Query("SELECT * FROM buyer_requirements ORDER BY updatedAt DESC") fun observeAll(): Flow<List<BuyerRequirementEntity>>
- @Query("SELECT * FROM buyer_requirements WHERE organizationId=:organizationId ORDER BY updatedAt DESC") fun observeForOrganization(organizationId:String):Flow<List<BuyerRequirementEntity>>
+ @Query("SELECT * FROM buyer_requirements WHERE deletedAt IS NULL ORDER BY updatedAt DESC") fun observeAll(): Flow<List<BuyerRequirementEntity>>
+ @Query("SELECT * FROM buyer_requirements WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC") fun observeDeleted(): Flow<List<BuyerRequirementEntity>>
+ @Query("SELECT * FROM buyer_requirements WHERE organizationId=:organizationId AND deletedAt IS NULL ORDER BY updatedAt DESC") fun observeForOrganization(organizationId:String):Flow<List<BuyerRequirementEntity>>
  @Query("SELECT * FROM buyer_requirements") suspend fun getAll():List<BuyerRequirementEntity>
- @Query("SELECT * FROM buyer_requirements WHERE id=:id LIMIT 1") suspend fun getById(id:String):BuyerRequirementEntity?
+ @Query("SELECT * FROM buyer_requirements WHERE id=:id AND deletedAt IS NULL LIMIT 1") suspend fun getById(id:String):BuyerRequirementEntity?
+ @Query("SELECT * FROM buyer_requirements WHERE id=:id LIMIT 1") suspend fun getIncludingDeletedById(id:String):BuyerRequirementEntity?
  @Insert(onConflict=OnConflictStrategy.ABORT) suspend fun insert(row:BuyerRequirementEntity)
  @Insert(onConflict=OnConflictStrategy.ABORT) suspend fun insertAll(rows:List<BuyerRequirementEntity>)
  @Update suspend fun update(row:BuyerRequirementEntity)
@@ -54,6 +56,7 @@ data class BuyerRequirementLineItemDraft(val productName:String,val specificatio
 /** User-authored requirements with precise line-item quantities and source links constrained to the same dossier. */
 class BuyerRequirementRepository(private val db: TraderDatabase) {
     fun observeAll() = db.buyerRequirementDao().observeAll()
+    fun observeDeleted() = db.buyerRequirementDao().observeDeleted()
     fun observeForOrganization(id: String) = db.buyerRequirementDao().observeForOrganization(id)
     fun observeItems(id: String) = db.buyerRequirementLineItemDao().observeForRequirement(id)
     fun observeEvidence(id: String) = db.buyerRequirementEvidenceDao().observeForRequirement(id)
@@ -170,16 +173,38 @@ class BuyerRequirementRepository(private val db: TraderDatabase) {
         link
     }
 
+    /** Move a requirement to recoverable trash; related sourcing data remains linked. */
     suspend fun deleteRequirement(id: String): Boolean = db.withTransaction {
         val req = db.buyerRequirementDao().getById(id) ?: return@withTransaction false
         val organization = db.organizationDao().getById(req.organizationId) ?: return@withTransaction false
         val now = System.currentTimeMillis()
+        db.buyerRequirementDao().update(req.copy(deletedAt = now, updatedAt = now))
+        db.organizationDao().touch(req.organizationId, now)
         db.appendBusinessActivity(
             req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
-            req.title, BusinessActivityAction.DELETED, "Buyer requirement deleted",
-            fromStatus = req.status, occurredAt = now
+            req.title, BusinessActivityAction.DELETED, "Buyer requirement moved to trash",
+            fromStatus = req.status,
+            details = "Requirement, line items, evidence links and sourcing decisions retained for recovery.",
+            occurredAt = now
         )
-        db.buyerRequirementDao().deleteById(id) > 0
+        true
+    }
+
+    suspend fun restoreRequirement(id: String): Boolean = db.withTransaction {
+        val req = db.buyerRequirementDao().getIncludingDeletedById(id) ?: return@withTransaction false
+        if (req.deletedAt == null) return@withTransaction true
+        val organization = db.organizationDao().getById(req.organizationId) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.buyerRequirementDao().update(req.copy(deletedAt = null, updatedAt = now))
+        db.organizationDao().touch(req.organizationId, now)
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.RESTORED, "Buyer requirement restored",
+            fromStatus = req.status,
+            details = "Restored from trash with original line items, evidence links and sourcing decisions.",
+            occurredAt = now
+        )
+        true
     }
 
     suspend fun deleteLineItem(id: String): Boolean = db.withTransaction {
@@ -268,4 +293,15 @@ val MIGRATION_9_10=object:Migration(9,10){
   db.execSQL("CREATE INDEX IF NOT EXISTS index_buyer_requirement_evidence_sourceId ON buyer_requirement_evidence (sourceId)")
   db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_buyer_requirement_evidence_requirementId_sourceId ON buyer_requirement_evidence (requirementId, sourceId)")
  }
+}
+
+
+/** Adds nullable tombstones without rewriting or cascading existing sourcing data. */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE buyer_requirements ADD COLUMN deletedAt INTEGER")
+        db.execSQL("ALTER TABLE supplier_offers ADD COLUMN deletedAt INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_buyer_requirements_deletedAt ON buyer_requirements (deletedAt)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_supplier_offers_deletedAt ON supplier_offers (deletedAt)")
+    }
 }

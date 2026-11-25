@@ -25,8 +25,19 @@ class BuyerRequirementRepositoryTest {
   val link=repo.linkEvidence(req.id,source.id)
   assertEquals(link.id,repo.linkEvidence(req.id,source.id).id)
   assertEquals(1,repo.observeItems(req.id).first().size); assertEquals(1,repo.observeEvidence(req.id).first().size)
-  repo.deleteRequirement(req.id)
-  assertTrue(repo.observeItems(req.id).first().isEmpty()); assertTrue(repo.observeEvidence(req.id).first().isEmpty())
+  assertTrue(repo.deleteRequirement(req.id))
+  assertTrue(repo.observeAll().first().isEmpty())
+  assertEquals(1, repo.observeDeleted().first().size)
+  assertEquals(1, repo.observeItems(req.id).first().size)
+  assertEquals(1, repo.observeEvidence(req.id).first().size)
+  assertTrue(repo.restoreRequirement(req.id))
+  assertEquals(1, repo.observeAll().first().size)
+  assertTrue(repo.observeDeleted().first().isEmpty())
+  assertEquals(1, repo.observeItems(req.id).first().size)
+  assertEquals(1, repo.observeEvidence(req.id).first().size)
+  val lifecycle = db.businessActivityDao().getAll().filter { it.entityId == req.id }.map { it.eventType }
+  assertTrue(lifecycle.contains(BusinessActivityAction.DELETED))
+  assertTrue(lifecycle.contains(BusinessActivityAction.RESTORED))
  }
  @Test fun rejectsInvalidQuantityCurrencyAndCrossDossierEvidence()=runBlocking {
   val a=orgs.createOrganization(OrganizationDraft("A")); val b=orgs.createOrganization(OrganizationDraft("B"))

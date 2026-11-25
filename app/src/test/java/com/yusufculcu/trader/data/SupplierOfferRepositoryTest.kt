@@ -156,4 +156,34 @@ class SupplierOfferRepositoryTest {
         assertTrue(events.any { it.entityId == offer.id && it.eventType == BusinessActivityAction.EVIDENCE_LINKED && it.details == "Current catalogue" })
     }
 
+
+    @Test fun deletedOfferCanBeRestoredWithoutLosingItemsEvidenceOrSourcingDecision() = runBlocking {
+        val buyer = organizations.createOrganization(OrganizationDraft("Recovery Buyer"))
+        val supplier = organizations.createOrganization(OrganizationDraft("Recovery Supplier"))
+        val source = organizations.addSource(supplier.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Offer evidence", "https://supplier.example/offer"))
+        val requirement = buyers.create(buyer.id, BuyerRequirementDraft("Recovery requirement"))
+        val offer = suppliers.create(
+            supplier.id,
+            SupplierOfferDraft("Recoverable offer"),
+            SupplierOfferLineItemDraft("Precision component"),
+            listOf(source.id)
+        )
+        suppliers.review(requirement.id, offer.id, SourcingReviewStatus.SHORTLISTED, "Keep this decision.")
+        assertTrue(suppliers.deleteOffer(offer.id))
+        assertTrue(suppliers.observeOffers().first().isEmpty())
+        assertEquals(offer.id, suppliers.observeDeletedOffers().first().single().id)
+        assertEquals(1, suppliers.observeItems(offer.id).first().size)
+        assertEquals(source.id, suppliers.observeEvidence(offer.id).first().single().sourceId)
+        assertEquals(SourcingReviewStatus.SHORTLISTED, suppliers.observeReviews(requirement.id).first().single().status)
+        assertTrue(suppliers.restoreOffer(offer.id))
+        assertEquals(offer.id, suppliers.observeOffers().first().single().id)
+        assertTrue(suppliers.observeDeletedOffers().first().isEmpty())
+        assertEquals(1, suppliers.observeItems(offer.id).first().size)
+        assertEquals(source.id, suppliers.observeEvidence(offer.id).first().single().sourceId)
+        assertEquals(SourcingReviewStatus.SHORTLISTED, suppliers.observeReviews(requirement.id).first().single().status)
+        val actions = db.businessActivityDao().getAll().filter { it.entityId == offer.id }.map { it.eventType }
+        assertTrue(actions.contains(BusinessActivityAction.DELETED))
+        assertTrue(actions.contains(BusinessActivityAction.RESTORED))
+    }
+
 }

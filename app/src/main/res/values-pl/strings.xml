@@ -450,4 +450,15 @@
     <string name="sourcing_line_item_removed">Usunięto pozycję.</string>
     <string name="sourcing_evidence_updated">Zaktualizowano dowody oferty.</string>
     <string name="business_action_evidence_unlinked">Odłączono dowód</string>
+    <string name="sourcing_recently_deleted">Ostatnio usunięte</string>
+    <string name="sourcing_back_to_active">Wróć do sourcingu</string>
+    <string name="sourcing_trash_empty">Brak usuniętych rekordów sourcingowych. Wymagania i oferty zachowują pozycje, dowody i decyzje oraz można je przywrócić.</string>
+    <string name="sourcing_move_to_trash">Przenieś do kosza</string>
+    <string name="sourcing_restore_record">Przywróć</string>
+    <string name="sourcing_deleted_requirement">Wymaganie kupującego · w koszu</string>
+    <string name="sourcing_deleted_offer">Oferta dostawcy · w koszu</string>
+    <string name="sourcing_requirement_archived">Wymaganie kupującego przeniesiono do kosza.</string>
+    <string name="sourcing_offer_archived">Ofertę dostawcy przeniesiono do kosza.</string>
+    <string name="sourcing_record_restored">Przywrócono rekord sourcingowy.</string>
+    <string name="business_action_restored">Przywrócono</string>
 </resources>

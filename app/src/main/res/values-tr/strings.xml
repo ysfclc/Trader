@@ -450,4 +450,15 @@
     <string name="sourcing_line_item_removed">Kalem kaldırıldı.</string>
     <string name="sourcing_evidence_updated">Teklif kanıtları güncellendi.</string>
     <string name="business_action_evidence_unlinked">Kanıt bağlantısı kaldırıldı</string>
+    <string name="sourcing_recently_deleted">Son silinenler</string>
+    <string name="sourcing_back_to_active">Tedarik ekranına dön</string>
+    <string name="sourcing_trash_empty">Silinen tedarik kaydı yok. Talepler ve teklifler kalemlerini, kanıtlarını ve kararlarını korur; buradan geri yüklenebilir.</string>
+    <string name="sourcing_move_to_trash">Çöp kutusuna taşı</string>
+    <string name="sourcing_restore_record">Geri yükle</string>
+    <string name="sourcing_deleted_requirement">Alıcı talebi · çöp kutusunda</string>
+    <string name="sourcing_deleted_offer">Tedarikçi teklifi · çöp kutusunda</string>
+    <string name="sourcing_requirement_archived">Alıcı talebi çöp kutusuna taşındı.</string>
+    <string name="sourcing_offer_archived">Tedarikçi teklifi çöp kutusuna taşındı.</string>
+    <string name="sourcing_record_restored">Tedarik kaydı geri yüklendi.</string>
+    <string name="business_action_restored">Geri yüklendi</string>
 </resources>

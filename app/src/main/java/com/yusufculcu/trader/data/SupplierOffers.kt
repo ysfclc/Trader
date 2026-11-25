@@ -21,11 +21,11 @@ object SourcingReviewStatus {
     const val NOT_SUITABLE = "NOT_SUITABLE"
     val ALL = setOf(SHORTLISTED, NEEDS_INFORMATION, NOT_SUITABLE)
 }
-@Entity(tableName = "supplier_offers", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)], indices = [Index("organizationId"), Index("status"), Index("updatedAt")])
+@Entity(tableName = "supplier_offers", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)], indices = [Index("organizationId"), Index("status"), Index("updatedAt"), Index("deletedAt")])
 data class SupplierOfferEntity(
     @PrimaryKey val id: String, val organizationId: String, val title: String, val description: String?,
     val status: String, val currency: String?, val originCountry: String?, val originCity: String?,
-    val notes: String?, val createdAt: Long, val updatedAt: Long
+    val notes: String?, val createdAt: Long, val updatedAt: Long, val deletedAt: Long? = null
 )
 @Entity(tableName = "supplier_offer_items", foreignKeys = [ForeignKey(entity = SupplierOfferEntity::class, parentColumns = ["id"], childColumns = ["offerId"], onDelete = ForeignKey.CASCADE)], indices = [Index("offerId")])
 data class SupplierOfferLineItemEntity(
@@ -40,9 +40,11 @@ data class SupplierOfferEvidenceEntity(@PrimaryKey val id: String, val offerId: 
 data class SourcingReviewEntity(@PrimaryKey val id: String, val buyerRequirementId: String, val supplierOfferId: String, val status: String, val rationale: String?, val createdAt: Long, val updatedAt: Long)
 
 @Dao interface SupplierOfferDao {
-    @Query("SELECT * FROM supplier_offers ORDER BY updatedAt DESC") fun observeAll(): Flow<List<SupplierOfferEntity>>
+    @Query("SELECT * FROM supplier_offers WHERE deletedAt IS NULL ORDER BY updatedAt DESC") fun observeAll(): Flow<List<SupplierOfferEntity>>
+    @Query("SELECT * FROM supplier_offers WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC") fun observeDeleted(): Flow<List<SupplierOfferEntity>>
     @Query("SELECT * FROM supplier_offers") suspend fun getAll(): List<SupplierOfferEntity>
-    @Query("SELECT * FROM supplier_offers WHERE id=:id LIMIT 1") suspend fun getById(id: String): SupplierOfferEntity?
+    @Query("SELECT * FROM supplier_offers WHERE id=:id AND deletedAt IS NULL LIMIT 1") suspend fun getById(id: String): SupplierOfferEntity?
+    @Query("SELECT * FROM supplier_offers WHERE id=:id LIMIT 1") suspend fun getIncludingDeletedById(id: String): SupplierOfferEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(row: SupplierOfferEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(rows: List<SupplierOfferEntity>)
     @Update suspend fun update(row: SupplierOfferEntity)
@@ -82,6 +84,7 @@ data class SupplierOfferLineItemDraft(val productName: String, val specification
 
 class SupplierOfferRepository(private val db: TraderDatabase) {
     fun observeOffers() = db.supplierOfferDao().observeAll()
+    fun observeDeletedOffers() = db.supplierOfferDao().observeDeleted()
     fun observeItems(offerId: String) = db.supplierOfferLineItemDao().observeForOffer(offerId)
     fun observeEvidence(offerId: String) = db.supplierOfferEvidenceDao().observeForOffer(offerId)
     fun observeReviews(requirementId: String) = db.sourcingReviewDao().observeForRequirement(requirementId)
@@ -320,16 +323,38 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
         row
     }
 
+    /** Move an offer to recoverable trash without cascading its items, evidence or decisions. */
     suspend fun deleteOffer(offerId: String): Boolean = db.withTransaction {
         val offer = db.supplierOfferDao().getById(offerId) ?: return@withTransaction false
         val organization = db.organizationDao().getById(offer.organizationId) ?: return@withTransaction false
         val now = System.currentTimeMillis()
+        db.supplierOfferDao().update(offer.copy(deletedAt = now, updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
         db.appendBusinessActivity(
             offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
-            offer.title, BusinessActivityAction.DELETED, "Supplier offer deleted",
-            fromStatus = offer.status, occurredAt = now
+            offer.title, BusinessActivityAction.DELETED, "Supplier offer moved to trash",
+            fromStatus = offer.status,
+            details = "Offer, line items, evidence links and sourcing decisions retained for recovery.",
+            occurredAt = now
         )
-        db.supplierOfferDao().deleteById(offerId) > 0
+        true
+    }
+
+    suspend fun restoreOffer(offerId: String): Boolean = db.withTransaction {
+        val offer = db.supplierOfferDao().getIncludingDeletedById(offerId) ?: return@withTransaction false
+        if (offer.deletedAt == null) return@withTransaction true
+        val organization = db.organizationDao().getById(offer.organizationId) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.supplierOfferDao().update(offer.copy(deletedAt = null, updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.RESTORED, "Supplier offer restored",
+            fromStatus = offer.status,
+            details = "Restored from trash with original line items, evidence links and sourcing decisions.",
+            occurredAt = now
+        )
+        true
     }
 
     private fun buildOffer(org: String, draft: SupplierOfferDraft, id: String, now: Long): SupplierOfferEntity {
