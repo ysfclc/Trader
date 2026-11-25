@@ -63,20 +63,52 @@ class OrganizationRepository(private val database: TraderDatabase) {
         database.organizationClaimDao().observeForOrganization(organizationId)
     fun observePeople(organizationId: String): Flow<List<OrganizationPersonEntity>> = database.organizationPersonDao().observeForOrganization(organizationId)
     suspend fun addPerson(organizationId: String, draft: OrganizationPersonDraft): OrganizationPersonEntity = database.withTransaction {
-        require(database.organizationDao().getById(organizationId) != null) { "Company dossier does not exist." }
-        val now = System.currentTimeMillis(); val row = buildPerson(organizationId, draft, UUID.randomUUID().toString(), now)
-        database.organizationPersonDao().insert(row); database.organizationDao().touch(organizationId, now); row
+        val organization = database.organizationDao().getById(organizationId)
+            ?: throw IllegalArgumentException("Company dossier does not exist.")
+        val now = System.currentTimeMillis()
+        val row = buildPerson(organizationId, draft, UUID.randomUUID().toString(), now)
+        database.organizationPersonDao().insert(row)
+        database.organizationDao().touch(organizationId, now)
+        database.appendBusinessActivity(
+            organizationId, organization.canonicalName, BusinessActivityEntityType.CONTACT, row.id,
+            row.role ?: "Contact", BusinessActivityAction.CREATED, "Contact added",
+            details = "A company contact record was added; personal contact details are not copied into activity history.",
+            occurredAt = now
+        )
+        row
     }
     suspend fun updatePerson(personId: String, draft: OrganizationPersonDraft): OrganizationPersonEntity = database.withTransaction {
-        val old = database.organizationPersonDao().getById(personId) ?: throw IllegalArgumentException("Contact no longer exists.")
-        val row = buildPerson(old.organizationId, draft, old.id, old.createdAt).copy(updatedAt = System.currentTimeMillis())
-        database.organizationPersonDao().update(row); database.organizationDao().touch(old.organizationId, row.updatedAt); row
+        val old = database.organizationPersonDao().getById(personId)
+            ?: throw IllegalArgumentException("Contact no longer exists.")
+        val organization = database.organizationDao().getById(old.organizationId)
+            ?: throw IllegalArgumentException("Company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val row = buildPerson(old.organizationId, draft, old.id, old.createdAt).copy(updatedAt = now)
+        database.organizationPersonDao().update(row)
+        database.organizationDao().touch(old.organizationId, now)
+        database.appendBusinessActivity(
+            old.organizationId, organization.canonicalName, BusinessActivityEntityType.CONTACT, row.id,
+            row.role ?: "Contact", BusinessActivityAction.UPDATED, "Contact updated",
+            details = "Contact details changed; personal fields are not copied into activity history.",
+            occurredAt = now
+        )
+        row
     }
     suspend fun deletePerson(personId: String): Boolean = database.withTransaction {
         val old = database.organizationPersonDao().getById(personId) ?: return@withTransaction false
-        database.organizationPersonDao().deleteById(personId); database.organizationDao().touch(old.organizationId, System.currentTimeMillis()); true
+        val organization = database.organizationDao().getById(old.organizationId)
+            ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        database.appendBusinessActivity(
+            old.organizationId, organization.canonicalName, BusinessActivityEntityType.CONTACT, old.id,
+            old.role ?: "Contact", BusinessActivityAction.DELETED, "Contact deleted",
+            details = "Contact record deleted; personal fields are not copied into activity history.",
+            occurredAt = now
+        )
+        database.organizationPersonDao().deleteById(personId)
+        database.organizationDao().touch(old.organizationId, now)
+        true
     }
-
     suspend fun findByDomain(domain: String): List<OrganizationEntity> {
         val normalized = domain.trim().lowercase(Locale.ROOT).removePrefix("www.")
         if (normalized.isBlank()) return emptyList()
@@ -84,11 +116,16 @@ class OrganizationRepository(private val database: TraderDatabase) {
     }
 
     suspend fun createOrganization(draft: OrganizationDraft): OrganizationEntity = database.withTransaction {
-        val row = buildOrganization(draft, UUID.randomUUID().toString(), System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        val row = buildOrganization(draft, UUID.randomUUID().toString(), now)
         database.organizationDao().insert(row)
+        database.appendBusinessActivity(
+            row.id, row.canonicalName, BusinessActivityEntityType.ORGANIZATION, row.id,
+            row.canonicalName, BusinessActivityAction.CREATED, "Company dossier created",
+            occurredAt = now
+        )
         row
     }
-
     suspend fun createFromDiscovery(draft: OrganizationDraft, document: DiscoveryDocument): OrganizationEntity = database.withTransaction {
         val now = System.currentTimeMillis()
         val organization = buildOrganization(draft, UUID.randomUUID().toString(), now)
@@ -105,13 +142,25 @@ class OrganizationRepository(private val database: TraderDatabase) {
         )
         database.organizationDao().insert(organization)
         database.organizationSourceDao().insert(source)
+        database.appendBusinessActivity(
+            organization.id, organization.canonicalName, BusinessActivityEntityType.ORGANIZATION, organization.id,
+            organization.canonicalName, BusinessActivityAction.CREATED, "Company dossier created",
+            details = "Created from a discovery result; the saved source remains unreviewed.",
+            occurredAt = now
+        )
+        database.appendBusinessActivity(
+            organization.id, organization.canonicalName, BusinessActivityEntityType.ORGANIZATION, organization.id,
+            source.title, BusinessActivityAction.SOURCE_ADDED, "Discovery source saved",
+            details = "The discovery result is research provenance, not identity verification.",
+            occurredAt = now
+        )
         organization
     }
-
     suspend fun updateOrganization(id: String, draft: OrganizationDraft): OrganizationEntity = database.withTransaction {
         val existing = database.organizationDao().getById(id)
             ?: throw IllegalArgumentException("Company dossier no longer exists.")
         val normalized = normalizeWebsite(draft.websiteUrl)
+        val now = System.currentTimeMillis()
         val updated = existing.copy(
             canonicalName = cleanRequired(draft.canonicalName, 200, "Company name"),
             websiteUrl = normalized.first,
@@ -120,24 +169,37 @@ class OrganizationRepository(private val database: TraderDatabase) {
             city = cleanOptional(draft.city, 120, "City"),
             industry = cleanOptional(draft.industry, 160, "Industry"),
             notes = cleanOptional(draft.notes, 4_000, "Notes"),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = now
         )
         database.organizationDao().update(updated)
+        database.appendBusinessActivity(
+            updated.id, updated.canonicalName, BusinessActivityEntityType.ORGANIZATION, updated.id,
+            updated.canonicalName, BusinessActivityAction.UPDATED, "Company profile updated",
+            details = "Company profile fields were edited; prior activity entries remain unchanged.",
+            occurredAt = now
+        )
         updated
     }
-
     suspend fun addSource(organizationId: String, draft: OrganizationSourceDraft): OrganizationSourceEntity = database.withTransaction {
-        require(database.organizationDao().getById(organizationId) != null) { "Company dossier does not exist." }
+        val organization = database.organizationDao().getById(organizationId)
+            ?: throw IllegalArgumentException("Company dossier does not exist.")
         val normalized = buildSource(organizationId, draft)
         val existing = database.organizationSourceDao().findByOrganizationAndUrl(organizationId, normalized.url)
         if (existing != null) return@withTransaction existing
         database.organizationSourceDao().insert(normalized)
-        database.organizationDao().touch(organizationId, System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        database.organizationDao().touch(organizationId, now)
+        database.appendBusinessActivity(
+            organizationId, organization.canonicalName, BusinessActivityEntityType.ORGANIZATION, organizationId,
+            normalized.title, BusinessActivityAction.SOURCE_ADDED, "Company source saved",
+            details = "A source snapshot was attached to the company dossier; its claims remain subject to review.",
+            occurredAt = now
+        )
         normalized
     }
-
     suspend fun addClaim(organizationId: String, draft: OrganizationClaimDraft): OrganizationClaimEntity = database.withTransaction {
-        require(database.organizationDao().getById(organizationId) != null) { "Company dossier does not exist." }
+        val organization = database.organizationDao().getById(organizationId)
+            ?: throw IllegalArgumentException("Company dossier does not exist.")
         val source = database.organizationSourceDao().getById(draft.sourceId)
             ?: throw IllegalArgumentException("Select a saved source for this claim.")
         require(source.organizationId == organizationId) {
@@ -158,28 +220,52 @@ class OrganizationRepository(private val database: TraderDatabase) {
         )
         database.organizationClaimDao().insert(claim)
         database.organizationDao().touch(organizationId, now)
+        database.appendBusinessActivity(
+            organizationId, organization.canonicalName, BusinessActivityEntityType.CLAIM, claim.id,
+            claim.field, BusinessActivityAction.CREATED, "Source-linked claim added",
+            toStatus = OrganizationClaimState.UNREVIEWED,
+            details = "Claim created from a saved company source and left unreviewed.",
+            occurredAt = now
+        )
         claim
     }
-
     suspend fun reviewClaim(claimId: String, state: String, note: String = ""): Boolean = database.withTransaction {
         require(state in OrganizationClaimState.ALL) { "Unsupported claim review state." }
         require(note.length <= 1_000) { "Review note is too long." }
         val existing = database.organizationClaimDao().getById(claimId) ?: return@withTransaction false
+        val organization = database.organizationDao().getById(existing.organizationId)
+            ?: return@withTransaction false
+        val cleanNote = note.trim().ifBlank { null }
+        if (existing.reviewState == state && existing.reviewNote == cleanNote) return@withTransaction true
         val now = System.currentTimeMillis()
         database.organizationClaimDao().update(
             existing.copy(
                 reviewState = state,
-                reviewNote = note.trim().ifBlank { null },
+                reviewNote = cleanNote,
                 reviewedAt = if (state == OrganizationClaimState.UNREVIEWED) null else now,
                 updatedAt = now
             )
         )
         database.organizationDao().touch(existing.organizationId, now)
+        database.appendBusinessActivity(
+            existing.organizationId, organization.canonicalName, BusinessActivityEntityType.CLAIM, existing.id,
+            existing.field, BusinessActivityAction.CLAIM_REVIEWED, "Company claim review changed",
+            fromStatus = existing.reviewState, toStatus = state, details = cleanNote.orEmpty(),
+            occurredAt = now
+        )
         true
     }
-
-    suspend fun deleteOrganization(id: String): Boolean = database.organizationDao().deleteById(id) > 0
-
+    suspend fun deleteOrganization(id: String): Boolean = database.withTransaction {
+        val organization = database.organizationDao().getById(id) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        database.appendBusinessActivity(
+            organization.id, organization.canonicalName, BusinessActivityEntityType.ORGANIZATION, organization.id,
+            organization.canonicalName, BusinessActivityAction.DELETED, "Company dossier deleted",
+            details = "Company records were deleted; this activity entry is retained as a minimal historical marker.",
+            occurredAt = now
+        )
+        database.organizationDao().deleteById(id) > 0
+    }
     private fun buildPerson(organizationId: String, draft: OrganizationPersonDraft, id: String, now: Long): OrganizationPersonEntity {
         val name = cleanRequired(draft.fullName, 160, "Contact name")
         val role = cleanOptional(draft.role, 160, "Role")

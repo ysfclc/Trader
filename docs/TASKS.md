@@ -47,7 +47,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
 - [ ] T2.5 Implement ServiceNeed and JobOpening using shared organization/source/task primitives.
 - [ ] T2.6 Implement contact basis/consent, suppression, representation and commission terms.
-- [ ] T2.7 Implement append-only status history and activity log.
+- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented; CI verification is pending. Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
 
 ## T3 — Discovery and browser/app automation
 
@@ -178,14 +178,14 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] T2.4 Add Room v9→v10 migration and encrypted backup snapshot v7 with validation and FK-safe restore order.
 - [x] T2.5 Add EN/PL/TR company-dossier UI for requirement creation, line items and evidence linking.
 - [x] T2.6 CI run 45570394101 passed unit tests, lint, build, package/version and persistent signing-certificate checks; physical-device acceptance remains open.
-- [ ] T2.7 Implement append-only status history and activity log.
+- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented; CI verification is pending. Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
 
 
 ## Product P1 — Industrial Sourcing Desk
 
 - [x] P1.1 Deliver the buyer-request → supplier-offer → comparison → human-shortlist workflow inside Trader.
-- [x] P1.2 Persist supplier offers, offer line items, evidence links and sourcing decisions in Room v11.
-- [x] P1.3 Preserve all sourcing records in encrypted backup snapshot v8 with relationship validation and safe restore ordering.
+- [x] P1.2 Persist supplier offers, offer line items, evidence links and sourcing decisions in Room v11; expose buyer-request and supplier-offer lifecycle status controls with immutable transition history in Room v12.
+- [x] P1.3 Preserve all sourcing records and business activity history in encrypted backup snapshot v9 with validation and safe restore ordering.
 - [x] P1.4 Provide EN/PL/TR sourcing workflow and explicit shareable shortlist handoff.
 - [x] P1.5 CI run 45574277490 passed clean build, tests, lint and persistent APK identity/signature checks.
 - [ ] P1.6 Complete physical-device install-over-existing, migration/restore and real buyer-to-shortlist acceptance.

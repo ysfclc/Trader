@@ -400,4 +400,36 @@
     <string name="sourcing_save_offer">Zapisz ofertę dostawcy</string>
     <string name="sourcing_review_note">Uzasadnienie decyzji</string>
     <string name="sourcing_review_warning">Umieszczenie na liście jest decyzją operatora, a nie potwierdzeniem kwalifikacji technicznej ani zobowiązaniem dostawcy.</string>
+
+    <string name="buyer_status_draft">Wersja robocza</string>
+    <string name="buyer_status_open">Otwarte</string>
+    <string name="buyer_status_paused">Wstrzymane</string>
+    <string name="buyer_status_fulfilled">Zrealizowane</string>
+    <string name="buyer_status_closed">Zamknięte</string>
+    <string name="buyer_status_unknown">Nieznany</string>
+    <string name="buyer_status_update_failed">Nie udało się zmienić statusu zapytania.</string>
+    <string name="offer_status_draft">Wersja robocza</string>
+    <string name="offer_status_available">Dostępna</string>
+    <string name="offer_status_on_hold">Wstrzymana</string>
+    <string name="offer_status_closed">Zamknięta</string>
+    <string name="offer_status_unknown">Nieznany</string>
+    <string name="business_activity_title">%1$s · %2$s</string>
+    <string name="business_activity_transition">%1$s → %2$s</string>
+    <string name="business_entity_record">Rekord</string>
+    <string name="business_entity_organization">Firma</string>
+    <string name="business_entity_contact">Kontakt</string>
+    <string name="business_entity_claim">Twierdzenie firmy</string>
+    <string name="business_entity_buyer_requirement">Wymaganie kupującego</string>
+    <string name="business_entity_supplier_offer">Oferta dostawcy</string>
+    <string name="business_entity_sourcing_review">Decyzja zakupowa</string>
+    <string name="business_action_created">Utworzono</string>
+    <string name="business_action_updated">Zaktualizowano</string>
+    <string name="business_action_status_changed">Zmieniono status</string>
+    <string name="business_action_source_added">Dodano źródło</string>
+    <string name="business_action_evidence_linked">Połączono dowód</string>
+    <string name="business_action_claim_reviewed">Sprawdzono twierdzenie</string>
+    <string name="business_action_line_added">Dodano pozycję</string>
+    <string name="business_action_decision_recorded">Zapisano decyzję</string>
+    <string name="business_action_deleted">Usunięto</string>
+
 </resources>

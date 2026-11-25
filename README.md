@@ -50,12 +50,11 @@ The workflow lives in the app: create a buyer requirement in a company dossier, 
 
 ## Current state
 
-The first product, **Industrial Sourcing Desk**, is implemented on `feature/discovery-run-persistence` and CI-verified. It supports buyer requirements, supplier offers, conservative comparison, recorded human shortlist decisions and a user-initiated share handoff. The product boundary and known limitations are in [the product definition](docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md).
+The first product, **Industrial Sourcing Desk**, now includes company and sourcing records, deterministic comparison, human shortlist decisions, user-initiated share handoff, and append-only business status history. The Activity destination combines ProblemCase events with company, buyer-requirement, supplier-offer, claim-review and sourcing-decision events. The product boundary and limitations are in [the product definition](docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md).
 
-- Android build: `0.8.0-debug`, versionCode 8, package `com.yusufculcu.trader.debug`.
-- Database: Room schema v11; encrypted backup snapshot v8.
-- CI: [45574277490](https://github.com/ysfclc/Trader/actions/runs/45574277490) and docs-aligned verification [45575324059](https://github.com/ysfclc/Trader/actions/runs/45575324059) passed build, tests, lint, package/version and persistent signing-certificate checks.
-- Installable APK: [artifact 15003658514](https://github.com/ysfclc/Trader/actions/runs/45575324059/artifacts/15003658514).
+- Android build candidate: `0.9.0-debug`, versionCode 9, package `com.yusufculcu.trader.debug`.
+- Database: Room schema v12; encrypted backup snapshot v9.
+- CI for the activity-history increment: pending; no new APK is claimed yet.
 - Not yet proven: install-over-existing on the Redmi, real-data sourcing journey, migration and encrypted backup/restore on-device.
 
 The next work stays inside this product until the real-device acceptance gate is closed. No second product is being started in parallel.
@@ -86,9 +85,9 @@ This is not continuous monitoring: feed checks are manual only. Configured publi
 
 ## App identity and safe updates
 
-The Android launcher icon is now defined as an adaptive icon. The debug package ID remains `com.yusufculcu.trader.debug`; current CI-verified version is `0.8.0-debug` / versionCode 8. CI only publishes a `trader-installable-apk` when the dedicated Trader development keystore is configured through repository Actions secrets. Without those secrets, the artifact is explicitly named `trader-ci-debug-apk-not-for-installation`. Do not uninstall or clear app storage as a routine update step. See [ANDROID_BUILD.md](docs/ANDROID_BUILD.md) for the one-time signing setup and migration caveat.
+The Android launcher icon is now defined as an adaptive icon. The debug package ID remains `com.yusufculcu.trader.debug`; current candidate is `0.9.0-debug` / versionCode 9. CI verification for this increment is pending. CI only publishes a `trader-installable-apk` when the dedicated Trader development keystore is configured through repository Actions secrets. Without those secrets, the artifact is explicitly named `trader-ci-debug-apk-not-for-installation`. Do not uninstall or clear app storage as a routine update step. See [ANDROID_BUILD.md](docs/ANDROID_BUILD.md) for the one-time signing setup and migration caveat.
 
 
 ## Industrial Sourcing Desk — current build
 
-The feature branch `feature/discovery-run-persistence` contains the first usable sourcing product. CI run [45574277490](https://github.com/ysfclc/Trader/actions/runs/45574277490) passed the clean Android build, unit tests, lint, package/version assertion and persistent signing-certificate verification. Installable artifact: [15003891645](https://github.com/ysfclc/Trader/actions/runs/45574277490/artifacts/15003891645). Build identity: `com.yusufculcu.trader.debug`, `0.8.0-debug`, versionCode 8. Physical-device update and sourcing-workflow acceptance remain open.
+The feature branch `feature/discovery-run-persistence` contains the first usable sourcing product plus append-only business activity history. The 0.9.0-debug / versionCode 9 candidate adds Room v11→v12, encrypted backup snapshot v9 and localized status controls. Its build, tests, lint and persistent signing verification are pending. Physical-device update and sourcing-workflow acceptance remain open.

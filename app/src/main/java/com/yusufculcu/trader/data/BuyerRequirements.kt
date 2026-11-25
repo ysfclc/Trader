@@ -50,49 +50,177 @@ data class BuyerRequirementDraft(val title:String,val description:String="",val 
 data class BuyerRequirementLineItemDraft(val productName:String,val specification:String="",val quantity:String="",val unit:String="",val targetUnitPriceMinorUnits:Long?=null)
 
 /** User-authored requirements with precise line-item quantities and source links constrained to the same dossier. */
-class BuyerRequirementRepository(private val db:TraderDatabase) {
- fun observeAll() = db.buyerRequirementDao().observeAll()
- fun observeForOrganization(id:String)=db.buyerRequirementDao().observeForOrganization(id)
- fun observeItems(id:String)=db.buyerRequirementLineItemDao().observeForRequirement(id)
- fun observeEvidence(id:String)=db.buyerRequirementEvidenceDao().observeForRequirement(id)
- suspend fun create(orgId:String,d:BuyerRequirementDraft)=db.withTransaction {
-  require(db.organizationDao().getById(orgId)!=null){"Company dossier does not exist."}
-  val now=System.currentTimeMillis(); val row=build(orgId,d,UUID.randomUUID().toString(),now)
-  db.buyerRequirementDao().insert(row); db.organizationDao().touch(orgId,now); row
- }
- suspend fun update(id:String,d:BuyerRequirementDraft)=db.withTransaction {
-  val old=db.buyerRequirementDao().getById(id)?:throw IllegalArgumentException("Buyer requirement no longer exists.")
-  val row=build(old.organizationId,d,old.id,old.createdAt).copy(updatedAt=System.currentTimeMillis())
-  db.buyerRequirementDao().update(row); db.organizationDao().touch(old.organizationId,row.updatedAt); row
- }
- suspend fun addLineItem(requirementId:String,d:BuyerRequirementLineItemDraft)=db.withTransaction {
-  val req=db.buyerRequirementDao().getById(requirementId)?:throw IllegalArgumentException("Buyer requirement does not exist.")
-  val quantity=optional(d.quantity,40,"Quantity")?.also { raw ->
-   val n=runCatching{BigDecimal(raw)}.getOrElse{throw IllegalArgumentException("Quantity must be a positive decimal number.")}
-   require(n>BigDecimal.ZERO && n.scale()<=6 && n.precision()<=18){"Quantity must be a positive decimal with at most six decimal places."}
-  }
-  require(d.targetUnitPriceMinorUnits==null || d.targetUnitPriceMinorUnits>=0){"Target unit price cannot be negative."}
-  val now=System.currentTimeMillis()
-  val row=BuyerRequirementLineItemEntity(UUID.randomUUID().toString(),requirementId,required(d.productName,200,"Product or service"),optional(d.specification,2000,"Specification"),quantity,optional(d.unit,40,"Unit"),d.targetUnitPriceMinorUnits,now)
-  db.buyerRequirementLineItemDao().insert(row); db.organizationDao().touch(req.organizationId,now); row
- }
- suspend fun linkEvidence(requirementId:String,sourceId:String)=db.withTransaction {
-  val req=db.buyerRequirementDao().getById(requirementId)?:throw IllegalArgumentException("Buyer requirement does not exist.")
-  val source=db.organizationSourceDao().getById(sourceId)?:throw IllegalArgumentException("Save the evidence source to this company dossier first.")
-  require(source.organizationId==req.organizationId){"Evidence must belong to the same company dossier."}
-  db.buyerRequirementEvidenceDao().getAll().firstOrNull{it.requirementId==requirementId&&it.sourceId==sourceId}?:BuyerRequirementEvidenceEntity(UUID.randomUUID().toString(),requirementId,sourceId,System.currentTimeMillis()).also{db.buyerRequirementEvidenceDao().insert(it)}
- }
- suspend fun deleteRequirement(id:String)=db.buyerRequirementDao().deleteById(id)>0
- suspend fun deleteLineItem(id:String)=db.buyerRequirementLineItemDao().deleteById(id)>0
- suspend fun deleteEvidenceLink(id:String)=db.buyerRequirementEvidenceDao().deleteById(id)>0
- private fun build(org:String,d:BuyerRequirementDraft,id:String,now:Long):BuyerRequirementEntity {
-  require(d.status in BuyerRequirementState.ALL){"Unsupported buyer requirement status."}
-  val currency=optional(d.currency,3,"Currency")?.uppercase()?.also{require(Regex("^[A-Z]{3}$").matches(it)){"Currency must be a three-letter ISO code."}}
-  require(d.budgetMinorUnits==null||d.budgetMinorUnits>=0){"Budget cannot be negative."}
-  return BuyerRequirementEntity(id,org,required(d.title,200,"Requirement title"),optional(d.description,4000,"Description"),d.status,optional(d.destinationCountry,120,"Destination country"),optional(d.destinationCity,120,"Destination city"),optional(d.requiredByText,120,"Required-by timing"),currency,d.budgetMinorUnits,optional(d.notes,2000,"Notes"),now,now)
- }
- private fun required(v:String,max:Int,label:String):String=v.trim().also{require(it.isNotBlank()&&it.length<=max){"$label is required and must be at most $max characters."}}
- private fun optional(v:String,max:Int,label:String):String?=v.trim().also{require(it.length<=max){"$label is too long."}}.ifBlank{null}
+class BuyerRequirementRepository(private val db: TraderDatabase) {
+    fun observeAll() = db.buyerRequirementDao().observeAll()
+    fun observeForOrganization(id: String) = db.buyerRequirementDao().observeForOrganization(id)
+    fun observeItems(id: String) = db.buyerRequirementLineItemDao().observeForRequirement(id)
+    fun observeEvidence(id: String) = db.buyerRequirementEvidenceDao().observeForRequirement(id)
+
+    suspend fun create(orgId: String, draft: BuyerRequirementDraft) = db.withTransaction {
+        val organization = db.organizationDao().getById(orgId)
+            ?: throw IllegalArgumentException("Company dossier does not exist.")
+        val now = System.currentTimeMillis()
+        val row = build(orgId, draft, UUID.randomUUID().toString(), now)
+        db.buyerRequirementDao().insert(row)
+        db.organizationDao().touch(orgId, now)
+        db.appendBusinessActivity(
+            orgId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, row.id,
+            row.title, BusinessActivityAction.CREATED, "Buyer requirement created",
+            toStatus = row.status, occurredAt = now
+        )
+        row
+    }
+
+    suspend fun update(id: String, draft: BuyerRequirementDraft) = db.withTransaction {
+        val old = db.buyerRequirementDao().getById(id)
+            ?: throw IllegalArgumentException("Buyer requirement no longer exists.")
+        val organization = db.organizationDao().getById(old.organizationId)
+            ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val row = build(old.organizationId, draft, old.id, old.createdAt).copy(updatedAt = now)
+        db.buyerRequirementDao().update(row)
+        db.organizationDao().touch(old.organizationId, now)
+        db.appendBusinessActivity(
+            old.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, row.id,
+            row.title,
+            if (old.status == row.status) BusinessActivityAction.UPDATED else BusinessActivityAction.STATUS_CHANGED,
+            if (old.status == row.status) "Buyer requirement updated" else "Buyer requirement status changed",
+            fromStatus = old.status.takeIf { it != row.status }, toStatus = row.status,
+            occurredAt = now
+        )
+        row
+    }
+
+    suspend fun setStatus(id: String, status: String): Boolean = db.withTransaction {
+        require(status in BuyerRequirementState.ALL) { "Unsupported buyer requirement status." }
+        val old = db.buyerRequirementDao().getById(id) ?: return@withTransaction false
+        if (old.status == status) return@withTransaction true
+        val organization = db.organizationDao().getById(old.organizationId)
+            ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.buyerRequirementDao().update(old.copy(status = status, updatedAt = now))
+        db.organizationDao().touch(old.organizationId, now)
+        db.appendBusinessActivity(
+            old.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, old.id,
+            old.title, BusinessActivityAction.STATUS_CHANGED, "Buyer requirement status changed",
+            fromStatus = old.status, toStatus = status, occurredAt = now
+        )
+        true
+    }
+
+    suspend fun addLineItem(requirementId: String, draft: BuyerRequirementLineItemDraft) = db.withTransaction {
+        val req = db.buyerRequirementDao().getById(requirementId)
+            ?: throw IllegalArgumentException("Buyer requirement does not exist.")
+        val organization = db.organizationDao().getById(req.organizationId)
+            ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
+        val quantity = optional(draft.quantity, 40, "Quantity")?.also { raw ->
+            val number = runCatching { BigDecimal(raw) }
+                .getOrElse { throw IllegalArgumentException("Quantity must be a positive decimal number.") }
+            require(number > BigDecimal.ZERO && number.scale() <= 6 && number.precision() <= 18) {
+                "Quantity must be a positive decimal with at most six decimal places."
+            }
+        }
+        require(draft.targetUnitPriceMinorUnits == null || draft.targetUnitPriceMinorUnits >= 0) {
+            "Target unit price cannot be negative."
+        }
+        val now = System.currentTimeMillis()
+        val row = BuyerRequirementLineItemEntity(
+            UUID.randomUUID().toString(), requirementId, required(draft.productName, 200, "Product or service"),
+            optional(draft.specification, 2_000, "Specification"), quantity, optional(draft.unit, 40, "Unit"),
+            draft.targetUnitPriceMinorUnits, now
+        )
+        db.buyerRequirementLineItemDao().insert(row)
+        db.organizationDao().touch(req.organizationId, now)
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.LINE_ADDED, "Buyer requirement line item added",
+            details = row.productName, occurredAt = now
+        )
+        row
+    }
+
+    suspend fun linkEvidence(requirementId: String, sourceId: String) = db.withTransaction {
+        val req = db.buyerRequirementDao().getById(requirementId)
+            ?: throw IllegalArgumentException("Buyer requirement does not exist.")
+        val organization = db.organizationDao().getById(req.organizationId)
+            ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
+        val source = db.organizationSourceDao().getById(sourceId)
+            ?: throw IllegalArgumentException("Save the evidence source to this company dossier first.")
+        require(source.organizationId == req.organizationId) { "Evidence must belong to the same company dossier." }
+        val existing = db.buyerRequirementEvidenceDao().getAll()
+            .firstOrNull { it.requirementId == requirementId && it.sourceId == sourceId }
+        if (existing != null) return@withTransaction existing
+        val now = System.currentTimeMillis()
+        val link = BuyerRequirementEvidenceEntity(UUID.randomUUID().toString(), requirementId, sourceId, now)
+        db.buyerRequirementEvidenceDao().insert(link)
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.EVIDENCE_LINKED, "Buyer requirement evidence linked",
+            details = source.title, occurredAt = now
+        )
+        link
+    }
+
+    suspend fun deleteRequirement(id: String): Boolean = db.withTransaction {
+        val req = db.buyerRequirementDao().getById(id) ?: return@withTransaction false
+        val organization = db.organizationDao().getById(req.organizationId) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.DELETED, "Buyer requirement deleted",
+            fromStatus = req.status, occurredAt = now
+        )
+        db.buyerRequirementDao().deleteById(id) > 0
+    }
+
+    suspend fun deleteLineItem(id: String): Boolean = db.withTransaction {
+        val item = db.buyerRequirementLineItemDao().getAll().firstOrNull { it.id == id }
+            ?: return@withTransaction false
+        val req = db.buyerRequirementDao().getById(item.requirementId) ?: return@withTransaction false
+        val organization = db.organizationDao().getById(req.organizationId) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.DELETED, "Buyer requirement line item removed",
+            details = item.productName, occurredAt = now
+        )
+        db.buyerRequirementLineItemDao().deleteById(id) > 0
+    }
+
+    suspend fun deleteEvidenceLink(id: String): Boolean = db.withTransaction {
+        val link = db.buyerRequirementEvidenceDao().getAll().firstOrNull { it.id == id }
+            ?: return@withTransaction false
+        val req = db.buyerRequirementDao().getById(link.requirementId) ?: return@withTransaction false
+        val organization = db.organizationDao().getById(req.organizationId) ?: return@withTransaction false
+        val source = db.organizationSourceDao().getById(link.sourceId)
+        val now = System.currentTimeMillis()
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.UPDATED, "Buyer requirement evidence unlinked",
+            details = source?.title.orEmpty(), occurredAt = now
+        )
+        db.buyerRequirementEvidenceDao().deleteById(id) > 0
+    }
+
+    private fun build(org: String, draft: BuyerRequirementDraft, id: String, createdAt: Long): BuyerRequirementEntity {
+        require(draft.status in BuyerRequirementState.ALL) { "Unsupported buyer requirement status." }
+        val currency = optional(draft.currency, 3, "Currency")?.uppercase()?.also {
+            require(Regex("^[A-Z]{3}$").matches(it)) { "Currency must be a three-letter ISO code." }
+        }
+        require(draft.budgetMinorUnits == null || draft.budgetMinorUnits >= 0) { "Budget cannot be negative." }
+        return BuyerRequirementEntity(
+            id, org, required(draft.title, 200, "Requirement title"), optional(draft.description, 4_000, "Description"),
+            draft.status, optional(draft.destinationCountry, 120, "Destination country"),
+            optional(draft.destinationCity, 120, "Destination city"), optional(draft.requiredByText, 120, "Required-by timing"),
+            currency, draft.budgetMinorUnits, optional(draft.notes, 2_000, "Notes"), createdAt, createdAt
+        )
+    }
+
+    private fun required(value: String, max: Int, label: String): String =
+        value.trim().also { require(it.isNotBlank() && it.length <= max) { "$label is required and must be at most $max characters." } }
+
+    private fun optional(value: String, max: Int, label: String): String =
+        value.trim().also { require(it.length <= max) { "$label is too long." } }.ifBlank { null }
 }
 
 val MIGRATION_9_10=object:Migration(9,10){

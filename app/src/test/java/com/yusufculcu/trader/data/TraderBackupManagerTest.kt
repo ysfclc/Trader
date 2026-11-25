@@ -78,6 +78,9 @@ class TraderBackupManagerTest {
             assertEquals(1, target.supplierOfferEvidenceDao().getAll().size)
             assertEquals(1, target.sourcingReviewDao().getAll().size)
             assertEquals(SourcingReviewStatus.SHORTLISTED, target.sourcingReviewDao().getAll().single().status)
+            assertEquals(1, target.businessActivityDao().getAll().size)
+            assertEquals("Company dossier created", target.businessActivityDao().getAll().single().summary)
+            assertEquals("Acme Industrial", target.businessActivityDao().getAll().single().organizationName)
         } finally {
             source.close()
             target.close()
@@ -142,6 +145,47 @@ class TraderBackupManagerTest {
             val decoded = TraderBackupManager(database).decodeSnapshot(legacy.toString())
             assertTrue(decoded.opportunities.isEmpty())
             assertTrue(decoded.discoverySources.isEmpty())
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun schemaElevenBackupRemainsReadableWithoutBusinessActivityHistory() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            val root = JSONObject().put("formatVersion", 8).put("databaseSchemaVersion", 11)
+            listOf(
+                "problems", "planSteps", "activityEvents", "evidence", "opportunities", "workflowRuns", "workflowSteps", "workflowEvents",
+                "discoverySources", "proofAssets", "discoveryStrategies", "organizationPeople", "buyerRequirements",
+                "buyerRequirementItems", "buyerRequirementEvidence", "supplierOffers", "supplierOfferItems",
+                "supplierOfferEvidence", "sourcingReviews"
+            ).forEach { root.put(it, JSONArray()) }
+            val decoded = TraderBackupManager(database).decodeSnapshot(root.toString())
+            assertTrue(decoded.businessActivityEvents.isEmpty())
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun schemaTwelveBackupRequiresBusinessActivityHistoryArray() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            val root = JSONObject().put("formatVersion", 9).put("databaseSchemaVersion", 12)
+            listOf(
+                "problems", "planSteps", "activityEvents", "evidence", "opportunities", "workflowRuns", "workflowSteps", "workflowEvents",
+                "discoverySources", "proofAssets", "discoveryStrategies", "organizationPeople", "buyerRequirements",
+                "buyerRequirementItems", "buyerRequirementEvidence", "supplierOffers", "supplierOfferItems",
+                "supplierOfferEvidence", "sourcingReviews"
+            ).forEach { root.put(it, JSONArray()) }
+            var rejected = false
+            try {
+                TraderBackupManager(database).decodeSnapshot(root.toString())
+            } catch (failure: IllegalArgumentException) {
+                rejected = failure.message?.contains("business activity history") == true
+            }
+            assertTrue(rejected)
         } finally {
             database.close()
         }
@@ -304,6 +348,13 @@ class TraderBackupManagerTest {
         database.supplierOfferLineItemDao().insert(SupplierOfferLineItemEntity("offer-item-1", "offer-1", "Aluminium housing", "6082-T6", "Aluminium", "150", "pcs", "50", 2200, "EUR", 21, now + 21))
         database.supplierOfferEvidenceDao().insert(SupplierOfferEvidenceEntity("offer-evidence-1", "offer-1", "org-source-1", now + 22))
         database.sourcingReviewDao().insert(SourcingReviewEntity("review-1", "buyer-req-1", "offer-1", SourcingReviewStatus.SHORTLISTED, "Human review", now + 23, now + 24))
+        database.businessActivityDao().insert(
+            BusinessActivityEntity(
+                "business-activity-1", "org-1", "Acme Industrial", BusinessActivityEntityType.ORGANIZATION,
+                "org-1", "Acme Industrial", BusinessActivityAction.CREATED, null, null,
+                "Company dossier created", "", now + 25
+            )
+        )
     }
 
     private fun problem(id: String, title: String) = ProblemEntity(

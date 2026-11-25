@@ -43,6 +43,7 @@ class TraderRepository(private val database: TraderDatabase) {
     fun observeArchivedProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeArchived()
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
+    fun observeBusinessActivity(): Flow<List<BusinessActivityEntity>> = database.businessActivityDao().observeRecent()
     fun observeEvidence(problemId: String): Flow<List<EvidenceEntity>> = database.evidenceDao().observeForProblem(problemId)
     fun observeOpportunity(problemId: String): Flow<OpportunityEntity?> = database.opportunityDao().observeForProblem(problemId)
     fun observeOpportunities(): Flow<List<OpportunityEntity>> = database.opportunityDao().observeAll()

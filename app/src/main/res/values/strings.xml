@@ -400,4 +400,36 @@
     <string name="sourcing_save_offer">Save supplier offer</string>
     <string name="sourcing_review_note">Decision rationale</string>
     <string name="sourcing_review_warning">Shortlisting is an operator decision, not a verified technical qualification or supplier commitment.</string>
+
+    <string name="buyer_status_draft">Draft</string>
+    <string name="buyer_status_open">Open</string>
+    <string name="buyer_status_paused">Paused</string>
+    <string name="buyer_status_fulfilled">Fulfilled</string>
+    <string name="buyer_status_closed">Closed</string>
+    <string name="buyer_status_unknown">Unknown</string>
+    <string name="buyer_status_update_failed">Could not update requirement status.</string>
+    <string name="offer_status_draft">Draft</string>
+    <string name="offer_status_available">Available</string>
+    <string name="offer_status_on_hold">On hold</string>
+    <string name="offer_status_closed">Closed</string>
+    <string name="offer_status_unknown">Unknown</string>
+    <string name="business_activity_title">%1$s · %2$s</string>
+    <string name="business_activity_transition">%1$s → %2$s</string>
+    <string name="business_entity_record">Record</string>
+    <string name="business_entity_organization">Company</string>
+    <string name="business_entity_contact">Contact</string>
+    <string name="business_entity_claim">Company claim</string>
+    <string name="business_entity_buyer_requirement">Buyer requirement</string>
+    <string name="business_entity_supplier_offer">Supplier offer</string>
+    <string name="business_entity_sourcing_review">Sourcing decision</string>
+    <string name="business_action_created">Created</string>
+    <string name="business_action_updated">Updated</string>
+    <string name="business_action_status_changed">Status changed</string>
+    <string name="business_action_source_added">Source added</string>
+    <string name="business_action_evidence_linked">Evidence linked</string>
+    <string name="business_action_claim_reviewed">Claim reviewed</string>
+    <string name="business_action_line_added">Line item added</string>
+    <string name="business_action_decision_recorded">Decision recorded</string>
+    <string name="business_action_deleted">Deleted</string>
+
 </resources>

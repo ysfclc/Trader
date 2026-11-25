@@ -1,5 +1,6 @@
 package com.yusufculcu.trader.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,8 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -418,6 +422,15 @@ private fun OrganizationDossierScreen(
 }
 
 
+private fun buyerRequirementStatusLabel(status: String): Int = when (status) {
+    BuyerRequirementState.DRAFT -> R.string.buyer_status_draft
+    BuyerRequirementState.OPEN -> R.string.buyer_status_open
+    BuyerRequirementState.PAUSED -> R.string.buyer_status_paused
+    BuyerRequirementState.FULFILLED -> R.string.buyer_status_fulfilled
+    BuyerRequirementState.CLOSED -> R.string.buyer_status_closed
+    else -> R.string.buyer_status_unknown
+}
+
 @Composable
 private fun BuyerRequirementCard(
     requirement: BuyerRequirementEntity,
@@ -430,11 +443,31 @@ private fun BuyerRequirementCard(
     val items by repository.observeItems(requirement.id).collectAsState(initial = emptyList())
     val evidence by repository.observeEvidence(requirement.id).collectAsState(initial = emptyList())
     val sourceById = remember(sources) { sources.associateBy { it.id } }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var statusMenu by remember(requirement.id) { mutableStateOf(false) }
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(requirement.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                AssistChip(onClick = {}, enabled = false, label = { Text(requirement.status) })
+                AssistChip(
+                    onClick = { statusMenu = true },
+                    label = { Text(stringResource(buyerRequirementStatusLabel(requirement.status))) }
+                )
+                DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
+                    listOf(BuyerRequirementState.DRAFT, BuyerRequirementState.OPEN, BuyerRequirementState.PAUSED, BuyerRequirementState.FULFILLED, BuyerRequirementState.CLOSED).forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(buyerRequirementStatusLabel(status))) },
+                            onClick = {
+                                statusMenu = false
+                                scope.launch {
+                                    runCatching { repository.setStatus(requirement.id, status) }
+                                        .onFailure { Toast.makeText(context, it.message ?: context.getString(R.string.buyer_status_update_failed), Toast.LENGTH_LONG).show() }
+                                }
+                            }
+                        )
+                    }
+                }
             }
             requirement.description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             val destination = listOfNotNull(requirement.destinationCity, requirement.destinationCountry).joinToString(" · ")

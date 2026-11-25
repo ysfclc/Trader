@@ -55,6 +55,7 @@ import com.yusufculcu.trader.data.SupplierOfferDraft
 import com.yusufculcu.trader.data.SupplierOfferEntity
 import com.yusufculcu.trader.data.SupplierOfferLineItemDraft
 import com.yusufculcu.trader.data.SupplierOfferRepository
+import com.yusufculcu.trader.data.SupplierOfferStatus
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -154,7 +155,13 @@ fun SourcingDeskScreen(
                             review = reviews.firstOrNull { it.supplierOfferId == offer.id },
                             repository = supplierRepository,
                             organizationRepository = organizationRepository,
-                            onReview = { reviewTarget = offer }
+                            onReview = { reviewTarget = offer },
+                            onSetStatus = { status ->
+                                scope.launch {
+                                    runCatching { supplierRepository.setStatus(offer.id, status) }
+                                        .onFailure { Toast.makeText(context, it.message ?: "Could not update offer status.", Toast.LENGTH_LONG).show() }
+                                }
+                            }
                         )
                     }
                 }
@@ -219,6 +226,15 @@ fun SourcingDeskScreen(
 }
 
 @Composable
+private fun supplierOfferStatusLabel(status: String): Int = when (status) {
+    SupplierOfferStatus.DRAFT -> R.string.offer_status_draft
+    SupplierOfferStatus.AVAILABLE -> R.string.offer_status_available
+    SupplierOfferStatus.ON_HOLD -> R.string.offer_status_on_hold
+    SupplierOfferStatus.CLOSED -> R.string.offer_status_closed
+    else -> R.string.offer_status_unknown
+}
+
+@Composable
 private fun SummaryPill(label: String, value: String) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -237,8 +253,10 @@ private fun SupplierOfferComparisonCard(
     review: SourcingReviewEntity?,
     repository: SupplierOfferRepository,
     organizationRepository: OrganizationRepository,
-    onReview: () -> Unit
+    onReview: () -> Unit,
+    onSetStatus: (String) -> Unit
 ) {
+    var statusMenu by remember(offer.id) { mutableStateOf(false) }
     val items by repository.observeItems(offer.id).collectAsState(initial = emptyList())
     val sources by organizationRepository.observeSources(offer.organizationId).collectAsState(initial = emptyList())
     val evidence by repository.observeEvidence(offer.id).collectAsState(initial = emptyList())
@@ -251,7 +269,15 @@ private fun SupplierOfferComparisonCard(
                     Text(supplierName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(offer.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                 }
-                AssistChip(onClick = {}, enabled = false, label = { Text(offer.status) })
+                AssistChip(onClick = { statusMenu = true }, label = { Text(stringResource(supplierOfferStatusLabel(offer.status))) })
+                DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
+                    listOf(SupplierOfferStatus.DRAFT, SupplierOfferStatus.AVAILABLE, SupplierOfferStatus.ON_HOLD, SupplierOfferStatus.CLOSED).forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(supplierOfferStatusLabel(status))) },
+                            onClick = { statusMenu = false; onSetStatus(status) }
+                        )
+                    }
+                }
             }
             offer.description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             val location = listOfNotNull(offer.originCity, offer.originCountry).joinToString(" · ")

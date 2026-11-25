@@ -26,6 +26,7 @@ class TraderViewModel(private val repository: TraderRepository) : ViewModel() {
     val problems = repository.observeProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val archivedProblems = repository.observeArchivedProblems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val activity = repository.observeActivity().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val businessActivity = repository.observeBusinessActivity().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val opportunities = combine(problems, repository.observeOpportunities()) { activeProblems, profiles ->
         profiles.mapNotNull { profile ->
             activeProblems.firstOrNull { it.id == profile.problemId }?.let { problem ->

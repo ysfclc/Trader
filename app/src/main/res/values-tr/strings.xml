@@ -400,4 +400,36 @@
     <string name="sourcing_save_offer">Tedarikçi teklifini kaydet</string>
     <string name="sourcing_review_note">Karar gerekçesi</string>
     <string name="sourcing_review_warning">Kısa listeye alma operatör kararıdır; doğrulanmış teknik yeterlilik veya tedarikçi taahhüdü değildir.</string>
+
+    <string name="buyer_status_draft">Taslak</string>
+    <string name="buyer_status_open">Açık</string>
+    <string name="buyer_status_paused">Duraklatıldı</string>
+    <string name="buyer_status_fulfilled">Karşılandı</string>
+    <string name="buyer_status_closed">Kapalı</string>
+    <string name="buyer_status_unknown">Bilinmiyor</string>
+    <string name="buyer_status_update_failed">Talep durumu güncellenemedi.</string>
+    <string name="offer_status_draft">Taslak</string>
+    <string name="offer_status_available">Kullanılabilir</string>
+    <string name="offer_status_on_hold">Beklemede</string>
+    <string name="offer_status_closed">Kapalı</string>
+    <string name="offer_status_unknown">Bilinmiyor</string>
+    <string name="business_activity_title">%1$s · %2$s</string>
+    <string name="business_activity_transition">%1$s → %2$s</string>
+    <string name="business_entity_record">Kayıt</string>
+    <string name="business_entity_organization">Şirket</string>
+    <string name="business_entity_contact">İletişim</string>
+    <string name="business_entity_claim">Şirket iddiası</string>
+    <string name="business_entity_buyer_requirement">Alıcı talebi</string>
+    <string name="business_entity_supplier_offer">Tedarikçi teklifi</string>
+    <string name="business_entity_sourcing_review">Tedarik kararı</string>
+    <string name="business_action_created">Oluşturuldu</string>
+    <string name="business_action_updated">Güncellendi</string>
+    <string name="business_action_status_changed">Durum değişti</string>
+    <string name="business_action_source_added">Kaynak eklendi</string>
+    <string name="business_action_evidence_linked">Kanıt bağlandı</string>
+    <string name="business_action_claim_reviewed">İddia incelendi</string>
+    <string name="business_action_line_added">Kalem eklendi</string>
+    <string name="business_action_decision_recorded">Karar kaydedildi</string>
+    <string name="business_action_deleted">Silindi</string>
+
 </resources>

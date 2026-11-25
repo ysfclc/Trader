@@ -1,7 +1,7 @@
 # Industrial Sourcing Desk
 
 **Product status:** first end-to-end product; CI-verified, physical-device acceptance open  
-**Build:** Trader 0.8.0-debug / versionCode 8  
+**Build candidate:** Trader 0.9.0-debug / versionCode 9  
 **Pilot:** Türkiye ↔ Poland/EU industrial tooling and machining
 
 ## Job to be done
@@ -46,13 +46,14 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 
 - Native Android Sourcing destination; buyer requests remain managed in company dossiers.
 - Supplier offer header, normalized line items, company-scoped evidence links and persistent human review decisions.
-- Room v10→v11 migration.
-- Encrypted workspace backup snapshot v8 with cross-record validation and FK-safe restore.
+- Room v10→v11 stores supplier offers and sourcing decisions; Room v11→v12 adds append-only business activity history.
+- Encrypted workspace backup snapshot v9 preserves all commercial records and business history; snapshots v1–v8 remain backward-readable.
+- Buyer requirement and supplier offer status controls are editable in the dossier/Sourcing UI; every transition records its previous and new state.
+- Activity combines ProblemCase history with company, contact, claim, requirement, offer and sourcing-decision events. Contact email, phone and name are not copied into event details.
 - English, Polish and Turkish UI.
-- CI run [45574277490](https://github.com/ysfclc/Trader/actions/runs/45574277490) passed clean build, unit tests, lint, package/version assertion and persistent signing-certificate verification.
-- Installable APK artifact [15003891645](https://github.com/ysfclc/Trader/actions/runs/45574277490/artifacts/15003891645).
+- CI verification for build candidate 0.9.0-debug is pending; no new APK is claimed yet.
 - Physical-device install-over-existing, migration/restore and real-world sourcing acceptance are still open.
 
 ## Product completion gate
 
-Do not start another product until a real device journey proves: create buyer dossier/request; create a supplier dossier/offer with source evidence; compare multiple offers; record and revise decisions; share a shortlist; close/reopen the app without losing records; export and restore the encrypted workspace; and install the next signed APK over the existing app without uninstalling or losing data.
+Do not start another product until a real device journey proves: create buyer dossier/request; create a supplier dossier/offer with source evidence; compare multiple offers; record and revise decisions; share a shortlist; record and revise requirement/offer statuses and sourcing decisions; inspect the combined activity history; close/reopen the app without losing records; export and restore the encrypted workspace; and install the next signed APK over the existing app without uninstalling or losing data.

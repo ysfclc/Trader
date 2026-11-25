@@ -83,74 +83,191 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
     fun observeReviews(requirementId: String) = db.sourcingReviewDao().observeForRequirement(requirementId)
     fun observeRequirements() = db.buyerRequirementDao().observeAll()
 
-    suspend fun create(organizationId: String, draft: SupplierOfferDraft, item: SupplierOfferLineItemDraft, sourceIds: List<String> = emptyList()): SupplierOfferEntity = db.withTransaction {
-        require(db.organizationDao().getById(organizationId) != null) { "Supplier company dossier does not exist." }
+    suspend fun create(
+        organizationId: String,
+        draft: SupplierOfferDraft,
+        item: SupplierOfferLineItemDraft,
+        sourceIds: List<String> = emptyList()
+    ): SupplierOfferEntity = db.withTransaction {
+        val organization = db.organizationDao().getById(organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier does not exist.")
         val now = System.currentTimeMillis()
         val offer = buildOffer(organizationId, draft, UUID.randomUUID().toString(), now)
         db.supplierOfferDao().insert(offer)
-        db.supplierOfferLineItemDao().insert(buildItem(offer.id, item, now))
+        val firstItem = buildItem(offer.id, item, now)
+        db.supplierOfferLineItemDao().insert(firstItem)
         sourceIds.distinct().forEach { sourceId ->
-            val source = db.organizationSourceDao().getById(sourceId) ?: throw IllegalArgumentException("Save supplier evidence to the company dossier first.")
-            require(source.organizationId == organizationId) { "Supplier evidence must belong to the supplier company dossier." }
+            val source = db.organizationSourceDao().getById(sourceId)
+                ?: throw IllegalArgumentException("Save supplier evidence to the company dossier first.")
+            require(source.organizationId == organizationId) {
+                "Supplier evidence must belong to the supplier company dossier."
+            }
             db.supplierOfferEvidenceDao().insert(SupplierOfferEvidenceEntity(UUID.randomUUID().toString(), offer.id, sourceId, now))
         }
         db.organizationDao().touch(organizationId, now)
+        db.appendBusinessActivity(
+            organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.CREATED, "Supplier offer created",
+            toStatus = offer.status, details = "Initial line item: ${firstItem.productName}",
+            occurredAt = now
+        )
         offer
     }
 
     suspend fun addLineItem(offerId: String, draft: SupplierOfferLineItemDraft): SupplierOfferLineItemEntity = db.withTransaction {
-        val offer = db.supplierOfferDao().getById(offerId) ?: throw IllegalArgumentException("Supplier offer no longer exists.")
-        val item = buildItem(offerId, draft, System.currentTimeMillis())
+        val offer = db.supplierOfferDao().getById(offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val organization = db.organizationDao().getById(offer.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val item = buildItem(offerId, draft, now)
         db.supplierOfferLineItemDao().insert(item)
-        db.organizationDao().touch(offer.organizationId, item.createdAt)
+        db.organizationDao().touch(offer.organizationId, now)
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.LINE_ADDED, "Supplier offer line item added",
+            details = item.productName, occurredAt = now
+        )
         item
     }
 
     suspend fun linkEvidence(offerId: String, sourceId: String): SupplierOfferEvidenceEntity = db.withTransaction {
-        val offer = db.supplierOfferDao().getById(offerId) ?: throw IllegalArgumentException("Supplier offer no longer exists.")
-        val source = db.organizationSourceDao().getById(sourceId) ?: throw IllegalArgumentException("Save supplier evidence to the company dossier first.")
-        require(source.organizationId == offer.organizationId) { "Supplier evidence must belong to the supplier company dossier." }
-        db.supplierOfferEvidenceDao().getAll().firstOrNull { it.offerId == offerId && it.sourceId == sourceId }
-            ?: SupplierOfferEvidenceEntity(UUID.randomUUID().toString(), offerId, sourceId, System.currentTimeMillis()).also { db.supplierOfferEvidenceDao().insert(it) }
+        val offer = db.supplierOfferDao().getById(offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val organization = db.organizationDao().getById(offer.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        val source = db.organizationSourceDao().getById(sourceId)
+            ?: throw IllegalArgumentException("Save supplier evidence to the company dossier first.")
+        require(source.organizationId == offer.organizationId) {
+            "Supplier evidence must belong to the supplier company dossier."
+        }
+        val existing = db.supplierOfferEvidenceDao().getAll().firstOrNull {
+            it.offerId == offerId && it.sourceId == sourceId
+        }
+        if (existing != null) return@withTransaction existing
+        val now = System.currentTimeMillis()
+        val link = SupplierOfferEvidenceEntity(UUID.randomUUID().toString(), offerId, sourceId, now)
+        db.supplierOfferEvidenceDao().insert(link)
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.EVIDENCE_LINKED, "Supplier offer evidence linked",
+            details = source.title, occurredAt = now
+        )
+        link
+    }
+
+    suspend fun setStatus(offerId: String, status: String): Boolean = db.withTransaction {
+        require(status in SupplierOfferStatus.ALL) { "Unsupported supplier offer status." }
+        val offer = db.supplierOfferDao().getById(offerId) ?: return@withTransaction false
+        if (offer.status == status) return@withTransaction true
+        val organization = db.organizationDao().getById(offer.organizationId)
+            ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.supplierOfferDao().update(offer.copy(status = status, updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.STATUS_CHANGED, "Supplier offer status changed",
+            fromStatus = offer.status, toStatus = status, occurredAt = now
+        )
+        true
     }
 
     suspend fun review(requirementId: String, offerId: String, status: String, rationale: String = ""): SourcingReviewEntity = db.withTransaction {
         require(status in SourcingReviewStatus.ALL) { "Unsupported sourcing review decision." }
-        require(db.buyerRequirementDao().getById(requirementId) != null) { "Buyer requirement no longer exists." }
-        require(db.supplierOfferDao().getById(offerId) != null) { "Supplier offer no longer exists." }
-        require(rationale.length <= 2000) { "Review note is too long." }
+        val requirement = db.buyerRequirementDao().getById(requirementId)
+            ?: throw IllegalArgumentException("Buyer requirement no longer exists.")
+        val offer = db.supplierOfferDao().getById(offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val buyerOrganization = db.organizationDao().getById(requirement.organizationId)
+            ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
+        val supplierOrganization = db.organizationDao().getById(offer.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        require(rationale.length <= 2_000) { "Review note is too long." }
+        val cleanRationale = rationale.trim().ifBlank { null }
         val now = System.currentTimeMillis()
         val old = db.sourcingReviewDao().getPair(requirementId, offerId)
-        val row = if (old == null) SourcingReviewEntity(UUID.randomUUID().toString(), requirementId, offerId, status, rationale.trim().ifBlank { null }, now, now)
-            else old.copy(status = status, rationale = rationale.trim().ifBlank { null }, updatedAt = now)
-        if (old == null) db.sourcingReviewDao().insert(row) else db.sourcingReviewDao().update(row)
+        if (old?.status == status && old.rationale == cleanRationale) return@withTransaction old
+        val row = if (old == null) {
+            SourcingReviewEntity(UUID.randomUUID().toString(), requirementId, offerId, status, cleanRationale, now, now)
+                .also { db.sourcingReviewDao().insert(it) }
+        } else {
+            old.copy(status = status, rationale = cleanRationale, updatedAt = now)
+                .also { db.sourcingReviewDao().update(it) }
+        }
+        val details = buildString {
+            append("Supplier: ").append(supplierOrganization.canonicalName)
+            if (!cleanRationale.isNullOrBlank()) append(" · ").append(cleanRationale)
+        }.take(2_000)
+        db.appendBusinessActivity(
+            buyerOrganization.id, buyerOrganization.canonicalName, BusinessActivityEntityType.SOURCING_REVIEW,
+            row.id, "${requirement.title} ↔ ${offer.title}".take(300), BusinessActivityAction.DECISION_RECORDED,
+            "Supplier review decision recorded", fromStatus = old?.status, toStatus = status,
+            details = details, occurredAt = now
+        )
         row
     }
 
-    suspend fun deleteOffer(offerId: String) = db.supplierOfferDao().deleteById(offerId) > 0
-
-    private fun buildOffer(org: String, d: SupplierOfferDraft, id: String, now: Long): SupplierOfferEntity {
-        require(d.status in SupplierOfferStatus.ALL) { "Unsupported supplier offer status." }
-        val currency = optional(d.currency, 3, "Currency")?.uppercase()?.also { require(Regex("^[A-Z]{3}$").matches(it)) { "Currency must be a three-letter ISO code." } }
-        return SupplierOfferEntity(id, org, required(d.title, 200, "Offer title"), optional(d.description, 4000, "Description"), d.status, currency, optional(d.originCountry, 120, "Origin country"), optional(d.originCity, 120, "Origin city"), optional(d.notes, 2000, "Notes"), now, now)
+    suspend fun deleteOffer(offerId: String): Boolean = db.withTransaction {
+        val offer = db.supplierOfferDao().getById(offerId) ?: return@withTransaction false
+        val organization = db.organizationDao().getById(offer.organizationId) ?: return@withTransaction false
+        val now = System.currentTimeMillis()
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.DELETED, "Supplier offer deleted",
+            fromStatus = offer.status, occurredAt = now
+        )
+        db.supplierOfferDao().deleteById(offerId) > 0
     }
 
-    private fun buildItem(offerId: String, d: SupplierOfferLineItemDraft, now: Long): SupplierOfferLineItemEntity {
-        val available = quantity(d.quantityAvailable, "Available quantity")
-        val moq = quantity(d.minimumOrderQuantity, "Minimum order quantity")
-        require(d.unitPriceMinorUnits == null || d.unitPriceMinorUnits >= 0) { "Unit price cannot be negative." }
-        val currency = optional(d.currency, 3, "Currency")?.uppercase()?.also { require(Regex("^[A-Z]{3}$").matches(it)) { "Currency must be a three-letter ISO code." } }
-        require(d.unitPriceMinorUnits == null || currency != null) { "A currency is required when a unit price is provided." }
-        require(d.leadTimeDays == null || d.leadTimeDays in 0..3650) { "Lead time must be between 0 and 3650 days." }
-        return SupplierOfferLineItemEntity(UUID.randomUUID().toString(), offerId, required(d.productName, 200, "Product or service"), optional(d.specification, 2000, "Specification"), optional(d.material, 120, "Material"), available, optional(d.quantityUnit, 40, "Quantity unit"), moq, d.unitPriceMinorUnits, currency, d.leadTimeDays, now)
+    private fun buildOffer(org: String, draft: SupplierOfferDraft, id: String, now: Long): SupplierOfferEntity {
+        require(draft.status in SupplierOfferStatus.ALL) { "Unsupported supplier offer status." }
+        val currency = optional(draft.currency, 3, "Currency")?.uppercase()?.also {
+            require(Regex("^[A-Z]{3}$").matches(it)) { "Currency must be a three-letter ISO code." }
+        }
+        return SupplierOfferEntity(
+            id, org, required(draft.title, 200, "Offer title"), optional(draft.description, 4_000, "Description"),
+            draft.status, currency, optional(draft.originCountry, 120, "Origin country"),
+            optional(draft.originCity, 120, "Origin city"), optional(draft.notes, 2_000, "Notes"), now, now
+        )
+    }
+
+    private fun buildItem(offerId: String, draft: SupplierOfferLineItemDraft, now: Long): SupplierOfferLineItemEntity {
+        val available = quantity(draft.quantityAvailable, "Available quantity")
+        val moq = quantity(draft.minimumOrderQuantity, "Minimum order quantity")
+        require(draft.unitPriceMinorUnits == null || draft.unitPriceMinorUnits >= 0) {
+            "Unit price cannot be negative."
+        }
+        val currency = optional(draft.currency, 3, "Currency")?.uppercase()?.also {
+            require(Regex("^[A-Z]{3}$").matches(it)) { "Currency must be a three-letter ISO code." }
+        }
+        require(draft.unitPriceMinorUnits == null || currency != null) {
+            "A currency is required when a unit price is provided."
+        }
+        require(draft.leadTimeDays == null || draft.leadTimeDays in 0..3_650) {
+            "Lead time must be between 0 and 3650 days."
+        }
+        return SupplierOfferLineItemEntity(
+            UUID.randomUUID().toString(), offerId, required(draft.productName, 200, "Product or service"),
+            optional(draft.specification, 2_000, "Specification"), optional(draft.material, 120, "Material"),
+            available, optional(draft.quantityUnit, 40, "Quantity unit"), moq, draft.unitPriceMinorUnits,
+            currency, draft.leadTimeDays, now
+        )
     }
 
     private fun quantity(raw: String, label: String): String? = optional(raw, 40, label)?.also {
-        val value = runCatching { BigDecimal(it) }.getOrElse { throw IllegalArgumentException("$label must be a positive decimal number.") }
-        require(value > BigDecimal.ZERO && value.scale() <= 6 && value.precision() <= 18) { "$label must be a positive decimal with at most six decimal places." }
+        val value = runCatching { BigDecimal(it) }
+            .getOrElse { throw IllegalArgumentException("$label must be a positive decimal number.") }
+        require(value > BigDecimal.ZERO && value.scale() <= 6 && value.precision() <= 18) {
+            "$label must be a positive decimal with at most six decimal places."
+        }
     }
-    private fun required(v: String, max: Int, label: String) = v.trim().also { require(it.isNotBlank() && it.length <= max) { "$label is required and must be at most $max characters." } }
-    private fun optional(v: String, max: Int, label: String) = v.trim().also { require(it.length <= max) { "$label is too long." } }.ifBlank { null }
+
+    private fun required(value: String, max: Int, label: String): String =
+        value.trim().also { require(it.isNotBlank() && it.length <= max) { "$label is required and must be at most $max characters." } }
+
+    private fun optional(value: String, max: Int, label: String): String =
+        value.trim().also { require(it.length <= max) { "$label is too long." } }.ifBlank { null }
 }
 
 /** Explainable comparisons only. Missing or semantically different free text is UNKNOWN, never a pass. */

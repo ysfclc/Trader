@@ -680,9 +680,10 @@ interface SourceRunDao {
         SupplierOfferEntity::class,
         SupplierOfferLineItemEntity::class,
         SupplierOfferEvidenceEntity::class,
-        SourcingReviewEntity::class
+        SourcingReviewEntity::class,
+        BusinessActivityEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -710,6 +711,7 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun supplierOfferLineItemDao(): SupplierOfferLineItemDao
     abstract fun supplierOfferEvidenceDao(): SupplierOfferEvidenceDao
     abstract fun sourcingReviewDao(): SourcingReviewDao
+    abstract fun businessActivityDao(): BusinessActivityDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {

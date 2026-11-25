@@ -12,6 +12,7 @@ import com.yusufculcu.trader.data.MIGRATION_7_8
 import com.yusufculcu.trader.data.MIGRATION_8_9
 import com.yusufculcu.trader.data.MIGRATION_9_10
 import com.yusufculcu.trader.data.MIGRATION_10_11
+import com.yusufculcu.trader.data.MIGRATION_11_12
 import com.yusufculcu.trader.data.SupplierOfferRepository
 import com.yusufculcu.trader.data.TraderDatabase
 import com.yusufculcu.trader.data.TraderRepository
@@ -26,7 +27,7 @@ import com.yusufculcu.trader.discovery.DiscoverySourceStore
 class TraderApplication : Application() {
     val database: TraderDatabase by lazy {
         Room.databaseBuilder(this, TraderDatabase::class.java, "trader.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
             .build()
     }
     val repository: TraderRepository by lazy { TraderRepository(database) }
