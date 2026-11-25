@@ -675,7 +675,7 @@ interface SourceRunDao {
         OrganizationClaimEntity::class,
         OrganizationPersonEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {

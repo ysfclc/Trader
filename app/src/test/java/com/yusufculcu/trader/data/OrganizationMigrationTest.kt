@@ -60,3 +60,23 @@ class OrganizationMigrationTest {
         }
     }
 }
+
+
+    @Test
+    fun migration9To10CreatesBuyerRequirementTablesAndCascades() {
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context).name(null).callback(object : SupportSQLiteOpenHelper.Callback(9) { override fun onCreate(db: SupportSQLiteDatabase) = Unit; override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit }).build())
+        try {
+            val db=helper.writableDatabase; db.setForeignKeyConstraintsEnabled(true)
+            MIGRATION_7_8.migrate(db); MIGRATION_8_9.migrate(db); MIGRATION_9_10.migrate(db)
+            db.execSQL("INSERT INTO organizations (id, canonicalName, websiteUrl, domain, country, city, industry, notes, createdAt, updatedAt) VALUES ('org', 'Acme', NULL, NULL, NULL, NULL, NULL, NULL, 1, 2)")
+            db.execSQL("INSERT INTO organization_sources (id, organizationId, sourceKind, title, url, excerpt, capturedAt) VALUES ('src', 'org', 'MANUAL_REFERENCE', 'RFQ', 'https://acme.example/rfq', '', 3)")
+            db.execSQL("INSERT INTO buyer_requirements (id, organizationId, title, description, status, destinationCountry, destinationCity, requiredByText, currency, budgetMinorUnits, notes, createdAt, updatedAt) VALUES ('req', 'org', 'CNC parts', NULL, 'OPEN', 'Poland', 'Kraków', NULL, 'EUR', NULL, NULL, 4, 4)")
+            db.execSQL("INSERT INTO buyer_requirement_items (id, requirementId, productName, specification, quantity, unit, targetUnitPriceMinorUnits, createdAt) VALUES ('item', 'req', 'Housing', 'Aluminium 6082', '12.5', 'pcs', NULL, 5)")
+            db.execSQL("INSERT INTO buyer_requirement_evidence (id, requirementId, sourceId, linkedAt) VALUES ('link', 'req', 'src', 6)")
+            assertEquals(1, scalar(db,"SELECT COUNT(*) FROM buyer_requirement_items"))
+            db.execSQL("DELETE FROM organizations WHERE id='org'")
+            assertEquals(0,scalar(db,"SELECT COUNT(*) FROM buyer_requirements"))
+            assertEquals(0,scalar(db,"SELECT COUNT(*) FROM buyer_requirement_items"))
+            assertEquals(0,scalar(db,"SELECT COUNT(*) FROM buyer_requirement_evidence"))
+        } finally { helper.close() }
+    }
