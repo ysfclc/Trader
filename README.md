@@ -42,8 +42,7 @@ The intended longer-term navigation is Discover / Work / Live / Studio. That is 
 See [the state ledger](docs/STATE.md) for the authoritative current build and task status.
 
 - Android package: `com.yusufculcu.trader.debug`; persistent Trader development signing is configured. Keep the package and signing certificate unchanged and increment versionCode for every installable update.
-- Latest verified installable baseline: `0.10.0-debug`, versionCode 10, CI run [45595844335](https://github.com/ysfclc/Trader/actions/runs/45595844335), artifact [15013068288](https://github.com/ysfclc/Trader/actions/runs/45595844335/artifacts/15013068288).
-- Current candidate: `0.11.0-debug`, versionCode 11. Supplier-offer editing and evidence-link reconciliation are implemented in the candidate, but its CI/signature verification is pending. Do not call it a verified installable APK until the state ledger records the passing run and artifact.
+- Latest verified installable build: `0.11.0-debug`, versionCode 11, CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208), artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). The run passed 157 unit tests, lint, APK assembly, exact package/version checks and persistent-certificate equality. Supplier-offer editing and evidence-link reconciliation are included.
 - Room schema v12 and encrypted backup snapshot v9 are implemented. Physical-device migration, export/restore and install-over-existing acceptance remain open.
 - Discover is a bounded, user-triggered search/feed workflow, not continuous monitoring. Live-source and device acceptance remain open.
 - Workflow state and approvals are persisted, but execution is still manually driven. There is no durable WorkManager capability executor.
@@ -52,11 +51,10 @@ See [the state ledger](docs/STATE.md) for the authoritative current build and ta
 
 ## The only active delivery sequence
 
-1. Verify the `0.11.0-debug` candidate through the full CI build, tests, lint, package/version and persistent-certificate checks.
-2. On the Redmi Note 12 Pro 5G, protect/export existing data, install the signed update over the existing app, and verify the Room migration without uninstalling or clearing storage.
-3. Complete the real sourcing journey: buyer dossier and requirement; supplier dossier, offer and source evidence; multiple-offer comparison; decision and revision; shortlist share; edit headers, line items and evidence links; inspect Activity; close/reopen; encrypted export and restore.
-4. Fix every observed regression and repeat the affected acceptance checks. Add recoverable deletion for important sourcing records before expanding the commercial data model.
-5. Only after this gate passes, integrate discovery and optional local AI into the same sourcing journey. AI may propose extracted fields and questions; it must not replace evidence review or deterministic comparison.
+1. On the Redmi Note 12 Pro 5G, export a fresh encrypted workspace backup before installation, then install `0.11.0-debug` over the existing app and verify the Room migration without uninstalling or clearing storage. If the installed APK predates the persistent-signing transition, stop rather than force an update; export and recover data before any uninstall.
+2. Complete the real sourcing journey: buyer dossier and requirement; supplier dossier, offer and source evidence; multiple-offer comparison; decision and revision; shortlist share; edit headers, line items and evidence links; inspect Activity; close/reopen; encrypted export and restore.
+3. Fix every observed regression and repeat the affected acceptance checks. Add recoverable deletion for important sourcing records before expanding the commercial data model.
+4. Only after this gate passes, integrate discovery and optional local AI into the same sourcing journey. AI may propose extracted fields and questions; it must not replace evidence review or deterministic comparison.
 
 Do not start Product/SKU, Match, Quote, Deal, social connectors, autonomous outreach or another product specialization in parallel with this acceptance work.
 
