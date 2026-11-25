@@ -59,7 +59,25 @@ jobs:
         env:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
           TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
-        run: ./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+        run: ./gradlew --no-daemon --write-verification-metadata sha256 clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+      - name: Scan resolved Gradle dependencies with OSV
+        run: |
+          test -s gradle/verification-metadata.xml
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" ghcr.io/google/osv-scanner:v2.7.1 \
+            scan source \
+            --lockfile=/src/gradle/verification-metadata.xml \
+            --format=json \
+            --output-file=/src/osv-scan-results.json
+      - name: Upload dependency security audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-dependency-security-audit
+          path: |
+            gradle/verification-metadata.xml
+            osv-scan-results.json
+          if-no-files-found: warn
+          retention-days: 30
       - name: Summarize unit-test code coverage
         run: python3 scripts/summarize_coverage.py --report app/build/reports/coverage/test/debug/report.xml --baseline docs/coverage-baseline.json --summary-file "$GITHUB_STEP_SUMMARY"
       - name: Upload unit-test coverage report
