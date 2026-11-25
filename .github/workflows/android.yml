@@ -59,10 +59,10 @@ jobs:
         env:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
           TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
-        run: ./gradlew --no-daemon --write-verification-metadata sha256 clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+        run: ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug cyclonedxBom
       - name: Capture resolved dependency paths for vulnerability triage
         run: |
-          ./gradlew --no-daemon :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
+          ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
       - name: Upload resolved dependency graph
         if: always()
         uses: actions/upload-artifact@v4
@@ -73,10 +73,10 @@ jobs:
           retention-days: 30
       - name: Scan resolved Gradle dependencies with OSV
         run: |
-          test -s gradle/verification-metadata.xml
+          test -s build/reports/cyclonedx/bom.json
           docker run --rm -v "$GITHUB_WORKSPACE:/src" ghcr.io/google/osv-scanner:v2.7.1 \
             scan source \
-            -L /src/gradle/verification-metadata.xml \
+            --sbom=/src/build/reports/cyclonedx/bom.json \
             --format=json \
             --output-file=/src/osv-scan-results.json
       - name: Upload dependency security audit evidence
@@ -85,7 +85,9 @@ jobs:
         with:
           name: trader-dependency-security-audit
           path: |
-            gradle/verification-metadata.xml
+            build/reports/cyclonedx/
+            build/reports/cyclonedx-direct/
+            app/build/reports/cyclonedx-direct/
             osv-scan-results.json
           if-no-files-found: warn
           retention-days: 30

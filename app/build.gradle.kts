@@ -5,6 +5,22 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// Keep AGP internal, KSP, test and runtime configurations on patched transitive versions.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        when {
+            requested.group == "io.netty" -> useVersion("4.1.137.Final")
+            requested.group == "com.google.guava" && requested.name == "guava" -> useVersion("33.7.2-jre")
+            requested.group == "com.google.protobuf" && requested.name in setOf("protobuf-java", "protobuf-java-util", "protobuf-kotlin") -> useVersion("3.25.5")
+            requested.group == "org.bouncycastle" && requested.name in setOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on") -> useVersion("1.86.2")
+            requested.group == "org.apache.commons" && requested.name == "commons-compress" -> useVersion("1.26.0")
+            requested.group == "org.bitbucket.b_c" && requested.name == "jose4j" -> useVersion("0.9.6")
+            requested.group == "org.jdom" && requested.name == "jdom2" -> useVersion("2.0.6.1")
+            requested.group == "org.apache.httpcomponents" && requested.name == "httpclient" -> useVersion("4.5.14")
+        }
+    }
+}
+
 val stableDebugKeystore = System.getenv("TRADER_KEYSTORE_PATH")
     ?.takeIf { it.isNotBlank() }
     ?.let { file(it) }
@@ -87,7 +103,7 @@ dependencies {
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.0")
     testImplementation("junit:junit:4.13.2")
     // Supply a real JVM org.json implementation; Android's mockable android.jar stubs throw from JSONObject.keys() in local unit tests.
-    testImplementation("org.json:json:20240303")
+    testImplementation("org.json:json:20260814")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("org.robolectric:robolectric:4.14.1")
