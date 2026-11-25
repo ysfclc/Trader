@@ -186,4 +186,15 @@ class SupplierOfferRepositoryTest {
         assertTrue(actions.contains(BusinessActivityAction.RESTORED))
     }
 
+
+    @Test fun companyDeletionCannotCascadeSupplierOffers() = runBlocking {
+        val supplier = organizations.createOrganization(OrganizationDraft("Protected supplier"))
+        val offer = suppliers.create(supplier.id, SupplierOfferDraft("Protected offer"), SupplierOfferLineItemDraft("Part"))
+        var rejected = false
+        try { organizations.deleteOrganization(supplier.id) } catch (_: IllegalArgumentException) { rejected = true }
+        assertTrue(rejected)
+        assertEquals(offer.id, suppliers.observeOffers().first().single().id)
+        assertEquals(1, suppliers.observeItems(offer.id).first().size)
+    }
+
 }

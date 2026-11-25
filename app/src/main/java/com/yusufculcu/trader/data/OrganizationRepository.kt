@@ -257,6 +257,11 @@ class OrganizationRepository(private val database: TraderDatabase) {
     }
     suspend fun deleteOrganization(id: String): Boolean = database.withTransaction {
         val organization = database.organizationDao().getById(id) ?: return@withTransaction false
+        val hasBuyerRequirements = database.buyerRequirementDao().getAll().any { it.organizationId == id }
+        val hasSupplierOffers = database.supplierOfferDao().getAll().any { it.organizationId == id }
+        require(!hasBuyerRequirements && !hasSupplierOffers) {
+            "Cannot delete this company dossier while it has buyer requirements or supplier offers; this prevents cascading loss of recoverable sourcing records."
+        }
         val now = System.currentTimeMillis()
         database.appendBusinessActivity(
             organization.id, organization.canonicalName, BusinessActivityEntityType.ORGANIZATION, organization.id,
