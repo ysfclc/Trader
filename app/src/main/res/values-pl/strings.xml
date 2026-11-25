@@ -323,4 +323,26 @@
     <string name="company_source_manual">Zapisane źródło</string>
     <string name="company_claim_source">Źródło: %1$s</string>
 
+    <string name="buyer_requirements">WYMAGANIA KUPUJĄCEGO</string>
+    <string name="buyer_add_requirement">Dodaj wymaganie</string>
+    <string name="buyer_no_requirements">Brak zapisanych ustrukturyzowanych wymagań kupującego.</string>
+    <string name="buyer_title">Tytuł wymagania</string>
+    <string name="buyer_description">Opis / kontekst</string>
+    <string name="buyer_country">Kraj dostawy</string>
+    <string name="buyer_city">Miasto dostawy</string>
+    <string name="buyer_required_by_label">Wymagany termin (data lub opis)</string>
+    <string name="buyer_currency">Waluta (kod ISO)</string>
+    <string name="buyer_destination">Dostawa: %1$s</string>
+    <string name="buyer_required_by">Wymagany termin: %1$s</string>
+    <string name="buyer_no_items">Brak pozycji.</string>
+    <string name="buyer_add_line_item">Dodaj pozycję</string>
+    <string name="buyer_product_name">Produkt lub usługa</string>
+    <string name="buyer_specification">Specyfikacja / tolerancja</string>
+    <string name="buyer_quantity">Ilość (liczba dziesiętna)</string>
+    <string name="buyer_unit">Jednostka (szt., kg itd.)</string>
+    <string name="buyer_target_price_minor">Docelowa cena jednostkowa (jednostki mniejsze)</string>
+    <string name="buyer_evidence">Powiązane dowody</string>
+    <string name="buyer_link_evidence">Połącz zapisaną stronę</string>
+    <string name="buyer_no_saved_sources">Najpierw zapisz źródło w dossier tej firmy.</string>
+    <string name="buyer_delete">Usuń wymaganie</string>
 </resources>

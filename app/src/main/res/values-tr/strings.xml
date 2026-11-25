@@ -323,4 +323,26 @@
     <string name="company_source_manual">Kaydedilmiş referans</string>
     <string name="company_claim_source">Kaynak: %1$s</string>
 
+    <string name="buyer_requirements">ALICI TALEPLERİ</string>
+    <string name="buyer_add_requirement">Talep ekle</string>
+    <string name="buyer_no_requirements">Henüz yapılandırılmış alıcı talebi kaydedilmedi.</string>
+    <string name="buyer_title">Talep başlığı</string>
+    <string name="buyer_description">Açıklama / bağlam</string>
+    <string name="buyer_country">Teslimat ülkesi</string>
+    <string name="buyer_city">Teslimat şehri</string>
+    <string name="buyer_required_by_label">Gerekli tarih (tarih veya açıklama)</string>
+    <string name="buyer_currency">Para birimi (ISO kodu)</string>
+    <string name="buyer_destination">Teslimat: %1$s</string>
+    <string name="buyer_required_by">Gerekli tarih: %1$s</string>
+    <string name="buyer_no_items">Henüz kalem yok.</string>
+    <string name="buyer_add_line_item">Kalem ekle</string>
+    <string name="buyer_product_name">Ürün veya hizmet</string>
+    <string name="buyer_specification">Teknik özellik / tolerans</string>
+    <string name="buyer_quantity">Miktar (ondalık)</string>
+    <string name="buyer_unit">Birim (adet, kg vb.)</string>
+    <string name="buyer_target_price_minor">Hedef birim fiyat (alt para birimi)</string>
+    <string name="buyer_evidence">Bağlı kanıtlar</string>
+    <string name="buyer_link_evidence">Kayıtlı kaynağı bağla</string>
+    <string name="buyer_no_saved_sources">Kanıt bağlamak için önce şirket dosyasına kaynak kaydedin.</string>
+    <string name="buyer_delete">Talebi sil</string>
 </resources>

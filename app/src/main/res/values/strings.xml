@@ -323,4 +323,26 @@
     <string name="company_source_manual">Saved reference</string>
     <string name="company_claim_source">Source: %1$s</string>
 
+    <string name="buyer_requirements">BUYER REQUIREMENTS</string>
+    <string name="buyer_add_requirement">Add requirement</string>
+    <string name="buyer_no_requirements">No structured buyer requirements recorded yet.</string>
+    <string name="buyer_title">Requirement title</string>
+    <string name="buyer_description">Description / context</string>
+    <string name="buyer_country">Destination country</string>
+    <string name="buyer_city">Destination city</string>
+    <string name="buyer_required_by_label">Required by (date or timing)</string>
+    <string name="buyer_currency">Currency (ISO code)</string>
+    <string name="buyer_destination">Destination: %1$s</string>
+    <string name="buyer_required_by">Required by: %1$s</string>
+    <string name="buyer_no_items">No line items yet.</string>
+    <string name="buyer_add_line_item">Add line item</string>
+    <string name="buyer_product_name">Product or service</string>
+    <string name="buyer_specification">Specification / tolerance</string>
+    <string name="buyer_quantity">Quantity (decimal)</string>
+    <string name="buyer_unit">Unit (pcs, kg, etc.)</string>
+    <string name="buyer_target_price_minor">Target unit price (minor units)</string>
+    <string name="buyer_evidence">Linked evidence</string>
+    <string name="buyer_link_evidence">Link saved source</string>
+    <string name="buyer_no_saved_sources">Save a source in this company dossier before linking evidence.</string>
+    <string name="buyer_delete">Delete requirement</string>
 </resources>

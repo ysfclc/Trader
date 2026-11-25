@@ -22,7 +22,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
 - Current branch: `feature/discovery-run-persistence`; latest app implementation commit: [3694176](https://github.com/ysfclc/Trader/commit/3694176c43faf1f16060c5967d0a897fa16741b9).
-- Current package/version target: `com.yusufculcu.trader.debug`, versionCode 6, versionName `0.6.0-debug`; Build and unit tests passed in CI run 45559987695; APK release gate was blocked by a stale workflow version assertion and is being corrected.
+- Current package/version target: `com.yusufculcu.trader.debug`, versionCode 7, versionName `0.7.0-debug`; Build and unit tests passed in CI run 45559987695; APK release gate was blocked by a stale workflow version assertion and is being corrected.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
@@ -64,3 +64,9 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Contact validation rejects malformed email and non-LinkedIn profile URLs. Similar names are not merged; aliases and reversible identity review remain future work.
 - Implementation committed in [1393cd8](https://github.com/ysfclc/Trader/commit/1393cd89946b66039a872c0784975393fb95f547); CI verification and APK artifact pending. Backup round-trip coverage and distinct save/delete feedback are included in the follow-up commit. No physical-device acceptance is claimed.
 \n\n## Buyer requirement storage increment (2026-11-25)\n\n- Added company-scoped BuyerRequirement records with lifecycle state, destination, required-by text, optional currency/budget and operator notes.\n- Added normalized line items. Quantity is retained as validated decimal text to avoid binary floating-point loss; target prices are integer minor units.\n- Added evidence links constrained to saved sources on the same company dossier.\n- Added Room v9→v10 migration and encrypted backup snapshot v7 support. Dossier UI and acceptance tests remain next.\n
+
+## Buyer requirement dossier UI (2026-11-25)
+
+- Added an EN/PL/TR buyer-requirements section inside each company dossier.
+- Operators can create a requirement, add structured product/service line items and link saved dossier sources as evidence. Linking a source does not auto-verify a claim.
+- Deleting a requirement cascades its line items and evidence links. Physical-device UX acceptance remains open.
