@@ -62,7 +62,10 @@ class BuyerRequirementRepositoryTest {
   assertEquals(item.id,correctedItem.id); assertEquals(item.createdAt,correctedItem.createdAt)
   assertEquals("Revised part",correctedItem.productName); assertEquals("12.5",correctedItem.quantity)
   val events=db.businessActivityDao().getAll()
-  assertTrue(events.any{it.entityId==req.id&&it.eventType==BusinessActivityAction.UPDATED&&it.entityLabel=="Corrected requirement"})
+  val headerEvent = events.single { it.entityId == req.id && it.entityLabel == "Corrected requirement" }
+    assertEquals(BusinessActivityAction.STATUS_CHANGED, headerEvent.eventType)
+    assertEquals(BuyerRequirementState.OPEN, headerEvent.fromStatus)
+    assertEquals(BuyerRequirementState.PAUSED, headerEvent.toStatus)
   assertTrue(events.any{it.entityId==req.id&&it.eventType==BusinessActivityAction.LINE_UPDATED&&it.details=="Revised part"})
   var rejected=false
   try{repo.updateLineItem(item.id,BuyerRequirementLineItemDraft("Bad part",quantity="-1"))}catch(_:IllegalArgumentException){rejected=true}
