@@ -264,7 +264,7 @@ class TraderBackupManager(
             organizations = if (backupSchemaVersion >= 8 && root.has("organizations")) decodeArray(root, "organizations", ::decodeOrganization) else emptyList(),
             organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
             organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList(),
-            organizationPeople = if (backupSchemaVersion >= 9 && root.has("organizationPeople")) decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) else emptyList()
+            organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList()
         )
     }
 
