@@ -64,7 +64,7 @@ jobs:
         run: |
           ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
       - name: Upload resolved dependency graph
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: trader-resolved-dependency-graph

@@ -6,7 +6,7 @@ buildscript {
                 requested.group == "io.netty" -> useVersion("4.1.137.Final")
                 requested.group == "com.google.guava" && requested.name == "guava" -> useVersion("33.7.2-jre")
                 requested.group == "com.google.protobuf" && requested.name in setOf("protobuf-java", "protobuf-java-util", "protobuf-kotlin") -> useVersion("3.25.5")
-                requested.group == "org.bouncycastle" && requested.name in setOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on") -> useVersion("1.86.2")
+                requested.group == "org.bouncycastle" && requested.name in setOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on") -> useVersion("1.86")
                 requested.group == "org.apache.commons" && requested.name == "commons-compress" -> useVersion("1.26.0")
                 requested.group == "org.bitbucket.b_c" && requested.name == "jose4j" -> useVersion("0.9.6")
                 requested.group == "org.jdom" && requested.name == "jdom2" -> useVersion("2.0.6.1")
