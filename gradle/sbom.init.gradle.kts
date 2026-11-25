@@ -18,6 +18,7 @@ gradle.projectsEvaluated {
     rootProject.allprojects {
         tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
             includeBuildEnvironment = true
+            includeMetadataResolution = false
             testConfigs = listOf("(?i).*test.*")
         }
     }

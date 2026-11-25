@@ -59,10 +59,10 @@ jobs:
         env:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
           TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
-        run: ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug cyclonedxBom
+        run: ./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
       - name: Capture resolved dependency paths for vulnerability triage
         run: |
-          ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
+          ./gradlew --no-daemon :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
       - name: Upload resolved dependency graph
         if: success()
         uses: actions/upload-artifact@v4
@@ -71,6 +71,8 @@ jobs:
           path: dependency-graph-report.txt
           if-no-files-found: error
           retention-days: 30
+      - name: Generate CycloneDX SBOM
+        run: ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts cyclonedxBom
       - name: Scan resolved Gradle dependencies with OSV
         run: |
           test -s build/reports/cyclonedx/bom.json
