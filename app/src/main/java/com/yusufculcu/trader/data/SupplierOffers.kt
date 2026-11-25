@@ -52,8 +52,11 @@ data class SourcingReviewEntity(@PrimaryKey val id: String, val buyerRequirement
 @Dao interface SupplierOfferLineItemDao {
     @Query("SELECT * FROM supplier_offer_items WHERE offerId=:offerId ORDER BY createdAt,id") fun observeForOffer(offerId: String): Flow<List<SupplierOfferLineItemEntity>>
     @Query("SELECT * FROM supplier_offer_items") suspend fun getAll(): List<SupplierOfferLineItemEntity>
+    @Query("SELECT * FROM supplier_offer_items WHERE id=:id LIMIT 1") suspend fun getById(id: String): SupplierOfferLineItemEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(row: SupplierOfferLineItemEntity)
+    @Update suspend fun update(row: SupplierOfferLineItemEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(rows: List<SupplierOfferLineItemEntity>)
+    @Query("DELETE FROM supplier_offer_items WHERE id=:id") suspend fun deleteById(id: String): Int
     @Query("DELETE FROM supplier_offer_items") suspend fun deleteAll()
 }
 @Dao interface SupplierOfferEvidenceDao {
@@ -61,6 +64,7 @@ data class SourcingReviewEntity(@PrimaryKey val id: String, val buyerRequirement
     @Query("SELECT * FROM supplier_offer_evidence") suspend fun getAll(): List<SupplierOfferEvidenceEntity>
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(row: SupplierOfferEvidenceEntity)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(rows: List<SupplierOfferEvidenceEntity>)
+    @Query("DELETE FROM supplier_offer_evidence WHERE id=:id") suspend fun deleteById(id: String): Int
     @Query("DELETE FROM supplier_offer_evidence") suspend fun deleteAll()
 }
 @Dao interface SourcingReviewDao {
@@ -114,6 +118,26 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
         offer
     }
 
+    suspend fun updateOffer(offerId: String, draft: SupplierOfferDraft): SupplierOfferEntity = db.withTransaction {
+        val old = db.supplierOfferDao().getById(offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val organization = db.organizationDao().getById(old.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val row = buildOffer(old.organizationId, draft, old.id, now).copy(createdAt = old.createdAt)
+        db.supplierOfferDao().update(row)
+        db.organizationDao().touch(old.organizationId, now)
+        db.appendBusinessActivity(
+            old.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, row.id,
+            row.title,
+            if (old.status == row.status) BusinessActivityAction.UPDATED else BusinessActivityAction.STATUS_CHANGED,
+            if (old.status == row.status) "Supplier offer updated" else "Supplier offer status changed",
+            fromStatus = old.status.takeIf { it != row.status }, toStatus = row.status,
+            occurredAt = now
+        )
+        row
+    }
+
     suspend fun addLineItem(offerId: String, draft: SupplierOfferLineItemDraft): SupplierOfferLineItemEntity = db.withTransaction {
         val offer = db.supplierOfferDao().getById(offerId)
             ?: throw IllegalArgumentException("Supplier offer no longer exists.")
@@ -122,6 +146,7 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
         val now = System.currentTimeMillis()
         val item = buildItem(offerId, draft, now)
         db.supplierOfferLineItemDao().insert(item)
+        db.supplierOfferDao().update(offer.copy(updatedAt = now))
         db.organizationDao().touch(offer.organizationId, now)
         db.appendBusinessActivity(
             offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
@@ -129,6 +154,46 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
             details = item.productName, occurredAt = now
         )
         item
+    }
+
+    suspend fun updateLineItem(itemId: String, draft: SupplierOfferLineItemDraft): SupplierOfferLineItemEntity = db.withTransaction {
+        val old = db.supplierOfferLineItemDao().getById(itemId)
+            ?: throw IllegalArgumentException("Supplier offer line item no longer exists.")
+        val offer = db.supplierOfferDao().getById(old.offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val organization = db.organizationDao().getById(offer.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val row = buildItem(old.offerId, draft, now).copy(id = old.id, createdAt = old.createdAt)
+        db.supplierOfferLineItemDao().update(row)
+        db.supplierOfferDao().update(offer.copy(updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.LINE_UPDATED, "Supplier offer line item updated",
+            details = row.productName, occurredAt = now
+        )
+        row
+    }
+
+    suspend fun deleteLineItem(itemId: String): Boolean = db.withTransaction {
+        val item = db.supplierOfferLineItemDao().getById(itemId) ?: return@withTransaction false
+        val offer = db.supplierOfferDao().getById(item.offerId) ?: return@withTransaction false
+        val organization = db.organizationDao().getById(offer.organizationId) ?: return@withTransaction false
+        val existingItems = db.supplierOfferLineItemDao().getAll().count { it.offerId == offer.id }
+        require(existingItems > 1) { "An offer must retain at least one line item." }
+        val now = System.currentTimeMillis()
+        db.appendBusinessActivity(
+            offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+            offer.title, BusinessActivityAction.DELETED, "Supplier offer line item removed",
+            details = item.productName, occurredAt = now
+        )
+        val deleted = db.supplierOfferLineItemDao().deleteById(itemId) > 0
+        if (deleted) {
+            db.supplierOfferDao().update(offer.copy(updatedAt = now))
+            db.organizationDao().touch(offer.organizationId, now)
+        }
+        deleted
     }
 
     suspend fun linkEvidence(offerId: String, sourceId: String): SupplierOfferEvidenceEntity = db.withTransaction {
@@ -148,12 +213,59 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
         val now = System.currentTimeMillis()
         val link = SupplierOfferEvidenceEntity(UUID.randomUUID().toString(), offerId, sourceId, now)
         db.supplierOfferEvidenceDao().insert(link)
+        db.supplierOfferDao().update(offer.copy(updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
         db.appendBusinessActivity(
             offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
             offer.title, BusinessActivityAction.EVIDENCE_LINKED, "Supplier offer evidence linked",
             details = source.title, occurredAt = now
         )
         link
+    }
+
+    /** Reconcile evidence links as one validated transaction; every add/remove gets its own history event. */
+    suspend fun setEvidenceLinks(offerId: String, sourceIds: Set<String>): Int = db.withTransaction {
+        val offer = db.supplierOfferDao().getById(offerId)
+            ?: throw IllegalArgumentException("Supplier offer no longer exists.")
+        val organization = db.organizationDao().getById(offer.organizationId)
+            ?: throw IllegalArgumentException("Supplier company dossier no longer exists.")
+        require(sourceIds.size <= 100) { "Too many evidence sources are linked to one offer." }
+        val validatedSources = sourceIds.associateWith { sourceId ->
+            db.organizationSourceDao().getById(sourceId)
+                ?: throw IllegalArgumentException("Save supplier evidence to the company dossier first.")
+        }
+        require(validatedSources.values.all { it.organizationId == offer.organizationId }) {
+            "Supplier evidence must belong to the supplier company dossier."
+        }
+        val current = db.supplierOfferEvidenceDao().getAll().filter { it.offerId == offerId }
+        val currentBySource = current.associateBy { it.sourceId }
+        val toAdd = sourceIds.filterNot { it in currentBySource }
+        val toRemove = current.filter { it.sourceId !in sourceIds }
+        if (toAdd.isEmpty() && toRemove.isEmpty()) return@withTransaction 0
+        val now = System.currentTimeMillis()
+        toAdd.forEach { sourceId ->
+            val source = validatedSources.getValue(sourceId)
+            db.supplierOfferEvidenceDao().insert(
+                SupplierOfferEvidenceEntity(UUID.randomUUID().toString(), offerId, sourceId, now)
+            )
+            db.appendBusinessActivity(
+                offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+                offer.title, BusinessActivityAction.EVIDENCE_LINKED, "Supplier offer evidence linked",
+                details = source.title, occurredAt = now
+            )
+        }
+        toRemove.forEach { link ->
+            val source = db.organizationSourceDao().getById(link.sourceId)
+            db.appendBusinessActivity(
+                offer.organizationId, organization.canonicalName, BusinessActivityEntityType.SUPPLIER_OFFER, offer.id,
+                offer.title, BusinessActivityAction.EVIDENCE_UNLINKED, "Supplier offer evidence unlinked",
+                details = source?.title.orEmpty(), occurredAt = now
+            )
+            db.supplierOfferEvidenceDao().deleteById(link.id)
+        }
+        db.supplierOfferDao().update(offer.copy(updatedAt = now))
+        db.organizationDao().touch(offer.organizationId, now)
+        toAdd.size + toRemove.size
     }
 
     suspend fun setStatus(offerId: String, status: String): Boolean = db.withTransaction {

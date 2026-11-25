@@ -53,6 +53,7 @@ import com.yusufculcu.trader.data.SourcingReviewEntity
 import com.yusufculcu.trader.data.SourcingReviewStatus
 import com.yusufculcu.trader.data.SupplierOfferDraft
 import com.yusufculcu.trader.data.SupplierOfferEntity
+import com.yusufculcu.trader.data.SupplierOfferLineItemEntity
 import com.yusufculcu.trader.data.SupplierOfferLineItemDraft
 import com.yusufculcu.trader.data.SupplierOfferRepository
 import com.yusufculcu.trader.data.SupplierOfferStatus
@@ -73,6 +74,10 @@ fun SourcingDeskScreen(
     var selectedRequirementId by rememberSaveable { mutableStateOf<String?>(null) }
     var showOfferDialog by remember { mutableStateOf(false) }
     var reviewTarget by remember { mutableStateOf<SupplierOfferEntity?>(null) }
+    var editOfferTarget by remember { mutableStateOf<SupplierOfferEntity?>(null) }
+    var itemEditorTarget by remember { mutableStateOf<Pair<SupplierOfferEntity, SupplierOfferLineItemEntity?>?>(null) }
+    var evidenceEditorTarget by remember { mutableStateOf<SupplierOfferEntity?>(null) }
+    var removeItemTarget by remember { mutableStateOf<Pair<SupplierOfferEntity, SupplierOfferLineItemEntity>?>(null) }
     val selectedRequirement = requirements.firstOrNull { it.id == selectedRequirementId }
     LaunchedEffect(requirements) {
         if (selectedRequirementId == null || requirements.none { it.id == selectedRequirementId }) {
@@ -161,7 +166,12 @@ fun SourcingDeskScreen(
                                     runCatching { supplierRepository.setStatus(offer.id, status) }
                                         .onFailure { Toast.makeText(context, it.message ?: "Could not update offer status.", Toast.LENGTH_LONG).show() }
                                 }
-                            }
+                            },
+                            onEditOffer = { editOfferTarget = offer },
+                            onAddItem = { itemEditorTarget = offer to null },
+                            onEditItem = { item -> itemEditorTarget = offer to item },
+                            onDeleteItem = { item -> removeItemTarget = offer to item },
+                            onManageEvidence = { evidenceEditorTarget = offer }
                         )
                     }
                 }
@@ -209,6 +219,68 @@ fun SourcingDeskScreen(
             onSaved = { showOfferDialog = false }
         )
     }
+    editOfferTarget?.let { offer ->
+        SupplierOfferEditDialog(
+            offer = offer,
+            onDismiss = { editOfferTarget = null },
+            onSave = { draft -> supplierRepository.updateOffer(offer.id, draft) },
+            onSaved = {
+                editOfferTarget = null
+                Toast.makeText(context, context.getString(R.string.sourcing_offer_updated), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+    itemEditorTarget?.let { (offer, item) ->
+        SupplierOfferLineItemDialog(
+            editorKey = offer.id + (item?.id ?: "new"),
+            initial = item,
+            onDismiss = { itemEditorTarget = null },
+            onSave = { draft ->
+                if (item == null) supplierRepository.addLineItem(offer.id, draft)
+                else supplierRepository.updateLineItem(item.id, draft)
+            },
+            onSaved = {
+                itemEditorTarget = null
+                Toast.makeText(context, context.getString(R.string.sourcing_line_item_saved), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+    evidenceEditorTarget?.let { offer ->
+        SupplierOfferEvidenceDialog(
+            offer = offer,
+            repository = supplierRepository,
+            organizationRepository = organizationRepository,
+            onDismiss = { evidenceEditorTarget = null },
+            onSave = { selected -> supplierRepository.setEvidenceLinks(offer.id, selected) },
+            onSaved = {
+                evidenceEditorTarget = null
+                Toast.makeText(context, context.getString(R.string.sourcing_evidence_updated), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+    removeItemTarget?.let { (_, item) ->
+        AlertDialog(
+            onDismissRequest = { removeItemTarget = null },
+            title = { Text(stringResource(R.string.sourcing_remove_line_item)) },
+            text = { Text(stringResource(R.string.sourcing_remove_line_item_confirm)) },
+            confirmButton = {
+                Button(onClick = {
+                    scope.launch {
+                        runCatching { supplierRepository.deleteLineItem(item.id) }
+                            .onSuccess {
+                                removeItemTarget = null
+                                Toast.makeText(context, context.getString(R.string.sourcing_line_item_removed), Toast.LENGTH_SHORT).show()
+                            }
+                            .onFailure {
+                                removeItemTarget = null
+                                Toast.makeText(context, it.message ?: "Could not remove line item.", Toast.LENGTH_LONG).show()
+                            }
+                    }
+                }) { Text(stringResource(R.string.sourcing_remove_line_item)) }
+            },
+            dismissButton = { TextButton(onClick = { removeItemTarget = null }) { Text(stringResource(R.string.company_cancel)) } }
+        )
+    }
     reviewTarget?.let { offer ->
         SourcingReviewDialog(
             offerTitle = offer.title,
@@ -254,7 +326,12 @@ private fun SupplierOfferComparisonCard(
     repository: SupplierOfferRepository,
     organizationRepository: OrganizationRepository,
     onReview: () -> Unit,
-    onSetStatus: (String) -> Unit
+    onSetStatus: (String) -> Unit,
+    onEditOffer: () -> Unit,
+    onAddItem: () -> Unit,
+    onEditItem: (SupplierOfferLineItemEntity) -> Unit,
+    onDeleteItem: (SupplierOfferLineItemEntity) -> Unit,
+    onManageEvidence: () -> Unit
 ) {
     var statusMenu by remember(offer.id) { mutableStateOf(false) }
     val items by repository.observeItems(offer.id).collectAsState(initial = emptyList())
@@ -318,12 +395,34 @@ private fun SupplierOfferComparisonCard(
                     }
                 }
             }
+            Text(stringResource(R.string.sourcing_offer_line_items), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+            items.forEach { offerItem ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(offerItem.productName, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        val facts = listOfNotNull(
+                            offerItem.material,
+                            offerItem.quantityAvailable?.let { "$it " + offerItem.quantityUnit.orEmpty() },
+                            offerItem.minimumOrderQuantity?.let { "MOQ " + it },
+                            offerItem.unitPriceMinorUnits?.let { it.toString() + " " + offerItem.currency.orEmpty() }
+                        ).joinToString(" · ")
+                        if (facts.isNotBlank()) Text(facts, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { onEditItem(offerItem) }) { Text(stringResource(R.string.sourcing_edit_line_item)) }
+                    TextButton(enabled = items.size > 1, onClick = { onDeleteItem(offerItem) }) { Text(stringResource(R.string.sourcing_remove_line_item)) }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onAddItem) { Text(stringResource(R.string.sourcing_add_line_item)) }
+                TextButton(onClick = onEditOffer) { Text(stringResource(R.string.sourcing_edit_offer)) }
+            }
             if (evidenceTitles.isNotEmpty()) {
                 Text(stringResource(R.string.sourcing_evidence), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                 evidenceTitles.forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
             } else {
                 Text(stringResource(R.string.sourcing_no_offer_evidence), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
             }
+            TextButton(onClick = onManageEvidence) { Text(stringResource(R.string.sourcing_manage_evidence)) }
             review?.let {
                 Text(
                     stringResource(R.string.sourcing_review_state, when (it.status) {
@@ -435,6 +534,192 @@ private fun SupplierOfferCreateDialog(
                     result.onSuccess { onSaved() }.onFailure { error = it.message ?: "Could not save supplier offer." }
                 }
             }) { Text(stringResource(R.string.sourcing_save_offer)) }
+        },
+        dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
+    )
+}
+
+
+@Composable
+private fun SupplierOfferEditDialog(
+    offer: SupplierOfferEntity,
+    onDismiss: () -> Unit,
+    onSave: suspend (SupplierOfferDraft) -> Unit,
+    onSaved: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var title by remember(offer.id) { mutableStateOf(offer.title) }
+    var description by remember(offer.id) { mutableStateOf(offer.description.orEmpty()) }
+    var status by remember(offer.id) { mutableStateOf(offer.status) }
+    var currency by remember(offer.id) { mutableStateOf(offer.currency.orEmpty()) }
+    var country by remember(offer.id) { mutableStateOf(offer.originCountry.orEmpty()) }
+    var city by remember(offer.id) { mutableStateOf(offer.originCity.orEmpty()) }
+    var notes by remember(offer.id) { mutableStateOf(offer.notes.orEmpty()) }
+    var statusMenu by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(R.string.sourcing_edit_offer)) },
+        text = {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                OutlinedTextField(title, { title = it.take(200) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_offer_title)) }, singleLine = true)
+                OutlinedTextField(description, { description = it.take(4000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_offer_description)) }, minLines = 2, maxLines = 3)
+                TextButton(onClick = { statusMenu = true }) { Text(stringResource(supplierOfferStatusLabel(status))) }
+                DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
+                    listOf(SupplierOfferStatus.DRAFT, SupplierOfferStatus.AVAILABLE, SupplierOfferStatus.ON_HOLD, SupplierOfferStatus.CLOSED).forEach { value ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(supplierOfferStatusLabel(value))) },
+                            onClick = { status = value; statusMenu = false }
+                        )
+                    }
+                }
+                OutlinedTextField(currency, { currency = it.take(3) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_currency)) }, singleLine = true)
+                OutlinedTextField(country, { country = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_origin_country)) }, singleLine = true)
+                OutlinedTextField(city, { city = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_origin_city)) }, singleLine = true)
+                OutlinedTextField(notes, { notes = it.take(2000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_notes)) }, minLines = 2, maxLines = 3)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(enabled = !saving && title.isNotBlank(), onClick = {
+                scope.launch {
+                    saving = true
+                    val result = runCatching {
+                        onSave(SupplierOfferDraft(title, description, status, currency, country, city, notes))
+                    }
+                    saving = false
+                    result.onSuccess { onSaved() }.onFailure { error = it.message ?: "Could not update supplier offer." }
+                }
+            }) { Text(stringResource(R.string.sourcing_save_changes)) }
+        },
+        dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
+    )
+}
+
+@Composable
+private fun SupplierOfferLineItemDialog(
+    editorKey: String,
+    initial: SupplierOfferLineItemEntity?,
+    onDismiss: () -> Unit,
+    onSave: suspend (SupplierOfferLineItemDraft) -> Unit,
+    onSaved: () -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var product by remember(editorKey) { mutableStateOf(initial?.productName.orEmpty()) }
+    var specification by remember(editorKey) { mutableStateOf(initial?.specification.orEmpty()) }
+    var material by remember(editorKey) { mutableStateOf(initial?.material.orEmpty()) }
+    var available by remember(editorKey) { mutableStateOf(initial?.quantityAvailable.orEmpty()) }
+    var unit by remember(editorKey) { mutableStateOf(initial?.quantityUnit ?: "pcs") }
+    var moq by remember(editorKey) { mutableStateOf(initial?.minimumOrderQuantity.orEmpty()) }
+    var price by remember(editorKey) { mutableStateOf(initial?.unitPriceMinorUnits?.toString().orEmpty()) }
+    var currency by remember(editorKey) { mutableStateOf(initial?.currency ?: "EUR") }
+    var leadTime by remember(editorKey) { mutableStateOf(initial?.leadTimeDays?.toString().orEmpty()) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(if (initial == null) R.string.sourcing_add_line_item else R.string.sourcing_edit_line_item)) },
+        text = {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                OutlinedTextField(product, { product = it.take(200) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_product_name)) }, singleLine = true)
+                OutlinedTextField(specification, { specification = it.take(2000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_specification)) }, minLines = 2, maxLines = 3)
+                OutlinedTextField(material, { material = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_material)) }, singleLine = true)
+                OutlinedTextField(available, { available = it.take(40) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_available_quantity)) }, singleLine = true)
+                OutlinedTextField(unit, { unit = it.take(40) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_quantity_unit)) }, singleLine = true)
+                OutlinedTextField(moq, { moq = it.take(40) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_moq)) }, singleLine = true)
+                OutlinedTextField(price, { price = it.take(18) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_unit_price_minor)) }, singleLine = true)
+                OutlinedTextField(currency, { currency = it.take(3) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_currency)) }, singleLine = true)
+                OutlinedTextField(leadTime, { leadTime = it.take(4) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.sourcing_lead_time_days)) }, singleLine = true)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(enabled = !saving && product.isNotBlank(), onClick = {
+                val parsedPrice = price.trim().takeIf { it.isNotBlank() }?.toLongOrNull()
+                val parsedLead = leadTime.trim().takeIf { it.isNotBlank() }?.toIntOrNull()
+                if (price.isNotBlank() && parsedPrice == null) { error = "Enter price as integer minor units."; return@Button }
+                if (leadTime.isNotBlank() && parsedLead == null) { error = "Enter lead time as whole days."; return@Button }
+                scope.launch {
+                    saving = true
+                    val result = runCatching {
+                        onSave(
+                            SupplierOfferLineItemDraft(
+                                productName = product, specification = specification, material = material,
+                                quantityAvailable = available, quantityUnit = unit, minimumOrderQuantity = moq,
+                                unitPriceMinorUnits = parsedPrice, currency = currency, leadTimeDays = parsedLead
+                            )
+                        )
+                    }
+                    saving = false
+                    result.onSuccess { onSaved() }.onFailure { error = it.message ?: "Could not save line item." }
+                }
+            }) { Text(stringResource(R.string.sourcing_save_changes)) }
+        },
+        dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
+    )
+}
+
+@Composable
+private fun SupplierOfferEvidenceDialog(
+    offer: SupplierOfferEntity,
+    repository: SupplierOfferRepository,
+    organizationRepository: OrganizationRepository,
+    onDismiss: () -> Unit,
+    onSave: suspend (Set<String>) -> Unit,
+    onSaved: () -> Unit
+) {
+    val sources by organizationRepository.observeSources(offer.organizationId).collectAsState(initial = emptyList())
+    val evidence by repository.observeEvidence(offer.id).collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
+    var selected by remember(offer.id) { mutableStateOf(emptySet<String>()) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(evidence) { selected = evidence.map { it.sourceId }.toSet() }
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(R.string.sourcing_manage_evidence)) },
+        text = {
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                if (sources.isEmpty()) {
+                    Text(stringResource(R.string.sourcing_save_source_first), color = MaterialTheme.colorScheme.tertiary)
+                } else {
+                    sources.forEach { source ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = source.id in selected,
+                                onCheckedChange = { checked ->
+                                    selected = if (checked) selected + source.id else selected - source.id
+                                }
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(source.title, style = MaterialTheme.typography.bodySmall)
+                                Text(source.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(enabled = !saving, onClick = {
+                scope.launch {
+                    saving = true
+                    val result = runCatching { onSave(selected) }
+                    saving = false
+                    result.onSuccess { onSaved() }.onFailure { error = it.message ?: "Could not update offer evidence." }
+                }
+            }) { Text(stringResource(R.string.sourcing_save_changes)) }
         },
         dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
     )

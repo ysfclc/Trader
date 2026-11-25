@@ -90,4 +90,70 @@ class SupplierOfferRepositoryTest {
         val item = suppliers.observeItems(offer.id).first().single()
         assertNull(item.specification); assertNull(item.material); assertNull(item.quantityAvailable); assertNull(item.quantityUnit); assertNull(item.minimumOrderQuantity); assertNull(item.currency)
     }
+    @Test fun offerHeaderAndLineItemCorrectionsPreserveIdentityAndAppendHistory() = runBlocking {
+        val supplier = organizations.createOrganization(OrganizationDraft("Correctable Supplier"))
+        val offer = suppliers.create(
+            supplier.id,
+            SupplierOfferDraft("Original offer", status = SupplierOfferStatus.AVAILABLE, currency = "EUR"),
+            SupplierOfferLineItemDraft("Original spacer", quantityAvailable = "20", quantityUnit = "pcs", currency = "EUR")
+        )
+        val originalItem = suppliers.observeItems(offer.id).first().single()
+        val extraItem = suppliers.addLineItem(offer.id, SupplierOfferLineItemDraft("Washer", quantityAvailable = "100", quantityUnit = "pcs"))
+        val corrected = suppliers.updateOffer(
+            offer.id,
+            SupplierOfferDraft("Updated offer", description = "Revision B", status = SupplierOfferStatus.ON_HOLD, currency = "EUR", originCountry = "Türkiye", notes = "Confirm new capacity")
+        )
+        assertEquals(offer.id, corrected.id)
+        assertEquals(offer.createdAt, corrected.createdAt)
+        assertEquals("Updated offer", corrected.title)
+        assertEquals(SupplierOfferStatus.ON_HOLD, corrected.status)
+        val correctedItem = suppliers.updateLineItem(
+            originalItem.id,
+            SupplierOfferLineItemDraft("Revised spacer", "Drawing B", "Steel", "25", "pcs", "10", 1250, "EUR", 14)
+        )
+        assertEquals(originalItem.id, correctedItem.id)
+        assertEquals(originalItem.createdAt, correctedItem.createdAt)
+        assertEquals("Revised spacer", correctedItem.productName)
+        assertEquals("25", correctedItem.quantityAvailable)
+        val events = db.businessActivityDao().getAll()
+        val headerEvent = events.single {
+            it.entityId == offer.id && it.eventType == BusinessActivityAction.STATUS_CHANGED && it.entityLabel == "Updated offer"
+        }
+        assertEquals(SupplierOfferStatus.AVAILABLE, headerEvent.fromStatus)
+        assertEquals(SupplierOfferStatus.ON_HOLD, headerEvent.toStatus)
+        assertTrue(events.any {
+            it.entityId == offer.id && it.eventType == BusinessActivityAction.LINE_UPDATED && it.details == "Revised spacer"
+        })
+        assertTrue(suppliers.deleteLineItem(extraItem.id))
+        assertEquals(1, suppliers.observeItems(offer.id).first().size)
+        var rejected = false
+        try { suppliers.deleteLineItem(originalItem.id) } catch (_: IllegalArgumentException) { rejected = true }
+        assertTrue(rejected)
+        assertEquals(1, suppliers.observeItems(offer.id).first().size)
+    }
+
+    @Test fun supplierEvidenceLinksCanBeReconciledAndEveryChangeIsAudited() = runBlocking {
+        val supplier = organizations.createOrganization(OrganizationDraft("Evidence Supplier"))
+        val other = organizations.createOrganization(OrganizationDraft("Other Supplier"))
+        val first = organizations.addSource(supplier.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Old catalogue", "https://supplier.example/old"))
+        val second = organizations.addSource(supplier.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Current catalogue", "https://supplier.example/current"))
+        val foreign = organizations.addSource(other.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Foreign source", "https://other.example/source"))
+        val offer = suppliers.create(
+            supplier.id, SupplierOfferDraft("Evidence-backed offer"),
+            SupplierOfferLineItemDraft("Precision part"), listOf(first.id)
+        )
+        assertEquals(2, suppliers.setEvidenceLinks(offer.id, setOf(second.id)))
+        assertEquals(setOf(second.id), suppliers.observeEvidence(offer.id).first().map { it.sourceId }.toSet())
+        val eventCount = db.businessActivityDao().getAll().size
+        assertEquals(0, suppliers.setEvidenceLinks(offer.id, setOf(second.id)))
+        assertEquals(eventCount, db.businessActivityDao().getAll().size)
+        var rejected = false
+        try { suppliers.setEvidenceLinks(offer.id, setOf(foreign.id)) } catch (_: IllegalArgumentException) { rejected = true }
+        assertTrue(rejected)
+        assertEquals(setOf(second.id), suppliers.observeEvidence(offer.id).first().map { it.sourceId }.toSet())
+        val events = db.businessActivityDao().getAll()
+        assertTrue(events.any { it.entityId == offer.id && it.eventType == BusinessActivityAction.EVIDENCE_UNLINKED && it.details == "Old catalogue" })
+        assertTrue(events.any { it.entityId == offer.id && it.eventType == BusinessActivityAction.EVIDENCE_LINKED && it.details == "Current catalogue" })
+    }
+
 }

@@ -437,4 +437,17 @@
     <string name="business_action_decision_recorded">Karar kaydedildi</string>
     <string name="business_action_deleted">Silindi</string>
 
+    <string name="sourcing_edit_offer">Teklifi düzenle</string>
+    <string name="sourcing_offer_line_items">Teklif kalemleri</string>
+    <string name="sourcing_add_line_item">Kalem ekle</string>
+    <string name="sourcing_edit_line_item">Kalemi düzenle</string>
+    <string name="sourcing_remove_line_item">Kalemi kaldır</string>
+    <string name="sourcing_remove_line_item_confirm">Bu kalem kaldırılsın mı? Teklifte en az bir kalem kalmalıdır.</string>
+    <string name="sourcing_manage_evidence">Kanıtları yönet</string>
+    <string name="sourcing_save_changes">Değişiklikleri kaydet</string>
+    <string name="sourcing_offer_updated">Tedarikçi teklifi güncellendi.</string>
+    <string name="sourcing_line_item_saved">Kalem kaydedildi.</string>
+    <string name="sourcing_line_item_removed">Kalem kaldırıldı.</string>
+    <string name="sourcing_evidence_updated">Teklif kanıtları güncellendi.</string>
+    <string name="business_action_evidence_unlinked">Kanıt bağlantısı kaldırıldı</string>
 </resources>

@@ -437,4 +437,17 @@
     <string name="business_action_decision_recorded">Decision recorded</string>
     <string name="business_action_deleted">Deleted</string>
 
+    <string name="sourcing_edit_offer">Edit offer</string>
+    <string name="sourcing_offer_line_items">Offer line items</string>
+    <string name="sourcing_add_line_item">Add line item</string>
+    <string name="sourcing_edit_line_item">Edit line item</string>
+    <string name="sourcing_remove_line_item">Remove line item</string>
+    <string name="sourcing_remove_line_item_confirm">Remove this line item? An offer must retain at least one item.</string>
+    <string name="sourcing_manage_evidence">Manage evidence</string>
+    <string name="sourcing_save_changes">Save changes</string>
+    <string name="sourcing_offer_updated">Supplier offer updated.</string>
+    <string name="sourcing_line_item_saved">Line item saved.</string>
+    <string name="sourcing_line_item_removed">Line item removed.</string>
+    <string name="sourcing_evidence_updated">Offer evidence updated.</string>
+    <string name="business_action_evidence_unlinked">Evidence unlinked</string>
 </resources>

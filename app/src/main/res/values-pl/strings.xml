@@ -437,4 +437,17 @@
     <string name="business_action_decision_recorded">Zapisano decyzję</string>
     <string name="business_action_deleted">Usunięto</string>
 
+    <string name="sourcing_edit_offer">Edytuj ofertę</string>
+    <string name="sourcing_offer_line_items">Pozycje oferty</string>
+    <string name="sourcing_add_line_item">Dodaj pozycję</string>
+    <string name="sourcing_edit_line_item">Edytuj pozycję</string>
+    <string name="sourcing_remove_line_item">Usuń pozycję</string>
+    <string name="sourcing_remove_line_item_confirm">Usunąć tę pozycję? Oferta musi zachować co najmniej jedną pozycję.</string>
+    <string name="sourcing_manage_evidence">Zarządzaj dowodami</string>
+    <string name="sourcing_save_changes">Zapisz zmiany</string>
+    <string name="sourcing_offer_updated">Zaktualizowano ofertę dostawcy.</string>
+    <string name="sourcing_line_item_saved">Zapisano pozycję.</string>
+    <string name="sourcing_line_item_removed">Usunięto pozycję.</string>
+    <string name="sourcing_evidence_updated">Zaktualizowano dowody oferty.</string>
+    <string name="business_action_evidence_unlinked">Odłączono dowód</string>
 </resources>

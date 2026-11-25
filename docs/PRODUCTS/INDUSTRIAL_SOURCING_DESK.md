@@ -1,7 +1,7 @@
 # Industrial Sourcing Desk
 
 **Product status:** first end-to-end product; CI-verified, physical-device acceptance open  
-**Build candidate:** Trader 0.9.0-debug / versionCode 9  
+**Build candidate:** Trader 0.11.0-debug / versionCode 11  
 **Pilot:** Türkiye ↔ Poland/EU industrial tooling and machining
 
 ## Job to be done
@@ -52,9 +52,10 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 - Activity combines ProblemCase history with company, contact, claim, requirement, offer and sourcing-decision events. Contact email, phone and name are not copied into event details.
 - English, Polish and Turkish UI.
 - Verified baseline: CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passed build, all unit tests, lint, package/version identity and persistent signing-certificate verification. Package `com.yusufculcu.trader.debug`, versionCode 9 / `0.9.0-debug`; installable APK artifact [15010224455](https://github.com/ysfclc/Trader/actions/runs/45591681856/artifacts/15010224455).
-- Buyer requirement correction is now implemented in the dossier: prefilled header editing, in-place line-item editing, shared validation and append-only correction history. Candidate versionCode 10 / `0.10.0-debug` is awaiting CI; no APK is claimed for that candidate yet.
+- Buyer requirement correction is CI-verified in run [45595844335](https://github.com/ysfclc/Trader/actions/runs/45595844335): header and line-item edits preserve identity, use shared validation and append correction history. Verified artifact [15013068288](https://github.com/ysfclc/Trader/actions/runs/45595844335/artifacts/15013068288), versionCode 10 / `0.10.0-debug`.
+- Supplier offer correction candidate adds editable offer headers and multiple line items, guarded removal, supplier-dossier-only evidence reconciliation and append-only add/update/remove/unlink events. Candidate versionCode 11 / `0.11.0-debug` is awaiting CI; no APK is claimed for this candidate yet.
 - Physical-device install-over-existing, migration/restore and real-world sourcing acceptance are still open.
 
 ## Product completion gate
 
-Do not start another product until a real device journey proves: create buyer dossier/request; create a supplier dossier/offer with source evidence; compare multiple offers; record and revise decisions; share a shortlist; record and revise requirement/offer statuses and sourcing decisions; inspect the combined activity history; close/reopen the app without losing records; export and restore the encrypted workspace; and install the next signed APK over the existing app without uninstalling or losing data.
+Do not start another product until a real device journey proves: create buyer dossier/request; create a supplier dossier/offer with source evidence; compare multiple offers; record and revise decisions; share a shortlist; record and revise requirement/offer headers, line items, evidence links, statuses and sourcing decisions; inspect the combined activity history; close/reopen the app without losing records; export and restore the encrypted workspace; and install the next signed APK over the existing app without uninstalling or losing data.
