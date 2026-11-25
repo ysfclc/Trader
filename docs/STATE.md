@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-25 — supplier-offer correction 0.11.0 candidate; CI verification pending; device acceptance open_
+_Last updated: 2026-11-25 — Trader 0.11.0 supplier-offer correction CI-verified; physical-device acceptance remains open_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -21,15 +21,15 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; verified buyer-requirement correction commit `f9de2fb278689a3f08d341e110423ca3f1717cae` passed CI run [45595844335](https://github.com/ysfclc/Trader/actions/runs/45595844335), including 155 unit tests, lint, debug APK assembly, package/version checks and persistent-certificate equality. Supplier-offer correction is the next candidate; CI pending.
-- Verified baseline package: `com.yusufculcu.trader.debug`, versionCode 10, versionName `0.10.0-debug`; installable APK artifact [15013068288](https://github.com/ysfclc/Trader/actions/runs/45595844335/artifacts/15013068288). Current candidate is versionCode 11 / `0.11.0-debug`; stable-signature verification is pending for this candidate.
+- Current branch: `feature/discovery-run-persistence`; verified buyer-requirement correction commit `f9de2fb278689a3f08d341e110423ca3f1717cae` passed CI run [45595844335](https://github.com/ysfclc/Trader/actions/runs/45595844335), including 155 unit tests, lint, debug APK assembly, package/version checks and persistent-certificate equality. Supplier-offer correction commit `e2c1730d8802d959d7434a3d74bb08550eb81b3a` passed CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208): 157 unit tests, lint, debug APK assembly, package/version checks and persistent-certificate equality.
+- Verified baseline package: `com.yusufculcu.trader.debug`, versionCode 10, versionName `0.10.0-debug`; installable APK artifact [15013068288](https://github.com/ysfclc/Trader/actions/runs/45595844335/artifacts/15013068288). Verified installable build is versionCode 11 / `0.11.0-debug`; APK artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). Unit-test report artifact [15014332640](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014332640) records 157 tests, 0 failures, 0 errors and 0 skipped.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
 ## Immediate next increments
-1. Complete physical-device acceptance of the Industrial Sourcing Desk: install-over-existing, Room 10→11 migration, encrypted backup/restore and a real buyer-to-shortlist journey.
-2. Implement recoverable deletion for important sourcing records; preserve history and allow operator restoration without silently reviving stale evidence or decisions.
-3. Extend comparisons only where buyer and supplier data can be compared deterministically; otherwise preserve explicit unknowns and require human review.
+1. Protect existing workspace data, then physically verify installation of the persistent-signed 0.11.0 APK over the compatible prior build; verify Room migration, close/reopen and encrypted backup/restore on the Redmi. Do not force an update over an APK signed with the old ephemeral certificate.
+2. Complete the real buyer-to-shortlist journey on-device, including offer corrections, evidence reconciliation, revised decisions and Activity history.
+3. Implement recoverable deletion for important sourcing records; preserve history and allow operator restoration without silently reviving stale evidence or decisions.
 4. Only after the sourcing journey is usable and device-accepted, continue to distinct Product/SKU, Match, Quote and Deal records. Do not expand into unrelated product areas in parallel.
 
 ## Known risks / constraints
@@ -134,3 +134,12 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Supplier offer headers and multiple line items are editable in place with ID/creation-time preservation and creation-equivalent validation. An offer cannot be left without any line item.
 - Evidence links are reconciled transactionally and restricted to sources in the supplier's own dossier. Additions and removals append separate activity events; unchanged links produce no duplicate events.
 - English/Polish/Turkish Sourcing Desk edit controls and repository regression tests are implemented. CI verification is pending; no candidate APK is claimed.
+
+
+## Supplier offer correction verification (2026-11-25)
+
+- Supplier-offer headers and multiple line items can now be edited in place with identity preservation and shared validation. Line-item removal is guarded against leaving an empty offer.
+- Evidence links can be reconciled transactionally and remain scoped to sources in the supplier's own company dossier. Add/update/remove/unlink operations append business activity events.
+- CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208) passed the full clean build, all 157 unit tests (0 failures/errors/skipped), lint, APK package/version checks and persistent signing-certificate equality.
+- Verified installable APK: `com.yusufculcu.trader.debug`, `0.11.0-debug`, versionCode 11; artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). Test reports: [15014332640](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014332640).
+- CI verification does not establish physical-device update, migration/restore, visual or real-world sourcing acceptance. Those remain the next gate.
