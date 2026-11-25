@@ -51,7 +51,8 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 - Buyer requirement and supplier offer status controls are editable in the dossier/Sourcing UI; every transition records its previous and new state.
 - Activity combines ProblemCase history with company, contact, claim, requirement, offer and sourcing-decision events. Contact email, phone and name are not copied into event details.
 - English, Polish and Turkish UI.
-- Commit `81228ff` corrected nullable optional-field normalization and version-derived CI identity checks; CI run [45590528494](https://github.com/ysfclc/Trader/actions/runs/45590528494) then compiled and assembled the APK and passed 153/154 tests. The sole failure was the legacy v1→v12 migration test missing `MIGRATION_11_12`; the test chain and schema assertion are now fixed. APK signature verification remains pending; no new APK is claimed.
+- Verified baseline: CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passed build, all unit tests, lint, package/version identity and persistent signing-certificate verification. Package `com.yusufculcu.trader.debug`, versionCode 9 / `0.9.0-debug`; installable APK artifact [15010224455](https://github.com/ysfclc/Trader/actions/runs/45591681856/artifacts/15010224455).
+- Buyer requirement correction is now implemented in the dossier: prefilled header editing, in-place line-item editing, shared validation and append-only correction history. Candidate versionCode 10 / `0.10.0-debug` is awaiting CI; no APK is claimed for that candidate yet.
 - Physical-device install-over-existing, migration/restore and real-world sourcing acceptance are still open.
 
 ## Product completion gate

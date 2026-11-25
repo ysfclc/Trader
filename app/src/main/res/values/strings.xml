@@ -325,6 +325,10 @@
 
     <string name="buyer_requirements">BUYER REQUIREMENTS</string>
     <string name="buyer_add_requirement">Add requirement</string>
+    <string name="buyer_edit_requirement">Edit requirement</string>
+    <string name="buyer_edit_line_item">Edit line item</string>
+    <string name="buyer_budget_minor">Budget (minor units)</string>
+    <string name="buyer_notes">Internal notes</string>
     <string name="buyer_no_requirements">No structured buyer requirements recorded yet.</string>
     <string name="buyer_title">Requirement title</string>
     <string name="buyer_description">Description / context</string>
@@ -429,6 +433,7 @@
     <string name="business_action_evidence_linked">Evidence linked</string>
     <string name="business_action_claim_reviewed">Claim reviewed</string>
     <string name="business_action_line_added">Line item added</string>
+    <string name="business_action_line_updated">Line item updated</string>
     <string name="business_action_decision_recorded">Decision recorded</string>
     <string name="business_action_deleted">Deleted</string>
 

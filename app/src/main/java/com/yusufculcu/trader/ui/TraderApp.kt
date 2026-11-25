@@ -1017,6 +1017,7 @@ private fun businessActionLabel(type: String): Int = when (type) {
     "EVIDENCE_LINKED" -> R.string.business_action_evidence_linked
     "CLAIM_REVIEWED" -> R.string.business_action_claim_reviewed
     "LINE_ADDED" -> R.string.business_action_line_added
+    "LINE_UPDATED" -> R.string.business_action_line_updated
     "DECISION_RECORDED" -> R.string.business_action_decision_recorded
     "DELETED" -> R.string.business_action_deleted
     else -> R.string.event_activity_recorded

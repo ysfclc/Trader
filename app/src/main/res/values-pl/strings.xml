@@ -325,6 +325,10 @@
 
     <string name="buyer_requirements">WYMAGANIA KUPUJĄCEGO</string>
     <string name="buyer_add_requirement">Dodaj wymaganie</string>
+    <string name="buyer_edit_requirement">Edytuj wymaganie</string>
+    <string name="buyer_edit_line_item">Edytuj pozycję</string>
+    <string name="buyer_budget_minor">Budżet (jednostki mniejsze)</string>
+    <string name="buyer_notes">Notatki wewnętrzne</string>
     <string name="buyer_no_requirements">Brak zapisanych ustrukturyzowanych wymagań kupującego.</string>
     <string name="buyer_title">Tytuł wymagania</string>
     <string name="buyer_description">Opis / kontekst</string>
@@ -429,6 +433,7 @@
     <string name="business_action_evidence_linked">Połączono dowód</string>
     <string name="business_action_claim_reviewed">Sprawdzono twierdzenie</string>
     <string name="business_action_line_added">Dodano pozycję</string>
+    <string name="business_action_line_updated">Zaktualizowano pozycję</string>
     <string name="business_action_decision_recorded">Zapisano decyzję</string>
     <string name="business_action_deleted">Usunięto</string>
 

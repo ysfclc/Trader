@@ -33,7 +33,9 @@ data class BuyerRequirementEvidenceEntity(@PrimaryKey val id:String,val requirem
 @Dao interface BuyerRequirementLineItemDao {
  @Query("SELECT * FROM buyer_requirement_items WHERE requirementId=:requirementId ORDER BY createdAt,id") fun observeForRequirement(requirementId:String):Flow<List<BuyerRequirementLineItemEntity>>
  @Query("SELECT * FROM buyer_requirement_items") suspend fun getAll():List<BuyerRequirementLineItemEntity>
+ @Query("SELECT * FROM buyer_requirement_items WHERE id=:id LIMIT 1") suspend fun getById(id:String):BuyerRequirementLineItemEntity?
  @Insert(onConflict=OnConflictStrategy.ABORT) suspend fun insert(row:BuyerRequirementLineItemEntity)
+ @Update suspend fun update(row:BuyerRequirementLineItemEntity)
  @Insert(onConflict=OnConflictStrategy.ABORT) suspend fun insertAll(rows:List<BuyerRequirementLineItemEntity>)
  @Query("DELETE FROM buyer_requirement_items WHERE id=:id") suspend fun deleteById(id:String):Int
  @Query("DELETE FROM buyer_requirement_items") suspend fun deleteAll()
@@ -113,27 +115,34 @@ class BuyerRequirementRepository(private val db: TraderDatabase) {
             ?: throw IllegalArgumentException("Buyer requirement does not exist.")
         val organization = db.organizationDao().getById(req.organizationId)
             ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
-        val quantity = optional(draft.quantity, 40, "Quantity")?.also { raw ->
-            val number = runCatching { BigDecimal(raw) }
-                .getOrElse { throw IllegalArgumentException("Quantity must be a positive decimal number.") }
-            require(number > BigDecimal.ZERO && number.scale() <= 6 && number.precision() <= 18) {
-                "Quantity must be a positive decimal with at most six decimal places."
-            }
-        }
-        require(draft.targetUnitPriceMinorUnits == null || draft.targetUnitPriceMinorUnits >= 0) {
-            "Target unit price cannot be negative."
-        }
         val now = System.currentTimeMillis()
-        val row = BuyerRequirementLineItemEntity(
-            UUID.randomUUID().toString(), requirementId, required(draft.productName, 200, "Product or service"),
-            optional(draft.specification, 2_000, "Specification"), quantity, optional(draft.unit, 40, "Unit"),
-            draft.targetUnitPriceMinorUnits, now
-        )
+        val row = buildLineItem(requirementId, draft, UUID.randomUUID().toString(), now)
         db.buyerRequirementLineItemDao().insert(row)
+        db.buyerRequirementDao().update(req.copy(updatedAt = now))
         db.organizationDao().touch(req.organizationId, now)
         db.appendBusinessActivity(
             req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
             req.title, BusinessActivityAction.LINE_ADDED, "Buyer requirement line item added",
+            details = row.productName, occurredAt = now
+        )
+        row
+    }
+
+    suspend fun updateLineItem(id: String, draft: BuyerRequirementLineItemDraft) = db.withTransaction {
+        val old = db.buyerRequirementLineItemDao().getById(id)
+            ?: throw IllegalArgumentException("Buyer requirement line item no longer exists.")
+        val req = db.buyerRequirementDao().getById(old.requirementId)
+            ?: throw IllegalArgumentException("Buyer requirement no longer exists.")
+        val organization = db.organizationDao().getById(req.organizationId)
+            ?: throw IllegalArgumentException("Buyer company dossier no longer exists.")
+        val now = System.currentTimeMillis()
+        val row = buildLineItem(old.requirementId, draft, old.id, old.createdAt)
+        db.buyerRequirementLineItemDao().update(row)
+        db.buyerRequirementDao().update(req.copy(updatedAt = now))
+        db.organizationDao().touch(req.organizationId, now)
+        db.appendBusinessActivity(
+            req.organizationId, organization.canonicalName, BusinessActivityEntityType.BUYER_REQUIREMENT, req.id,
+            req.title, BusinessActivityAction.LINE_UPDATED, "Buyer requirement line item updated",
             details = row.productName, occurredAt = now
         )
         row
@@ -200,6 +209,29 @@ class BuyerRequirementRepository(private val db: TraderDatabase) {
             details = source?.title.orEmpty(), occurredAt = now
         )
         db.buyerRequirementEvidenceDao().deleteById(id) > 0
+    }
+
+    private fun buildLineItem(
+        requirementId: String,
+        draft: BuyerRequirementLineItemDraft,
+        id: String,
+        createdAt: Long
+    ): BuyerRequirementLineItemEntity {
+        val quantity = optional(draft.quantity, 40, "Quantity")?.also { raw ->
+            val number = runCatching { BigDecimal(raw) }
+                .getOrElse { throw IllegalArgumentException("Quantity must be a positive decimal number.") }
+            require(number > BigDecimal.ZERO && number.scale() <= 6 && number.precision() <= 18) {
+                "Quantity must be a positive decimal with at most six decimal places."
+            }
+        }
+        require(draft.targetUnitPriceMinorUnits == null || draft.targetUnitPriceMinorUnits >= 0) {
+            "Target unit price cannot be negative."
+        }
+        return BuyerRequirementLineItemEntity(
+            id, requirementId, required(draft.productName, 200, "Product or service"),
+            optional(draft.specification, 2_000, "Specification"), quantity, optional(draft.unit, 40, "Unit"),
+            draft.targetUnitPriceMinorUnits, createdAt
+        )
     }
 
     private fun build(org: String, draft: BuyerRequirementDraft, id: String, createdAt: Long): BuyerRequirementEntity {

@@ -57,6 +57,7 @@ import com.yusufculcu.trader.data.OrganizationPersonEntity
 import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.data.BuyerRequirementDraft
 import com.yusufculcu.trader.data.BuyerRequirementLineItemDraft
+import com.yusufculcu.trader.data.BuyerRequirementLineItemEntity
 import com.yusufculcu.trader.data.BuyerRequirementEntity
 import com.yusufculcu.trader.data.BuyerRequirementState
 import com.yusufculcu.trader.data.OrganizationSourceDraft
@@ -204,6 +205,8 @@ private fun OrganizationDossierScreen(
     var showBuyerLineItemDialog by remember { mutableStateOf(false) }
     var buyerEvidenceRequirement by remember { mutableStateOf<BuyerRequirementEntity?>(null) }
     var lineItemRequirement by remember { mutableStateOf<BuyerRequirementEntity?>(null) }
+    var editingRequirement by remember { mutableStateOf<BuyerRequirementEntity?>(null) }
+    var editingLineItem by remember { mutableStateOf<BuyerRequirementLineItemEntity?>(null) }
     var editingPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
     var claimSource by remember { mutableStateOf<OrganizationSourceEntity?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -287,13 +290,15 @@ private fun OrganizationDossierScreen(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.buyer_requirements), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { showBuyerRequirementDialog = true }) { Text(stringResource(R.string.buyer_add_requirement)) }
+            TextButton(onClick = { editingRequirement = null; showBuyerRequirementDialog = true }) { Text(stringResource(R.string.buyer_add_requirement)) }
         }
         if (buyerRequirements.isEmpty()) Text(stringResource(R.string.buyer_no_requirements), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         else buyerRequirements.forEach { requirement ->
             BuyerRequirementCard(
                 requirement = requirement, repository = buyerRepository, sources = sources,
-                onAddItem = { lineItemRequirement = requirement; showBuyerLineItemDialog = true },
+                onEdit = { editingRequirement = requirement; showBuyerRequirementDialog = true },
+                onAddItem = { lineItemRequirement = requirement; editingLineItem = null; showBuyerLineItemDialog = true },
+                onEditItem = { item -> lineItemRequirement = requirement; editingLineItem = item; showBuyerLineItemDialog = true },
                 onLinkEvidence = { buyerEvidenceRequirement = requirement },
                 onDelete = { scope.launch { buyerRepository.deleteRequirement(requirement.id) } }
             )
@@ -374,18 +379,37 @@ private fun OrganizationDossierScreen(
         )
     }
     if (showBuyerRequirementDialog) {
+        val selected = editingRequirement
         BuyerRequirementEditorDialog(
-            onDismiss = { showBuyerRequirementDialog = false },
-            onSave = { draft -> buyerRepository.create(organizationId, draft).id },
-            onSaved = { showBuyerRequirementDialog = false; notice = "Buyer requirement saved." }
+            initial = selected,
+            onDismiss = { showBuyerRequirementDialog = false; editingRequirement = null },
+            onSave = { draft ->
+                if (selected == null) buyerRepository.create(organizationId, draft).id
+                else buyerRepository.update(selected.id, draft).id
+            },
+            onSaved = {
+                showBuyerRequirementDialog = false
+                editingRequirement = null
+                notice = "Buyer requirement saved."
+            }
         )
     }
     lineItemRequirement?.let { requirement ->
         if (showBuyerLineItemDialog) BuyerRequirementLineItemDialog(
             requirementTitle = requirement.title,
-            onDismiss = { showBuyerLineItemDialog = false; lineItemRequirement = null },
-            onSave = { draft -> buyerRepository.addLineItem(requirement.id, draft).id },
-            onSaved = { showBuyerLineItemDialog = false; lineItemRequirement = null; notice = "Line item saved." }
+            initial = editingLineItem,
+            onDismiss = { showBuyerLineItemDialog = false; lineItemRequirement = null; editingLineItem = null },
+            onSave = { draft ->
+                val selected = editingLineItem
+                if (selected == null) buyerRepository.addLineItem(requirement.id, draft).id
+                else buyerRepository.updateLineItem(selected.id, draft).id
+            },
+            onSaved = {
+                showBuyerLineItemDialog = false
+                lineItemRequirement = null
+                editingLineItem = null
+                notice = "Line item saved."
+            }
         )
     }
     buyerEvidenceRequirement?.let { requirement ->
@@ -436,7 +460,9 @@ private fun BuyerRequirementCard(
     requirement: BuyerRequirementEntity,
     repository: BuyerRequirementRepository,
     sources: List<OrganizationSourceEntity>,
+    onEdit: () -> Unit,
     onAddItem: () -> Unit,
+    onEditItem: (BuyerRequirementLineItemEntity) -> Unit,
     onLinkEvidence: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -450,6 +476,7 @@ private fun BuyerRequirementCard(
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(requirement.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = onEdit) { Text(stringResource(R.string.buyer_edit_requirement)) }
                 AssistChip(
                     onClick = { statusMenu = true },
                     label = { Text(stringResource(buyerRequirementStatusLabel(requirement.status))) }
@@ -475,11 +502,14 @@ private fun BuyerRequirementCard(
             requirement.requiredByText?.let { Text(stringResource(R.string.buyer_required_by, it), style = MaterialTheme.typography.labelSmall) }
             if (items.isEmpty()) Text(stringResource(R.string.buyer_no_items), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             items.forEach { item ->
-                Column(Modifier.fillMaxWidth().padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("• ${item.productName}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                    item.specification?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    val quantity = listOfNotNull(item.quantity, item.unit).joinToString(" ")
-                    if (quantity.isNotBlank()) Text(quantity, style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.fillMaxWidth().padding(start = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("• ${item.productName}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                        item.specification?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        val quantity = listOfNotNull(item.quantity, item.unit).joinToString(" ")
+                        if (quantity.isNotBlank()) Text(quantity, style = MaterialTheme.typography.labelSmall)
+                    }
+                    TextButton(onClick = { onEditItem(item) }) { Text(stringResource(R.string.buyer_edit_line_item)) }
                 }
             }
             if (evidence.isNotEmpty()) {
@@ -496,50 +526,100 @@ private fun BuyerRequirementCard(
 }
 
 @Composable
-private fun BuyerRequirementEditorDialog(onDismiss: () -> Unit, onSave: suspend (BuyerRequirementDraft) -> String, onSaved: (String) -> Unit) {
+private fun BuyerRequirementEditorDialog(
+    initial: BuyerRequirementEntity?,
+    onDismiss: () -> Unit,
+    onSave: suspend (BuyerRequirementDraft) -> String,
+    onSaved: (String) -> Unit
+) {
     val scope = rememberCoroutineScope()
-    var title by remember { mutableStateOf("") }; var description by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }; var city by remember { mutableStateOf("") }
-    var requiredBy by remember { mutableStateOf("") }; var currency by remember { mutableStateOf("") }
-    var saving by remember { mutableStateOf(false) }; var error by remember { mutableStateOf<String?>(null) }
-    AlertDialog(onDismissRequest = { if (!saving) onDismiss() }, title = { Text(stringResource(R.string.buyer_add_requirement)) }, text = {
-        Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(title, { title=it.take(200); error=null }, modifier=Modifier.fillMaxWidth(), label={Text(stringResource(R.string.buyer_title))}, singleLine=true)
-            OutlinedTextField(description,{description=it.take(4000)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_description))},minLines=2,maxLines=4)
-            OutlinedTextField(country,{country=it.take(120)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_country))},singleLine=true)
-            OutlinedTextField(city,{city=it.take(120)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_city))},singleLine=true)
-            OutlinedTextField(requiredBy,{requiredBy=it.take(120)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_required_by_label))},singleLine=true)
-            OutlinedTextField(currency,{currency=it.take(3)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_currency))},singleLine=true)
-            error?.let{Text(it,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)}
-        }
-    }, confirmButton = {
-        Button(enabled=!saving&&title.isNotBlank(),onClick={scope.launch{saving=true;val result=runCatching{onSave(BuyerRequirementDraft(title,description,BuyerRequirementState.OPEN,country,city,requiredBy,currency))};saving=false;result.onSuccess(onSaved).onFailure{error=it.message?:"Could not save buyer requirement."}}}){Text(stringResource(R.string.company_save))}
-    }, dismissButton={TextButton(enabled=!saving,onClick=onDismiss){Text(stringResource(R.string.company_cancel))}})
+    var title by remember(initial) { mutableStateOf(initial?.title.orEmpty()) }
+    var description by remember(initial) { mutableStateOf(initial?.description.orEmpty()) }
+    var country by remember(initial) { mutableStateOf(initial?.destinationCountry.orEmpty()) }
+    var city by remember(initial) { mutableStateOf(initial?.destinationCity.orEmpty()) }
+    var requiredBy by remember(initial) { mutableStateOf(initial?.requiredByText.orEmpty()) }
+    var currency by remember(initial) { mutableStateOf(initial?.currency.orEmpty()) }
+    var budget by remember(initial) { mutableStateOf(initial?.budgetMinorUnits?.toString().orEmpty()) }
+    var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(if (initial == null) R.string.buyer_add_requirement else R.string.buyer_edit_requirement)) },
+        text = {
+            Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(title, { title = it.take(200); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_title)) }, singleLine = true)
+                OutlinedTextField(description, { description = it.take(4_000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_description)) }, minLines = 2, maxLines = 4)
+                OutlinedTextField(country, { country = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_country)) }, singleLine = true)
+                OutlinedTextField(city, { city = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_city)) }, singleLine = true)
+                OutlinedTextField(requiredBy, { requiredBy = it.take(120) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_required_by_label)) }, singleLine = true)
+                OutlinedTextField(currency, { currency = it.take(3) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_currency)) }, singleLine = true)
+                OutlinedTextField(budget, { budget = it.take(18); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_budget_minor)) }, singleLine = true)
+                OutlinedTextField(notes, { notes = it.take(2_000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_notes)) }, minLines = 2, maxLines = 4)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(enabled = !saving && title.isNotBlank(), onClick = {
+                val parsedBudget = budget.trim().takeIf { it.isNotBlank() }?.toLongOrNull()
+                if (budget.isNotBlank() && parsedBudget == null) { error = "Enter budget as integer minor units."; return@Button }
+                scope.launch {
+                    saving = true
+                    val draft = BuyerRequirementDraft(title, description, initial?.status ?: BuyerRequirementState.OPEN, country, city, requiredBy, currency, parsedBudget, notes)
+                    val result = runCatching { onSave(draft) }
+                    saving = false
+                    result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save buyer requirement." }
+                }
+            }) { Text(stringResource(R.string.company_save)) }
+        },
+        dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
+    )
 }
 
 @Composable
-private fun BuyerRequirementLineItemDialog(requirementTitle:String,onDismiss:()->Unit,onSave:suspend(BuyerRequirementLineItemDraft)->String,onSaved:(String)->Unit) {
-    val scope=rememberCoroutineScope()
-    var name by remember{mutableStateOf("")};var specification by remember{mutableStateOf("")}
-    var quantity by remember{mutableStateOf("")};var unit by remember{mutableStateOf("")};var targetPrice by remember{mutableStateOf("")}
-    var saving by remember{mutableStateOf(false)};var error by remember{mutableStateOf<String?>(null)}
-    AlertDialog(onDismissRequest={if(!saving)onDismiss()},title={Text(stringResource(R.string.buyer_add_line_item))},text={
-        Column(Modifier.fillMaxWidth().heightIn(max=540.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
-            Text(requirementTitle,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.secondary)
-            OutlinedTextField(name,{name=it.take(200);error=null},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_product_name))},singleLine=true)
-            OutlinedTextField(specification,{specification=it.take(2000)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_specification))},minLines=2,maxLines=4)
-            OutlinedTextField(quantity,{quantity=it.take(40);error=null},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_quantity))},singleLine=true)
-            OutlinedTextField(unit,{unit=it.take(40)},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_unit))},singleLine=true)
-            OutlinedTextField(targetPrice,{targetPrice=it.take(18);error=null},modifier=Modifier.fillMaxWidth(),label={Text(stringResource(R.string.buyer_target_price_minor))},singleLine=true)
-            error?.let{Text(it,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)}
-        }
-    },confirmButton={
-        Button(enabled=!saving&&name.isNotBlank(),onClick={
-            val price=targetPrice.trim().takeIf{it.isNotBlank()}?.toLongOrNull()
-            if(targetPrice.isNotBlank()&&price==null){error="Enter target price as integer minor units.";return@Button}
-            scope.launch{saving=true;val result=runCatching{onSave(BuyerRequirementLineItemDraft(name,specification,quantity,unit,price))};saving=false;result.onSuccess(onSaved).onFailure{error=it.message?:"Could not save line item."}}
-        }){Text(stringResource(R.string.company_save))}
-    },dismissButton={TextButton(enabled=!saving,onClick=onDismiss){Text(stringResource(R.string.company_cancel))}})
+private fun BuyerRequirementLineItemDialog(
+    requirementTitle: String,
+    initial: BuyerRequirementLineItemEntity?,
+    onDismiss: () -> Unit,
+    onSave: suspend (BuyerRequirementLineItemDraft) -> String,
+    onSaved: (String) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    var name by remember(initial) { mutableStateOf(initial?.productName.orEmpty()) }
+    var specification by remember(initial) { mutableStateOf(initial?.specification.orEmpty()) }
+    var quantity by remember(initial) { mutableStateOf(initial?.quantity.orEmpty()) }
+    var unit by remember(initial) { mutableStateOf(initial?.unit.orEmpty()) }
+    var targetPrice by remember(initial) { mutableStateOf(initial?.targetUnitPriceMinorUnits?.toString().orEmpty()) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text(stringResource(if (initial == null) R.string.buyer_add_line_item else R.string.buyer_edit_line_item)) },
+        text = {
+            Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(requirementTitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                OutlinedTextField(name, { name = it.take(200); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_product_name)) }, singleLine = true)
+                OutlinedTextField(specification, { specification = it.take(2_000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_specification)) }, minLines = 2, maxLines = 4)
+                OutlinedTextField(quantity, { quantity = it.take(40); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_quantity)) }, singleLine = true)
+                OutlinedTextField(unit, { unit = it.take(40) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_unit)) }, singleLine = true)
+                OutlinedTextField(targetPrice, { targetPrice = it.take(18); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.buyer_target_price_minor)) }, singleLine = true)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(enabled = !saving && name.isNotBlank(), onClick = {
+                val price = targetPrice.trim().takeIf { it.isNotBlank() }?.toLongOrNull()
+                if (targetPrice.isNotBlank() && price == null) { error = "Enter target price as integer minor units."; return@Button }
+                scope.launch {
+                    saving = true
+                    val result = runCatching { onSave(BuyerRequirementLineItemDraft(name, specification, quantity, unit, price)) }
+                    saving = false
+                    result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save line item." }
+                }
+            }) { Text(stringResource(R.string.company_save)) }
+        },
+        dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
+    )
 }
 
 @Composable

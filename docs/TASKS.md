@@ -47,7 +47,11 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
 - [ ] T2.5 Implement ServiceNeed and JobOpening using shared organization/source/task primitives.
 - [ ] T2.6 Implement contact basis/consent, suppression, representation and commission terms.
-- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented. CI run 45590528494 compiled and assembled successfully and passed 153/154 tests; the remaining failure was the legacy Room v1→v12 test omitting `MIGRATION_11_12`. The migration chain and table assertion are now corrected; full CI/signature verification remains pending. Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
+- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented. CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passed the full build/test/lint workflow and persistent APK signature check; installable artifact ID 15010224455 is available.
+- [x] T2.8 Expose buyer-requirement header and line-item correction in the company dossier. Preserve IDs/creation timestamps, validate with the same repository rules as creation, and append a `LINE_UPDATED` audit event. English/Polish/Turkish UI and regression tests are implemented; candidate `0.10.0-debug` CI verification is pending.
+- [ ] T2.9 Expose supplier-offer header and multi-line-item correction, including evidence-link maintenance and activity history.
+- [ ] T2.10 Add durable recovery for deleted sourcing records; do not make hard deletion the only path for important buyer/offer data.
+ Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
 
 ## T3 — Discovery and browser/app automation
 

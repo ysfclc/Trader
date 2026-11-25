@@ -21,8 +21,8 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; latest code commit before the migration-test repair is `81228ff617a575934fda9fc456326c5e630b90eb` (nullable optional-field normalization, whitespace regression tests and version-derived APK identity assertion).
-- Current package/version candidate: `com.yusufculcu.trader.debug`, versionCode 9, versionName `0.9.0-debug`. CI run [45590528494](https://github.com/ysfclc/Trader/actions/runs/45590528494) compiled and assembled the APK and completed 154 tests: 153 passed, one failed because the legacy Room v1→v12 test omitted `MIGRATION_11_12`. The build stopped at the test task, so APK certificate verification and installable-artifact upload did not run.
+- Current branch: `feature/discovery-run-persistence`; the verified baseline is commit `11e2f4a124e0d6859a3d51e3e993f70f01f31e05` with CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passing build, unit tests, lint, APK identity and persistent signing-certificate checks.
+- Verified baseline package: `com.yusufculcu.trader.debug`, versionCode 9, versionName `0.9.0-debug`; installable APK artifact [15010224455](https://github.com/ysfclc/Trader/actions/runs/45591681856/artifacts/15010224455). The next candidate increments to versionCode 10 / `0.10.0-debug`; the existing version-derived workflow assertion will validate it without a hard-coded release number.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
@@ -106,4 +106,11 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Company, source, claim, contact, requirement, offer, line-item and evidence lifecycle events appear in the unified Activity timeline. Contact email, phone and name are not copied into activity details.
 - Buyer requirement and supplier offer cards expose localized lifecycle status controls in English, Polish and Turkish.
 - Encrypted backup snapshot v9 includes business activity history, validates event shape, and continues to read v1–v8 snapshots as empty history where appropriate.
-- Build candidate: `0.9.0-debug` / versionCode 9. The compile repair in commit `81228ff` succeeded and the APK assembled, but CI run [45590528494](https://github.com/ysfclc/Trader/actions/runs/45590528494) reported 153/154 passing tests. The remaining failure was the legacy Room v1→v12 test missing the new 11→12 migration in its explicit migration list; the test now includes it and asserts the `business_activity_events` table. Package/signature verification and artifact upload remain pending. Physical-device acceptance remains open.
+- Verified on CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856): the full Gradle build/test/lint command passed, APK package identity was `com.yusufculcu.trader.debug` versionCode 9 / `0.9.0-debug`, and the APK matched the persistent signing certificate. Installable artifact: [15010224455](https://github.com/ysfclc/Trader/actions/runs/45591681856/artifacts/15010224455). Physical-device update/install acceptance remains open.
+
+## Buyer requirement correction increment (2026-11-25)
+
+- The company dossier now opens existing buyer requirements in a prefilled editor; title, context, destination, timing, currency, budget, notes and existing status can be corrected without replacing the record.
+- Existing buyer line items can be edited in place. Validation is shared with creation, IDs and creation timestamps are preserved, and parent requirement/organization update timestamps advance.
+- Line-item corrections append a distinct `LINE_UPDATED` business activity event; the Activity timeline has localized English, Polish and Turkish wording.
+- No Room or backup schema change was required. Candidate build: `0.10.0-debug` / versionCode 10; CI verification for this correction increment is pending.

@@ -50,4 +50,22 @@ class BuyerRequirementRepositoryTest {
   ))
   assertNull(item.specification); assertNull(item.quantity); assertNull(item.unit)
  }
+
+ @Test fun requirementAndLineItemCorrectionsPreserveIdentityAndAppendHistory()=runBlocking {
+  val org=orgs.createOrganization(OrganizationDraft("Correction Buyer"))
+  val req=repo.create(org.id,BuyerRequirementDraft("Original requirement",status=BuyerRequirementState.OPEN))
+  val item=repo.addLineItem(req.id,BuyerRequirementLineItemDraft("Original part",quantity="10",unit="pcs"))
+  val corrected=repo.update(req.id,BuyerRequirementDraft("Corrected requirement",description="Updated drawing revision",status=BuyerRequirementState.PAUSED,currency="EUR",budgetMinorUnits=12500,notes="Confirm revision B"))
+  assertEquals(req.id,corrected.id); assertEquals(req.createdAt,corrected.createdAt)
+  assertEquals("Corrected requirement",corrected.title); assertEquals(BuyerRequirementState.PAUSED,corrected.status)
+  val correctedItem=repo.updateLineItem(item.id,BuyerRequirementLineItemDraft("Revised part","Revision B","12.5","pcs",900))
+  assertEquals(item.id,correctedItem.id); assertEquals(item.createdAt,correctedItem.createdAt)
+  assertEquals("Revised part",correctedItem.productName); assertEquals("12.5",correctedItem.quantity)
+  val events=db.businessActivityDao().getAll()
+  assertTrue(events.any{it.entityId==req.id&&it.eventType==BusinessActivityAction.UPDATED&&it.entityLabel=="Corrected requirement"})
+  assertTrue(events.any{it.entityId==req.id&&it.eventType==BusinessActivityAction.LINE_UPDATED&&it.details=="Revised part"})
+  var rejected=false
+  try{repo.updateLineItem(item.id,BuyerRequirementLineItemDraft("Bad part",quantity="-1"))}catch(_:IllegalArgumentException){rejected=true}
+  assertTrue(rejected)
+ }
 }

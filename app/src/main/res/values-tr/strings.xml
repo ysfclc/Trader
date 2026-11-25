@@ -325,6 +325,10 @@
 
     <string name="buyer_requirements">ALICI TALEPLERİ</string>
     <string name="buyer_add_requirement">Talep ekle</string>
+    <string name="buyer_edit_requirement">Talebi düzenle</string>
+    <string name="buyer_edit_line_item">Kalemi düzenle</string>
+    <string name="buyer_budget_minor">Bütçe (alt para birimi)</string>
+    <string name="buyer_notes">Dahili notlar</string>
     <string name="buyer_no_requirements">Henüz yapılandırılmış alıcı talebi kaydedilmedi.</string>
     <string name="buyer_title">Talep başlığı</string>
     <string name="buyer_description">Açıklama / bağlam</string>
@@ -429,6 +433,7 @@
     <string name="business_action_evidence_linked">Kanıt bağlandı</string>
     <string name="business_action_claim_reviewed">İddia incelendi</string>
     <string name="business_action_line_added">Kalem eklendi</string>
+    <string name="business_action_line_updated">Kalem güncellendi</string>
     <string name="business_action_decision_recorded">Karar kaydedildi</string>
     <string name="business_action_deleted">Silindi</string>
 
