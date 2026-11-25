@@ -1,12 +1,12 @@
 # Requirement coverage matrix
 
-_Branch review: 2026-11-24 against `feature/discovery-run-persistence` commit `5099d1929176f8b2c380e9747102d662246eee3a`; CI run 45394348906 passed `testDebugUnitTest`, `assembleDebug`, `lintDebug`, APK signature, persistent-certificate and package/version checks. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
+_Branch review: 2026-11-25 against `feature/discovery-run-persistence` commit `d376db2e108fa94cc90c6143c8545791eab5dd89`; CI run 45642932647 passed 161 tests, `assembleDebug`, `lintDebug`, APK signature and package/version checks. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
 
 ## Source of truth
 
 `docs/PROJECT_LOCK.md` is the canonical product specification (there is no separate `docs/SPEC.md`). Architecture and constraints are refined in `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/OPERATING_RULES.md`, `docs/DECISIONS.md` and `docs/ROADMAP.md`.
 
-A row is not marked complete merely because a screen or class exists. The status distinguishes code presence, test coverage, CI verification and physical-device acceptance. Line references are anchors in the current main revision and must be refreshed when files move.
+A row is not marked complete merely because a screen or class exists. The status distinguishes code presence, test coverage, CI verification and physical-device acceptance. Line references are anchors in the current main revision and must be refreshed when files move. This matrix is requirement coverage, not numerical code coverage; no coverage instrumentation or non-regression gate is currently configured, so code-coverage delta remains unverified and blocks APK publication.
 
 | Req ID | Requirement | Implementation | Test evidence | Documentation | Status |
 |---|---|---|---|---|---|
@@ -34,6 +34,7 @@ A row is not marked complete merely because a screen or class exists. The status
 
 | R-020 | Keep Trader installable across development updates without losing local work: stable application ID, monotonically increasing versionCode, dedicated persistent development signing certificate, launcher identity and non-destructive update rules. | `app/build.gradle.kts` retains `com.yusufculcu.trader.debug`, versionCode 2; `.github/workflows/android.yml` supports stable keystore secrets, verifies pinned certificate fingerprint and refuses to label ephemeral builds installable; manifest uses adaptive launcher/round icons. | CI runs 398 and 405 passed the app build/lint/package/signature checks and version 0.2.0; run 405 also passed the 98-test suite. Stable secrets were absent, so only CI-only APK artifact was emitted; stable-signed upgrade and Redmi acceptance remain open. | D-026; docs/ANDROID_BUILD.md; docs/TASKS.md T1.1a–c; docs/RISKS.md R-22/R-23 | 🟡 Implementation committed; CI/device/update acceptance pending |
 
+| R-023 | Buyer requirements and supplier offers can be moved to recoverable trash and restored without losing line items, evidence or sourcing decisions; company deletion cannot cascade them. | `BuyerRequirements.kt` and `SupplierOffers.kt` nullable `deletedAt`, active/trash queries and transactional archive/restore; `OrganizationRepository.kt` cascade guard; `SourcingDeskScreen.kt` localized Trash/restore UI; Room 12→13; backup snapshot v10. | `BuyerRequirementRepositoryTest` (preserves line items/evidence/reviews and blocks company cascade); `SupplierOfferRepositoryTest` (preserves line items/evidence/reviews and blocks company cascade); `SourcingRecordLifecycleMigrationTest`; `WorkflowPersistenceTest` v1→v13 chain; `TraderBackupManagerTest` tombstone round-trip. CI run 45642932647: 161 tests, 0 failures/errors/skipped. | `docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md`; `docs/TASKS.md` T2.10; `docs/STATE.md` | 🟡 Code, migration, backup and CI verified; physical-device recovery acceptance open |
 ## Current CI evidence
 
 - App identity/icon candidate: CI run 397 on `build/persistent-install-identity`; pending at last check. Previous run 396 failed during Gradle configuration because an absent `TRADER_KEYSTORE_PATH` was passed as an empty file path; corrected and rerun. Stable signing secrets were not configured in run 396.

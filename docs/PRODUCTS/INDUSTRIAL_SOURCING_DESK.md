@@ -1,7 +1,7 @@
 # Industrial Sourcing Desk
 
-**Product status:** first end-to-end product; CI-verified, physical-device acceptance open  
-**Build candidate:** Trader 0.11.0-debug / versionCode 11  
+**Product status:** first end-to-end product; 0.12.0 CI-verified, physical-device acceptance open  
+**Build candidate:** Trader 0.12.0-debug / versionCode 12; installable artifact withheld by release gate  
 **Pilot:** Türkiye ↔ Poland/EU industrial tooling and machining
 
 ## Job to be done
@@ -46,11 +46,13 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 
 - Native Android Sourcing destination; buyer requests remain managed in company dossiers.
 - Supplier offer header, normalized line items, company-scoped evidence links and persistent human review decisions.
-- Room v10→v11 stores supplier offers and sourcing decisions; Room v11→v12 adds append-only business activity history.
-- Encrypted workspace backup snapshot v9 preserves all commercial records and business history; snapshots v1–v8 remain backward-readable.
+- Room v10→v11 stores supplier offers and sourcing decisions; Room v11→v12 adds append-only business activity history; Room v12→v13 adds recoverable deletion timestamps and indexes.
+- Encrypted workspace backup snapshot v10 preserves all commercial records, business history and deletion state; snapshots v1–v9 remain backward-readable.
 - Buyer requirement and supplier offer status controls are editable in the dossier/Sourcing UI; every transition records its previous and new state.
 - Activity combines ProblemCase history with company, contact, claim, requirement, offer and sourcing-decision events. Contact email, phone and name are not copied into event details.
-- English, Polish and Turkish UI.
+- English, Polish and Turkish UI, including Sourcing Trash, restore, empty and failure states.
+- Recoverable deletion preserves requirement/offer line items, evidence links and sourcing reviews. Restores append activity events; company deletion is blocked while sourcing records exist.
+- CI run [45642932647](https://github.com/ysfclc/Trader/actions/runs/45642932647) passed 161 tests (0 failures/errors/skipped), clean build, lint and persistent signing-certificate/package verification. Test reports: [15035912637](https://github.com/ysfclc/Trader/actions/runs/45642932647/artifacts/15035912637). No installable APK artifact was published.
 - Verified baseline: CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passed build, all unit tests, lint, package/version identity and persistent signing-certificate verification. Package `com.yusufculcu.trader.debug`, versionCode 9 / `0.9.0-debug`; installable APK artifact [15010224455](https://github.com/ysfclc/Trader/actions/runs/45591681856/artifacts/15010224455).
 - Buyer requirement correction is CI-verified in run [45595844335](https://github.com/ysfclc/Trader/actions/runs/45595844335): header and line-item edits preserve identity, use shared validation and append correction history. Verified artifact [15013068288](https://github.com/ysfclc/Trader/actions/runs/45595844335/artifacts/15013068288), versionCode 10 / `0.10.0-debug`.
 - Supplier-offer correction is CI-verified in run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208): editable offer headers and multiple line items, guarded removal, transactional supplier-dossier-only evidence reconciliation and append-only add/update/remove/unlink events. All 157 unit tests, lint, APK assembly, package/version checks and persistent-certificate equality passed. Verified installable `0.11.0-debug`, versionCode 11, artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093).

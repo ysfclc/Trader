@@ -1,3 +1,12 @@
+## 2026-11-25 — Trader 0.12.0 recoverable sourcing records
+
+- Buyer requirements and supplier offers can be moved to recoverable trash and restored without losing line items, company-scoped evidence links or sourcing decisions. Active queries exclude trashed records.
+- Added append-only deletion/restoration activity events and blocked company deletion while any buyer requirements or supplier offers exist, preventing parent cascades from bypassing recovery.
+- Added Room v12→v13 nullable tombstones/indexes and encrypted backup snapshot v10; older snapshots without deletion fields decode them as active records.
+- Added English/Polish/Turkish Sourcing Trash, restore, empty and failure states. Updated Room runtime, KTX, compiler and testing components together to 2.8.5.
+- CI run [45642932647](https://github.com/ysfclc/Trader/actions/runs/45642932647): 161 tests passed (0 failures/errors/skipped), clean debug build, lint, package/version checks and persistent signing-certificate equality. Test report [15035912637](https://github.com/ysfclc/Trader/actions/runs/45642932647/artifacts/15035912637).
+- The installable APK artifact was deliberately not published. Workflow upload now requires an explicit manual `workflow_dispatch` approval after all release gates are green. Physical-device acceptance, numerical coverage non-regression and full dependency vulnerability scanning remain open.
+
 ## 2026-11-25 — Trader 0.11.0 supplier-offer correction verification
 
 - Verified supplier-offer header and line-item correction, guarded removal, transactional evidence-link reconciliation and append-only business activity history.
