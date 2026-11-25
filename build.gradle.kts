@@ -3,7 +3,7 @@ buildscript {
     configurations.configureEach {
         resolutionStrategy.eachDependency {
             when {
-                requested.group == "io.netty" -> useVersion("4.1.137.Final")
+                requested.group == "io.netty" && !requested.name.startsWith("netty-tcnative") -> useVersion("4.1.137.Final")
                 requested.group == "com.google.guava" && requested.name == "guava" -> useVersion("33.7.2-jre")
                 requested.group == "com.google.protobuf" && requested.name in setOf("protobuf-java", "protobuf-java-util", "protobuf-kotlin") -> useVersion("3.25.5")
                 requested.group == "org.bouncycastle" && requested.name in setOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on") -> useVersion("1.86")
