@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Branch review: 2026-11-25 against `feature/discovery-run-persistence` commit `d376db2e108fa94cc90c6143c8545791eab5dd89`; CI run 45642932647 passed 161 tests, `assembleDebug`, `lintDebug`, APK signature and package/version checks. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
+_Branch review: 2026-11-25 against `feature/discovery-run-persistence` commit `b22f0c9442a9dbbf5a01c39dc174d161b161e5bc`; coverage-gated CI run 45666843559 passed 161 app tests, six coverage-tool tests, `assembleDebug`, `lintDebug`, exact line/branch non-regression, APK signature and package/version checks. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
 
 ## Source of truth
 
@@ -12,7 +12,7 @@ A row is not marked complete merely because a screen or class exists. The status
 
 - The Android `debug` variant enables AGP-native unit-test coverage. CI runs `:app:createDebugUnitTestCoverageReport` and publishes the HTML/XML report as the `trader-unit-test-coverage` artifact.
 - `scripts/summarize_coverage.py` validates that the XML report contains a non-empty line counter and prints line, branch, instruction, method and class coverage into the Actions job summary.
-- Baseline: `docs/coverage-baseline.json`, measured from CI run [45665570698](https://github.com/ysfclc/Trader/actions/runs/45665570698), commit `29a1b1f`. Application-source line coverage is **14.85%** (1,394/9,388); branch coverage is **4.75%** (574/12,079). The raw AGP totals are 8.88% line and 4.38% branch because generated Room `_Impl` classes contribute 6,773 uncovered lines and 1,040 uncovered branches.
+- Baseline: `docs/coverage-baseline.json`, measured from CI run [45665570698](https://github.com/ysfclc/Trader/actions/runs/45665570698), commit `29a1b1f`; enforced successfully by coverage-gated CI run [45666843559](https://github.com/ysfclc/Trader/actions/runs/45666843559), commit `b22f0c9`. Application-source line coverage is **14.85%** (1,394/9,388); branch coverage is **4.75%** (574/12,079). The raw AGP totals are 8.88% line and 4.38% branch because generated Room `_Impl` classes contribute 6,773 uncovered lines and 1,040 uncovered branches. Run 45666843559 independently reproduced the same counters and reported `Baseline check: PASS`.
 - CI fails if application-source line or branch coverage falls below the exact checked-in baseline ratio. Comparisons use integer cross-multiplication, not rounded percentages. The baseline is not auto-updated.
 - The report utility has standard-library unit tests for generated-code exclusion, empty reports, independent line/branch regressions and exact ratio comparisons.
 - Coverage is JVM/Robolectric unit-test coverage of the debug variant. It is not instrumentation/device coverage and does not establish UI/device acceptance. The current baseline is a no-regression floor, not a quality target.

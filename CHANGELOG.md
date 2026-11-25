@@ -4,6 +4,7 @@
 - Established application-source baseline excluding Room-generated `_Impl` classes: 1,394/9,388 lines (14.85%) and 574/12,079 branches (4.75%). Counts are stored in `docs/coverage-baseline.json`.
 - CI now enforces exact line/branch ratio non-regression using integer arithmetic; baseline updates require an intentional reviewed change. Added six Python unit tests for coverage parsing, generated-code exclusion and regression detection.
 - The baseline is a floor, not a quality target. UI, ViewModel and data-layer coverage remain weak. No APK release approval is implied.
+- Coverage-gated CI run [45666843559](https://github.com/ysfclc/Trader/actions/runs/45666843559) passed six coverage utility tests, all 161 Android unit tests (0 failures/errors/skipped), clean build, lint, exact line/branch baseline enforcement (`Baseline check: PASS`), APK package/version and persistent-certificate checks. Coverage artifact [15046784926](https://github.com/ysfclc/Trader/actions/runs/45666843559/artifacts/15046784926); JUnit artifact [15048156829](https://github.com/ysfclc/Trader/actions/runs/45666843559/artifacts/15048156829). Installable APK upload remained skipped.
 
 ## 2026-11-25 — Trader numerical unit-test coverage instrumentation
 
