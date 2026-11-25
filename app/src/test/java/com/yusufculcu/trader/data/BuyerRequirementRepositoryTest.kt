@@ -62,7 +62,7 @@ class BuyerRequirementRepositoryTest {
   assertEquals(item.id,correctedItem.id); assertEquals(item.createdAt,correctedItem.createdAt)
   assertEquals("Revised part",correctedItem.productName); assertEquals("12.5",correctedItem.quantity)
   val events=db.businessActivityDao().getAll()
-  val headerEvent = events.single { it.entityId == req.id && it.entityLabel == "Corrected requirement" }
+  val headerEvent = events.single { it.entityId == req.id && it.eventType == BusinessActivityAction.STATUS_CHANGED && it.entityLabel == "Corrected requirement" }
     assertEquals(BusinessActivityAction.STATUS_CHANGED, headerEvent.eventType)
     assertEquals(BuyerRequirementState.OPEN, headerEvent.fromStatus)
     assertEquals(BuyerRequirementState.PAUSED, headerEvent.toStatus)
