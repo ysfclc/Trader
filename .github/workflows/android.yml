@@ -60,6 +60,17 @@ jobs:
           TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
           TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon --write-verification-metadata sha256 clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+      - name: Capture resolved dependency paths for vulnerability triage
+        run: |
+          ./gradlew --no-daemon :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
+      - name: Upload resolved dependency graph
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-resolved-dependency-graph
+          path: dependency-graph-report.txt
+          if-no-files-found: error
+          retention-days: 30
       - name: Scan resolved Gradle dependencies with OSV
         run: |
           test -s gradle/verification-metadata.xml
