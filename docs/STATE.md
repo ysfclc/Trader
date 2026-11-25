@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-24 — discovery provenance integrity hardening CI-verified_
+_Last updated: 2026-11-25 — company contact implementation; CI verification pending_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -7,7 +7,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 ## Current implementation
 | Area | State | Verified boundary |
 |---|---|---|
-| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; current build `0.4.0-debug`, versionCode 4. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
+| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; current build `0.5.0-debug`, versionCode 5. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
 | Local data | 🟡 partial | Room schema v9 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs/findings, organizations, organization sources, source-linked claims and company-scoped people/contact records. Encrypted backup snapshot v6 includes these records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
 | Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; physical install-over-existing is still unverified. The earlier one-time signing transition required uninstalling the previous app; no recovery claim is made without an exported .traderbackup. Snapshot v5 includes all current records, including organizations, source snapshots and claims; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
@@ -21,13 +21,13 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; latest app implementation commit: [5099d19](https://github.com/ysfclc/Trader/commit/5099d1929176f8b2c380e9747102d662246eee3a).
-- Verified package/version: `com.yusufculcu.trader.debug`, versionCode 5, versionName 0.5.0-debug.
+- Current branch: `feature/discovery-run-persistence`; latest app implementation commit: [1393cd8](https://github.com/ysfclc/Trader/commit/1393cd89946b66039a872c0784975393fb95f547).
+- Current package/version target: `com.yusufculcu.trader.debug`, versionCode 5, versionName `0.5.0-debug`; CI verification for this increment is pending.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
 ## Immediate next increments
-1. Add Person records, aliases and reversible duplicate/identity review without automatic merges.
+1. Add person aliases and reversible duplicate/identity review without automatic merges.
 2. Add structured BuyerRequirement and SupplierOffer records with line items and evidence links.
 3. Add deterministic, explainable ProofAsset-to-Organization fit assessments: support, contradictions, unknowns and reviewer override.
 4. Capture browser evidence into dossiers, then compare requirements and offers for the Türkiye → Poland/EU industrial tooling pilot.
@@ -62,4 +62,4 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Added company-scoped people/contact records for name, role, email, phone, LinkedIn profile and operator-entered notes. Records can be created, edited and deleted inside a company dossier.
 - Added Room v8→v9 migration with company foreign key/cascade and encrypted backup snapshot v6. Older backup snapshots remain readable with an empty contact list.
 - Contact validation rejects malformed email and non-LinkedIn profile URLs. Similar names are not merged; aliases and reversible identity review remain future work.
-- Implementation committed; CI verification and APK artifact pending. No physical-device acceptance is claimed.
+- Implementation committed in [1393cd8](https://github.com/ysfclc/Trader/commit/1393cd89946b66039a872c0784975393fb95f547); CI verification and APK artifact pending. Backup round-trip coverage and distinct save/delete feedback are included in the follow-up commit. No physical-device acceptance is claimed.

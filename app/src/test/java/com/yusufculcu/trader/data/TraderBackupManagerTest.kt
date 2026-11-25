@@ -68,6 +68,10 @@ class TraderBackupManagerTest {
             assertEquals("https://acme.example/rfq", target.organizationSourceDao().getAll().single().url)
             assertEquals(1, target.organizationClaimDao().getAll().size)
             assertEquals(OrganizationClaimState.SUPPORTED, target.organizationClaimDao().getAll().single().reviewState)
+            assertEquals(1, target.organizationPersonDao().getAll().size)
+            assertEquals("Ada Buyer", target.organizationPersonDao().getAll().single().fullName)
+            assertEquals("ada@acme.example", target.organizationPersonDao().getAll().single().email)
+            assertEquals("User-confirmed contact", target.organizationPersonDao().getAll().single().notes)
         } finally {
             source.close()
             target.close()
@@ -284,6 +288,9 @@ class TraderBackupManagerTest {
         )
         database.organizationClaimDao().insert(
             OrganizationClaimEntity("org-claim-1", "org-1", "org-source-1", "Buyer requirement", "Requests 500 machined parts per quarter.", OrganizationClaimState.SUPPORTED, null, now + 13, now + 12, now + 13)
+        )
+        database.organizationPersonDao().insert(
+            OrganizationPersonEntity("org-person-1", "org-1", "Ada Buyer", "Procurement Manager", "ada@acme.example", "+48 600 000 000", "https://www.linkedin.com/in/ada-buyer", "User-confirmed contact", now + 14, now + 15)
         )
     }
 

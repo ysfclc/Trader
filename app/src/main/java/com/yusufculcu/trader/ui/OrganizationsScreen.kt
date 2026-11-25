@@ -341,7 +341,7 @@ private fun OrganizationDossierScreen(
             onDismiss = { showPersonDialog = false; editingPerson = null },
             onSave = { draft -> val selected = editingPerson; if (selected == null) repository.addPerson(organizationId, draft).id else repository.updatePerson(selected.id, draft).id },
             onDelete = { personId -> repository.deletePerson(personId) },
-            onSaved = { showPersonDialog = false; editingPerson = null; notice = "Contact saved. No identity merge was performed." }
+            onSaved = { _, deleted -> showPersonDialog = false; editingPerson = null; notice = if (deleted) "Contact deleted." else "Contact saved. No identity merge was performed." }
         )
     }
     if (showSourceDialog) {
@@ -370,7 +370,7 @@ private fun OrganizationDossierScreen(
 }
 
 @Composable
-private fun OrganizationPersonDialog(initial: OrganizationPersonEntity?, onDismiss: () -> Unit, onSave: suspend (OrganizationPersonDraft) -> String, onDelete: suspend (String) -> Boolean, onSaved: (String) -> Unit) {
+private fun OrganizationPersonDialog(initial: OrganizationPersonEntity?, onDismiss: () -> Unit, onSave: suspend (OrganizationPersonDraft) -> String, onDelete: suspend (String) -> Boolean, onSaved: (String, Boolean) -> Unit) {
     val scope = rememberCoroutineScope()
     var name by remember(initial) { mutableStateOf(initial?.fullName.orEmpty()) }
     var role by remember(initial) { mutableStateOf(initial?.role.orEmpty()) }
@@ -392,8 +392,8 @@ private fun OrganizationPersonDialog(initial: OrganizationPersonEntity?, onDismi
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
     }, confirmButton = { Row {
-        if (initial != null) TextButton(enabled = !saving, onClick = { scope.launch { saving = true; val result = runCatching { onDelete(initial.id) }; saving = false; result.onSuccess { onSaved(initial.id) }.onFailure { error = it.message ?: "Could not delete contact." } } }) { Text(stringResource(R.string.company_delete_contact)) }
-        Button(enabled = !saving && name.isNotBlank(), onClick = { scope.launch { saving = true; val result = runCatching { onSave(OrganizationPersonDraft(name, role, email, phone, profile, notes)) }; saving = false; result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save contact." } } }) { Text(stringResource(R.string.company_save)) }
+        if (initial != null) TextButton(enabled = !saving, onClick = { scope.launch { saving = true; val result = runCatching { onDelete(initial.id) }; saving = false; result.onSuccess { deleted -> if (deleted) onSaved(initial.id, true) else error = "Contact no longer exists." }.onFailure { error = it.message ?: "Could not delete contact." } } }) { Text(stringResource(R.string.company_delete_contact)) }
+        Button(enabled = !saving && name.isNotBlank(), onClick = { scope.launch { saving = true; val result = runCatching { onSave(OrganizationPersonDraft(name, role, email, phone, profile, notes)) }; saving = false; result.onSuccess { id -> onSaved(id, false) }.onFailure { error = it.message ?: "Could not save contact." } } }) { Text(stringResource(R.string.company_save)) }
     } }, dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } })
 }
 
