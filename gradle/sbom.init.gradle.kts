@@ -14,9 +14,11 @@ rootProject {
     apply<CyclonedxPlugin>()
 }
 
-allprojects {
-    tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
-        includeBuildEnvironment = true
-        testConfigs = listOf("(?i).*test.*")
+gradle.projectsEvaluated {
+    rootProject.allprojects {
+        tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
+            includeBuildEnvironment = true
+            testConfigs = listOf("(?i).*test.*")
+        }
     }
 }
