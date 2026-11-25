@@ -38,6 +38,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,7 +72,7 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, DISCOVER, PIPELINE, ACTIVITY, BROWSER, AI }
+private enum class AppTab { INBOX, DISCOVER, SOURCING, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,6 +161,7 @@ fun TraderApp(
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
                 NavigationBarItem(tab == AppTab.DISCOVER, { tab = AppTab.DISCOVER }, icon = { Icon(Icons.Rounded.Search, null) }, label = { Text(stringResource(R.string.discover_nav)) })
+                NavigationBarItem(tab == AppTab.SOURCING, { tab = AppTab.SOURCING }, icon = { Icon(Icons.Rounded.Inventory2, null) }, label = { Text(stringResource(R.string.sourcing_nav)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
                 NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
@@ -207,6 +209,13 @@ fun TraderApp(
                 }
             )
             tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
+            tab == AppTab.SOURCING -> SourcingDeskScreen(
+                buyerRepository = (context.applicationContext as TraderApplication).buyerRequirementRepository,
+                supplierRepository = (context.applicationContext as TraderApplication).supplierOfferRepository,
+                organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
+                onOpenCompanies = { tab = AppTab.PIPELINE },
+                modifier = Modifier.padding(padding)
+            )
             tab == AppTab.PIPELINE -> PipelineWorkspaceContent(
                 opportunities = opportunities,
                 onOpenOpportunity = { selectedId = it.id },
