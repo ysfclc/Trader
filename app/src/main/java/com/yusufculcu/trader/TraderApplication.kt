@@ -9,12 +9,14 @@ import com.yusufculcu.trader.data.MIGRATION_4_5
 import com.yusufculcu.trader.data.MIGRATION_5_6
 import com.yusufculcu.trader.data.MIGRATION_6_7
 import com.yusufculcu.trader.data.MIGRATION_7_8
-import com.yusufculcu.trader.data.MIGRATION_8_9\nimport com.yusufculcu.trader.data.MIGRATION_9_10
+import com.yusufculcu.trader.data.MIGRATION_8_9
+import com.yusufculcu.trader.data.MIGRATION_9_10
 import com.yusufculcu.trader.data.TraderDatabase
 import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.ai.TraderModelCandidateVerifier
@@ -29,7 +31,8 @@ class TraderApplication : Application() {
     val repository: TraderRepository by lazy { TraderRepository(database) }
     val discoveryStrategyRepository: DiscoveryStrategyRepository by lazy { DiscoveryStrategyRepository(database) }
     val discoveryRunRepository: DiscoveryRunRepository by lazy { DiscoveryRunRepository(database) }
-    val organizationRepository: OrganizationRepository by lazy { OrganizationRepository(database) }\n    val buyerRequirementRepository: BuyerRequirementRepository by lazy { BuyerRequirementRepository(database) }
+    val organizationRepository: OrganizationRepository by lazy { OrganizationRepository(database) }
+    val buyerRequirementRepository: BuyerRequirementRepository by lazy { BuyerRequirementRepository(database) }
     val modelStore: TraderModelStore by lazy { TraderModelStore(this) }
     val modelCandidateVerifier: TraderModelCandidateVerifier by lazy { TraderModelCandidateVerifier(this) }
     val discoverySourceStore: DiscoverySourceStore by lazy { DiscoverySourceStore(this) }

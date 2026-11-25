@@ -57,7 +57,10 @@ class TraderBackupManager(
                     organizations = database.organizationDao().getAll(),
                     organizationSources = database.organizationSourceDao().getAll(),
                     organizationClaims = database.organizationClaimDao().getAll(),
-                    organizationPeople = database.organizationPersonDao().getAll(),\n                    buyerRequirements = database.buyerRequirementDao().getAll(),\n                    buyerRequirementItems = database.buyerRequirementLineItemDao().getAll(),\n                    buyerRequirementEvidence = database.buyerRequirementEvidenceDao().getAll()
+                    organizationPeople = database.organizationPersonDao().getAll(),
+                    buyerRequirements = database.buyerRequirementDao().getAll(),
+                    buyerRequirementItems = database.buyerRequirementLineItemDao().getAll(),
+                    buyerRequirementEvidence = database.buyerRequirementEvidenceDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -123,7 +126,10 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
-                        database.buyerRequirementEvidenceDao().deleteAll()\n                        database.buyerRequirementLineItemDao().deleteAll()\n                        database.buyerRequirementDao().deleteAll()\n                        database.organizationPersonDao().deleteAll()
+                        database.buyerRequirementEvidenceDao().deleteAll()
+                        database.buyerRequirementLineItemDao().deleteAll()
+                        database.buyerRequirementDao().deleteAll()
+                        database.organizationPersonDao().deleteAll()
                         database.organizationClaimDao().deleteAll()
                         database.organizationSourceDao().deleteAll()
                         database.organizationDao().deleteAll()
@@ -156,7 +162,10 @@ class TraderBackupManager(
                         database.organizationDao().insertAll(snapshot.organizations)
                         database.organizationSourceDao().insertAll(snapshot.organizationSources)
                         database.organizationClaimDao().insertAll(snapshot.organizationClaims)
-                        database.organizationPersonDao().insertAll(snapshot.organizationPeople)\n                        database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)\n                        database.buyerRequirementLineItemDao().insertAll(snapshot.buyerRequirementItems)\n                        database.buyerRequirementEvidenceDao().insertAll(snapshot.buyerRequirementEvidence)
+                        database.organizationPersonDao().insertAll(snapshot.organizationPeople)
+                        database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)
+                        database.buyerRequirementLineItemDao().insertAll(snapshot.buyerRequirementItems)
+                        database.buyerRequirementEvidenceDao().insertAll(snapshot.buyerRequirementEvidence)
                     }
                 } catch (failure: Throwable) {
                     if (previousSources != null) {
@@ -228,7 +237,10 @@ class TraderBackupManager(
             .put("organizations", jsonArray(snapshot.organizations, ::encodeOrganization))
             .put("organizationSources", jsonArray(snapshot.organizationSources, ::encodeOrganizationSource))
             .put("organizationClaims", jsonArray(snapshot.organizationClaims, ::encodeOrganizationClaim))
-            .put("organizationPeople", jsonArray(snapshot.organizationPeople, ::encodeOrganizationPerson))\n            .put("buyerRequirements", jsonArray(snapshot.buyerRequirements, ::encodeBuyerRequirement))\n            .put("buyerRequirementItems", jsonArray(snapshot.buyerRequirementItems, ::encodeBuyerRequirementItem))\n            .put("buyerRequirementEvidence", jsonArray(snapshot.buyerRequirementEvidence, ::encodeBuyerRequirementEvidence))
+            .put("organizationPeople", jsonArray(snapshot.organizationPeople, ::encodeOrganizationPerson))
+            .put("buyerRequirements", jsonArray(snapshot.buyerRequirements, ::encodeBuyerRequirement))
+            .put("buyerRequirementItems", jsonArray(snapshot.buyerRequirementItems, ::encodeBuyerRequirementItem))
+            .put("buyerRequirementEvidence", jsonArray(snapshot.buyerRequirementEvidence, ::encodeBuyerRequirementEvidence))
         return root.toString()
     }
 
@@ -264,7 +276,10 @@ class TraderBackupManager(
             organizations = if (backupSchemaVersion >= 8 && root.has("organizations")) decodeArray(root, "organizations", ::decodeOrganization) else emptyList(),
             organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
             organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList(),
-            organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList(),\n            buyerRequirements = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirements")) { "Backup is missing buyer requirements." }; decodeArray(root, "buyerRequirements", ::decodeBuyerRequirement) } else emptyList(),\n            buyerRequirementItems = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementItems")) { "Backup is missing buyer requirement line items." }; decodeArray(root, "buyerRequirementItems", ::decodeBuyerRequirementItem) } else emptyList(),\n            buyerRequirementEvidence = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementEvidence")) { "Backup is missing buyer requirement evidence links." }; decodeArray(root, "buyerRequirementEvidence", ::decodeBuyerRequirementEvidence) } else emptyList()
+            organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList(),
+            buyerRequirements = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirements")) { "Backup is missing buyer requirements." }; decodeArray(root, "buyerRequirements", ::decodeBuyerRequirement) } else emptyList(),
+            buyerRequirementItems = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementItems")) { "Backup is missing buyer requirement line items." }; decodeArray(root, "buyerRequirementItems", ::decodeBuyerRequirementItem) } else emptyList(),
+            buyerRequirementEvidence = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementEvidence")) { "Backup is missing buyer requirement evidence links." }; decodeArray(root, "buyerRequirementEvidence", ::decodeBuyerRequirementEvidence) } else emptyList()
         )
     }
 
@@ -297,7 +312,14 @@ class TraderBackupManager(
         unique(snapshot.organizationSources.map { it.id }, "organization source")
         unique(snapshot.organizationSources.map { it.organizationId + "|" + it.url }, "organization source URL")
         unique(snapshot.organizationClaims.map { it.id }, "organization claim")
-        unique(snapshot.organizationPeople.map { it.id }, "organization person")\n        unique(snapshot.buyerRequirements.map { it.id }, "buyer requirement")\n        unique(snapshot.buyerRequirementItems.map { it.id }, "buyer requirement line item")\n        unique(snapshot.buyerRequirementEvidence.map { it.id }, "buyer requirement evidence link")\n        unique(snapshot.buyerRequirementEvidence.map { it.requirementId + "|" + it.sourceId }, "buyer requirement evidence pair")\n        require(snapshot.buyerRequirements.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Buyer requirement references a missing company." }\n        require(snapshot.buyerRequirementItems.all { it.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) }) { "Buyer requirement line item references a missing requirement." }\n        require(snapshot.buyerRequirementEvidence.all { link -> link.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) && link.sourceId in snapshot.organizationSources.map(OrganizationSourceEntity::id) && snapshot.buyerRequirements.first { it.id == link.requirementId }.organizationId == snapshot.organizationSources.first { it.id == link.sourceId }.organizationId }) { "Buyer requirement evidence link is invalid." }
+        unique(snapshot.organizationPeople.map { it.id }, "organization person")
+        unique(snapshot.buyerRequirements.map { it.id }, "buyer requirement")
+        unique(snapshot.buyerRequirementItems.map { it.id }, "buyer requirement line item")
+        unique(snapshot.buyerRequirementEvidence.map { it.id }, "buyer requirement evidence link")
+        unique(snapshot.buyerRequirementEvidence.map { it.requirementId + "|" + it.sourceId }, "buyer requirement evidence pair")
+        require(snapshot.buyerRequirements.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Buyer requirement references a missing company." }
+        require(snapshot.buyerRequirementItems.all { it.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) }) { "Buyer requirement line item references a missing requirement." }
+        require(snapshot.buyerRequirementEvidence.all { link -> link.requirementId in snapshot.buyerRequirements.map(BuyerRequirementEntity::id) && link.sourceId in snapshot.organizationSources.map(OrganizationSourceEntity::id) && snapshot.buyerRequirements.first { it.id == link.requirementId }.organizationId == snapshot.organizationSources.first { it.id == link.sourceId }.organizationId }) { "Buyer requirement evidence link is invalid." }
         unique(snapshot.discoverySources.map { it.feedUrl.lowercase() }, "discovery feed URL")
         require(snapshot.discoverySources.all {
             it.adapterId == RssAtomFeedAdapter.ADAPTER_ID && it.name.isNotBlank() && it.name.length <= 100 &&
@@ -576,7 +598,14 @@ class TraderBackupManager(
         createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
     )
 
-    private fun encodeBuyerRequirement(row: BuyerRequirementEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "destinationCountry" to row.destinationCountry, "destinationCity" to row.destinationCity, "requiredByText" to row.requiredByText, "currency" to row.currency, "budgetMinorUnits" to row.budgetMinorUnits, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)\n    private fun decodeBuyerRequirement(o: JSONObject) = BuyerRequirementEntity(o.getString("id"),o.getString("organizationId"),o.getString("title"),o.stringOrNull("description"),o.getString("status"),o.stringOrNull("destinationCountry"),o.stringOrNull("destinationCity"),o.stringOrNull("requiredByText"),o.stringOrNull("currency"),o.longOrNull("budgetMinorUnits"),o.stringOrNull("notes"),o.getLong("createdAt"),o.getLong("updatedAt"))\n    private fun encodeBuyerRequirementItem(row: BuyerRequirementLineItemEntity) = json("id" to row.id, "requirementId" to row.requirementId, "productName" to row.productName, "specification" to row.specification, "quantity" to row.quantity, "unit" to row.unit, "targetUnitPriceMinorUnits" to row.targetUnitPriceMinorUnits, "createdAt" to row.createdAt)\n    private fun decodeBuyerRequirementItem(o: JSONObject) = BuyerRequirementLineItemEntity(o.getString("id"),o.getString("requirementId"),o.getString("productName"),o.stringOrNull("specification"),o.stringOrNull("quantity"),o.stringOrNull("unit"),o.longOrNull("targetUnitPriceMinorUnits"),o.getLong("createdAt"))\n    private fun encodeBuyerRequirementEvidence(row: BuyerRequirementEvidenceEntity) = json("id" to row.id, "requirementId" to row.requirementId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt)\n    private fun decodeBuyerRequirementEvidence(o: JSONObject) = BuyerRequirementEvidenceEntity(o.getString("id"),o.getString("requirementId"),o.getString("sourceId"),o.getLong("linkedAt"))\n\n    private fun encodeOrganizationPerson(row: OrganizationPersonEntity) = json("id" to row.id, "organizationId" to row.organizationId, "fullName" to row.fullName, "role" to row.role, "email" to row.email, "phone" to row.phone, "profileUrl" to row.profileUrl, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
+    private fun encodeBuyerRequirement(row: BuyerRequirementEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "destinationCountry" to row.destinationCountry, "destinationCity" to row.destinationCity, "requiredByText" to row.requiredByText, "currency" to row.currency, "budgetMinorUnits" to row.budgetMinorUnits, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
+    private fun decodeBuyerRequirement(o: JSONObject) = BuyerRequirementEntity(o.getString("id"),o.getString("organizationId"),o.getString("title"),o.stringOrNull("description"),o.getString("status"),o.stringOrNull("destinationCountry"),o.stringOrNull("destinationCity"),o.stringOrNull("requiredByText"),o.stringOrNull("currency"),o.longOrNull("budgetMinorUnits"),o.stringOrNull("notes"),o.getLong("createdAt"),o.getLong("updatedAt"))
+    private fun encodeBuyerRequirementItem(row: BuyerRequirementLineItemEntity) = json("id" to row.id, "requirementId" to row.requirementId, "productName" to row.productName, "specification" to row.specification, "quantity" to row.quantity, "unit" to row.unit, "targetUnitPriceMinorUnits" to row.targetUnitPriceMinorUnits, "createdAt" to row.createdAt)
+    private fun decodeBuyerRequirementItem(o: JSONObject) = BuyerRequirementLineItemEntity(o.getString("id"),o.getString("requirementId"),o.getString("productName"),o.stringOrNull("specification"),o.stringOrNull("quantity"),o.stringOrNull("unit"),o.longOrNull("targetUnitPriceMinorUnits"),o.getLong("createdAt"))
+    private fun encodeBuyerRequirementEvidence(row: BuyerRequirementEvidenceEntity) = json("id" to row.id, "requirementId" to row.requirementId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt)
+    private fun decodeBuyerRequirementEvidence(o: JSONObject) = BuyerRequirementEvidenceEntity(o.getString("id"),o.getString("requirementId"),o.getString("sourceId"),o.getLong("linkedAt"))
+
+    private fun encodeOrganizationPerson(row: OrganizationPersonEntity) = json("id" to row.id, "organizationId" to row.organizationId, "fullName" to row.fullName, "role" to row.role, "email" to row.email, "phone" to row.phone, "profileUrl" to row.profileUrl, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
     private fun decodeOrganizationPerson(o: JSONObject) = OrganizationPersonEntity(o.getString("id"), o.getString("organizationId"), o.getString("fullName"), o.stringOrNull("role"), o.stringOrNull("email"), o.stringOrNull("phone"), o.stringOrNull("profileUrl"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"))
 
     private fun encodeSourceRun(row: SourceRunEntity) = json(
@@ -640,7 +669,10 @@ class TraderBackupManager(
         val organizations: List<OrganizationEntity> = emptyList(),
         val organizationSources: List<OrganizationSourceEntity> = emptyList(),
         val organizationClaims: List<OrganizationClaimEntity> = emptyList(),
-        val organizationPeople: List<OrganizationPersonEntity> = emptyList(),\n        val buyerRequirements: List<BuyerRequirementEntity> = emptyList(),\n        val buyerRequirementItems: List<BuyerRequirementLineItemEntity> = emptyList(),\n        val buyerRequirementEvidence: List<BuyerRequirementEvidenceEntity> = emptyList()
+        val organizationPeople: List<OrganizationPersonEntity> = emptyList(),
+        val buyerRequirements: List<BuyerRequirementEntity> = emptyList(),
+        val buyerRequirementItems: List<BuyerRequirementLineItemEntity> = emptyList(),
+        val buyerRequirementEvidence: List<BuyerRequirementEvidenceEntity> = emptyList()
     )
 
     companion object {

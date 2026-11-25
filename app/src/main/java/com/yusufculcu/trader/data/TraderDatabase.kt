@@ -673,7 +673,10 @@ interface SourceRunDao {
         OrganizationEntity::class,
         OrganizationSourceEntity::class,
         OrganizationClaimEntity::class,
-        OrganizationPersonEntity::class
+        OrganizationPersonEntity::class,
+        BuyerRequirementEntity::class,
+        BuyerRequirementLineItemEntity::class,
+        BuyerRequirementEvidenceEntity::class
     ],
     version = 10,
     exportSchema = true
@@ -696,6 +699,9 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun organizationSourceDao(): OrganizationSourceDao
     abstract fun organizationClaimDao(): OrganizationClaimDao
     abstract fun organizationPersonDao(): OrganizationPersonDao
+    abstract fun buyerRequirementDao(): BuyerRequirementDao
+    abstract fun buyerRequirementLineItemDao(): BuyerRequirementLineItemDao
+    abstract fun buyerRequirementEvidenceDao(): BuyerRequirementEvidenceDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
