@@ -189,7 +189,7 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 
 - [x] P1.1 Deliver the buyer-request → supplier-offer → comparison → human-shortlist workflow inside Trader.
 - [x] P1.2 Persist supplier offers, offer line items, evidence links and sourcing decisions in Room v11; expose buyer-request and supplier-offer lifecycle status controls with immutable transition history in Room v12.
-- [x] P1.3 Preserve all sourcing records and business activity history in encrypted backup snapshot v9 with validation and safe restore ordering.
+- [x] P1.3 Preserve all sourcing records and business activity history in encrypted backup snapshot v10, including recoverable deletion state, with validation and safe restore ordering.
 - [x] P1.4 Provide EN/PL/TR sourcing workflow and explicit shareable shortlist handoff.
 - [x] P1.5 CI run 45574277490 passed clean build, tests, lint and persistent APK identity/signature checks.
 - [ ] P1.6 Complete physical-device install-over-existing, migration/restore and real buyer-to-shortlist acceptance.
