@@ -53,6 +53,8 @@ data class OrganizationClaimDraft(
  * UNREVIEWED; no model output can mark a claim supported automatically.
  */
 class OrganizationRepository(private val database: TraderDatabase) {
+    fun buyerRequirementRepository(): BuyerRequirementRepository = BuyerRequirementRepository(database)
+
     fun observeOrganizations(): Flow<List<OrganizationEntity>> = database.organizationDao().observeAll()
     fun observeOrganization(id: String): Flow<OrganizationEntity?> = database.organizationDao().observeById(id)
     fun observeSources(organizationId: String): Flow<List<OrganizationSourceEntity>> =
