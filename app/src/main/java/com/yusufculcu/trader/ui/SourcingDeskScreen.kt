@@ -132,7 +132,7 @@ fun SourcingDeskScreen(
                                     scope.launch {
                                         runCatching { buyerRepository.restoreRequirement(requirement.id) }
                                             .onSuccess { selectedRequirementId = requirement.id; Toast.makeText(context, R.string.sourcing_record_restored, Toast.LENGTH_SHORT).show() }
-                                            .onFailure { Toast.makeText(context, it.message ?: "Could not restore requirement.", Toast.LENGTH_LONG).show() }
+                                            .onFailure { Toast.makeText(context, R.string.sourcing_restore_failed, Toast.LENGTH_LONG).show() }
                                     }
                                 }) { Text(stringResource(R.string.sourcing_restore_record)) }
                             }
@@ -149,7 +149,7 @@ fun SourcingDeskScreen(
                                     scope.launch {
                                         runCatching { supplierRepository.restoreOffer(offer.id) }
                                             .onSuccess { Toast.makeText(context, R.string.sourcing_record_restored, Toast.LENGTH_SHORT).show() }
-                                            .onFailure { Toast.makeText(context, it.message ?: "Could not restore offer.", Toast.LENGTH_LONG).show() }
+                                            .onFailure { Toast.makeText(context, R.string.sourcing_restore_failed, Toast.LENGTH_LONG).show() }
                                     }
                                 }) { Text(stringResource(R.string.sourcing_restore_record)) }
                             }
@@ -192,7 +192,7 @@ fun SourcingDeskScreen(
                         scope.launch {
                             runCatching { buyerRepository.deleteRequirement(request.id) }
                                 .onSuccess { selectedRequirementId = null; Toast.makeText(context, R.string.sourcing_requirement_archived, Toast.LENGTH_SHORT).show() }
-                                .onFailure { Toast.makeText(context, it.message ?: "Could not move requirement to trash.", Toast.LENGTH_LONG).show() }
+                                .onFailure { Toast.makeText(context, R.string.sourcing_archive_failed, Toast.LENGTH_LONG).show() }
                         }
                     }) { Text(stringResource(R.string.sourcing_move_to_trash)) }
                 }
@@ -234,7 +234,7 @@ fun SourcingDeskScreen(
                                 scope.launch {
                                     runCatching { supplierRepository.deleteOffer(offer.id) }
                                         .onSuccess { Toast.makeText(context, R.string.sourcing_offer_archived, Toast.LENGTH_SHORT).show() }
-                                        .onFailure { Toast.makeText(context, it.message ?: "Could not move offer to trash.", Toast.LENGTH_LONG).show() }
+                                        .onFailure { Toast.makeText(context, R.string.sourcing_archive_failed, Toast.LENGTH_LONG).show() }
                                 }
                             }
                         )

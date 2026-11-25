@@ -461,4 +461,6 @@
     <string name="sourcing_offer_archived">Tedarikçi teklifi çöp kutusuna taşındı.</string>
     <string name="sourcing_record_restored">Tedarik kaydı geri yüklendi.</string>
     <string name="business_action_restored">Geri yüklendi</string>
+    <string name="sourcing_restore_failed">Kayıt geri yüklenemedi. Lütfen tekrar deneyin.</string>
+    <string name="sourcing_archive_failed">Kayıt çöp kutusuna taşınamadı. Lütfen tekrar deneyin.</string>
 </resources>

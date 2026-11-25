@@ -461,4 +461,6 @@
     <string name="sourcing_offer_archived">Supplier offer moved to trash.</string>
     <string name="sourcing_record_restored">Sourcing record restored.</string>
     <string name="business_action_restored">Restored</string>
+    <string name="sourcing_restore_failed">Couldn’t restore this record. Please try again.</string>
+    <string name="sourcing_archive_failed">Couldn’t move this record to trash. Please try again.</string>
 </resources>
