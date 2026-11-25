@@ -36,4 +36,18 @@ class BuyerRequirementRepositoryTest {
   rejected=false; try{repo.addLineItem(req.id,BuyerRequirementLineItemDraft("Part",quantity="-2"))}catch(_:IllegalArgumentException){rejected=true}; assertTrue(rejected)
   rejected=false; try{repo.create(a.id,BuyerRequirementDraft("Bad",currency="EURO"))}catch(_:IllegalArgumentException){rejected=true}; assertTrue(rejected)
  }
+
+ @Test fun whitespaceOnlyOptionalFieldsAreStoredAsNull()=runBlocking {
+  val org=orgs.createOrganization(OrganizationDraft("Optional Fields Ltd"))
+  val req=repo.create(org.id,BuyerRequirementDraft(
+   title="Machined brackets", description="  ", destinationCountry=" ", destinationCity="  ",
+   requiredByText=" ", currency=" ", notes="  "
+  ))
+  assertNull(req.description); assertNull(req.destinationCountry); assertNull(req.destinationCity)
+  assertNull(req.requiredByText); assertNull(req.currency); assertNull(req.notes)
+  val item=repo.addLineItem(req.id,BuyerRequirementLineItemDraft(
+   productName="Bracket", specification="  ", quantity=" ", unit="  "
+  ))
+  assertNull(item.specification); assertNull(item.quantity); assertNull(item.unit)
+ }
 }

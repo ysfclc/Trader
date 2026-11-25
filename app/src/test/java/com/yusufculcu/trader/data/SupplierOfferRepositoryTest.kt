@@ -78,4 +78,16 @@ class SupplierOfferRepositoryTest {
         val differentCurrency = matching.copy(currency = "TRY")
         assertEquals("MORE_INFORMATION_NEEDED", SourcingMatchEngine.compare(request, buyer, differentCurrency).disposition)
     }
+
+    @Test fun whitespaceOnlyOptionalOfferAndLineItemFieldsAreStoredAsNull() = runBlocking {
+        val supplier = organizations.createOrganization(OrganizationDraft("Optional Supplier Ltd"))
+        val offer = suppliers.create(
+            supplier.id,
+            SupplierOfferDraft(title = "Machining offer", description = " ", currency = " ", originCountry = "  ", originCity = " ", notes = "  "),
+            SupplierOfferLineItemDraft(productName = "Precision spacer", specification = " ", material = "  ", quantityAvailable = " ", quantityUnit = " ", minimumOrderQuantity = "  ", currency = " ")
+        )
+        assertNull(offer.description); assertNull(offer.currency); assertNull(offer.originCountry); assertNull(offer.originCity); assertNull(offer.notes)
+        val item = suppliers.observeItems(offer.id).first().single()
+        assertNull(item.specification); assertNull(item.material); assertNull(item.quantityAvailable); assertNull(item.quantityUnit); assertNull(item.minimumOrderQuantity); assertNull(item.currency)
+    }
 }

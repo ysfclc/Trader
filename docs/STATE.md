@@ -21,8 +21,8 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 
 ## Branches and build
 - Canonical repository: `ysfclc/Trader`; canonical product specification: `docs/PROJECT_LOCK.md`.
-- Current branch: `feature/discovery-run-persistence`; activity-history implementation commit and CI evidence will be recorded after the verification run.
-- Current package/version candidate: `com.yusufculcu.trader.debug`, versionCode 9, versionName `0.9.0-debug`; CI build, unit tests, lint, APK package/version and persistent signing-certificate checks are pending for Room schema v12 and backup snapshot v9.
+- Current branch: `feature/discovery-run-persistence`; latest implementation commit before the verification repair is `703c52134c6647ec377cdf5a0059dc57fa697dd2` (append-only business activity history).
+- Current package/version candidate: `com.yusufculcu.trader.debug`, versionCode 9, versionName `0.9.0-debug`. CI run [45589272775](https://github.com/ysfclc/Trader/actions/runs/45589272775) failed during Kotlin compilation before tests or APK verification; no APK artifact was published. The compiler identified nullable optional-field helpers declared as non-null `String` in buyer requirements and supplier offers. The workflow also still asserted versionCode 8 / 0.8.0, so the repair derives the expected version from `app/build.gradle.kts`.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
 - Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug`.
 
@@ -106,4 +106,4 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Company, source, claim, contact, requirement, offer, line-item and evidence lifecycle events appear in the unified Activity timeline. Contact email, phone and name are not copied into activity details.
 - Buyer requirement and supplier offer cards expose localized lifecycle status controls in English, Polish and Turkish.
 - Encrypted backup snapshot v9 includes business activity history, validates event shape, and continues to read v1–v8 snapshots as empty history where appropriate.
-- Build candidate: `0.9.0-debug` / versionCode 9; CI verification pending. Physical-device acceptance remains open.
+- Build candidate: `0.9.0-debug` / versionCode 9. CI run [45589272775](https://github.com/ysfclc/Trader/actions/runs/45589272775) stopped at `:app:compileDebugKotlin` with the optional-field return-type errors; unit tests, APK identity/signature verification and artifact upload did not run. The follow-up corrects nullable normalization, adds whitespace-only regression tests and removes the stale hard-coded workflow version. Physical-device acceptance remains open.

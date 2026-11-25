@@ -266,7 +266,7 @@ class SupplierOfferRepository(private val db: TraderDatabase) {
     private fun required(value: String, max: Int, label: String): String =
         value.trim().also { require(it.isNotBlank() && it.length <= max) { "$label is required and must be at most $max characters." } }
 
-    private fun optional(value: String, max: Int, label: String): String =
+    private fun optional(value: String, max: Int, label: String): String? =
         value.trim().also { require(it.length <= max) { "$label is too long." } }.ifBlank { null }
 }
 

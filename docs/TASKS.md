@@ -47,7 +47,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
 - [ ] T2.5 Implement ServiceNeed and JobOpening using shared organization/source/task primitives.
 - [ ] T2.6 Implement contact basis/consent, suppression, representation and commission terms.
-- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented; CI verification is pending. Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
+- [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented. CI run 45589272775 exposed nullable optional-field helper declarations that prevented compilation before tests; corrective changes and whitespace-only regression coverage are in progress. Event rows are insert-only in normal product flows, company deletion retains a minimal history marker, and contact email/phone/name are not copied into activity details.
 
 ## T3 — Discovery and browser/app automation
 

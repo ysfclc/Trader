@@ -51,7 +51,7 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 - Buyer requirement and supplier offer status controls are editable in the dossier/Sourcing UI; every transition records its previous and new state.
 - Activity combines ProblemCase history with company, contact, claim, requirement, offer and sourcing-decision events. Contact email, phone and name are not copied into event details.
 - English, Polish and Turkish UI.
-- CI verification for build candidate 0.9.0-debug is pending; no new APK is claimed yet.
+- CI run [45589272775](https://github.com/ysfclc/Trader/actions/runs/45589272775) failed at Kotlin compilation before tests and APK verification; no new APK is claimed. Nullable optional-field normalization and version-derived CI identity checks are being repaired.
 - Physical-device install-over-existing, migration/restore and real-world sourcing acceptance are still open.
 
 ## Product completion gate

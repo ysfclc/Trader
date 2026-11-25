@@ -68,7 +68,12 @@ jobs:
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose "$APK"
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK" | grep "package: name='com.yusufculcu.trader.debug' versionCode='8' versionName='0.8.0-debug'"
+          EXPECTED_VERSION_CODE=$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+)$/\1/p' app/build.gradle.kts | head -n1)
+          EXPECTED_VERSION_NAME=$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)"$/\1/p' app/build.gradle.kts | head -n1)
+          test -n "$EXPECTED_VERSION_CODE"
+          test -n "$EXPECTED_VERSION_NAME"
+          BADGING=$($ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK")
+          echo "$BADGING" | grep -F "package: name='com.yusufculcu.trader.debug' versionCode='${EXPECTED_VERSION_CODE}' versionName='${EXPECTED_VERSION_NAME}-debug'"
           if [ "$STABLE_SIGNING_READY" = "true" ]; then
             keytool -exportcert -rfc -keystore "$TRADER_KEYSTORE_PATH" -storepass "$TRADER_KEYSTORE_PASSWORD" -alias trader-upload |
               openssl x509 -outform DER | sha256sum | awk '{print $1}' > "$RUNNER_TEMP/keystore-cert.sha256"
