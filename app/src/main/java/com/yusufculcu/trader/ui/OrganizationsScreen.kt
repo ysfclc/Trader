@@ -281,6 +281,20 @@ private fun OrganizationDossierScreen(
             }
         }
 
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.buyer_requirements), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            TextButton(onClick = { showBuyerRequirementDialog = true }) { Text(stringResource(R.string.buyer_add_requirement)) }
+        }
+        if (buyerRequirements.isEmpty()) Text(stringResource(R.string.buyer_no_requirements), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        else buyerRequirements.forEach { requirement ->
+            BuyerRequirementCard(
+                requirement = requirement, repository = buyerRepository, sources = sources,
+                onAddItem = { lineItemRequirement = requirement; showBuyerLineItemDialog = true },
+                onLinkEvidence = { buyerEvidenceRequirement = requirement },
+                onDelete = { scope.launch { buyerRepository.deleteRequirement(requirement.id) } }
+            )
+        }
+
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(stringResource(R.string.company_claims), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
