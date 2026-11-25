@@ -15,6 +15,7 @@ import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.ai.TraderModelCandidateVerifier
 import com.yusufculcu.trader.discovery.DiscoverySourceStore

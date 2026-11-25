@@ -59,8 +59,6 @@ class OrganizationMigrationTest {
             cursor.close()
         }
     }
-}
-
 
     @Test
     fun migration9To10CreatesBuyerRequirementTablesAndCascades() {
@@ -80,3 +78,5 @@ class OrganizationMigrationTest {
             assertEquals(0,scalar(db,"SELECT COUNT(*) FROM buyer_requirement_evidence"))
         } finally { helper.close() }
     }
+
+}
