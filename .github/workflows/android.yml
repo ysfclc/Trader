@@ -65,7 +65,7 @@ jobs:
           test -s gradle/verification-metadata.xml
           docker run --rm -v "$GITHUB_WORKSPACE:/src" ghcr.io/google/osv-scanner:v2.7.1 \
             scan source \
-            --lockfile=/src/gradle/verification-metadata.xml \
+            -L /src/gradle/verification-metadata.xml \
             --format=json \
             --output-file=/src/osv-scan-results.json
       - name: Upload dependency security audit evidence
