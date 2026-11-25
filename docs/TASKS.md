@@ -169,3 +169,13 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [ ] On Redmi, prove the next APK updates the currently installed stable-signed app in place (adb install -r) without uninstalling or losing app data.
 - [ ] Do not call a phase complete based only on tests or schema work: ship a visible app capability and provide a concise before/after summary with every APK.
 - [ ] Next visible vertical slice: Organization dossier with evidence-backed identity, source-linked claims, contact records, buyer requirements/supplier capabilities, and explainable support/contradiction/unknown states.
+
+## T2 — Buyer requirements
+
+- [x] T2.1 Add company-scoped buyer requirement records with lifecycle status, destination, required-by timing, optional currency/budget and operator notes.
+- [x] T2.2 Add normalized line items with specification, exact decimal quantity text, unit and optional target unit price in minor units.
+- [x] T2.3 Link requirements to saved company sources as evidence; reject cross-company links and avoid automatic fact verification.
+- [x] T2.4 Add Room v9→v10 migration and encrypted backup snapshot v7 with validation and FK-safe restore order.
+- [x] T2.5 Add EN/PL/TR company-dossier UI for requirement creation, line items and evidence linking.
+- [x] T2.6 CI run 45570394101 passed unit tests, lint, build, package/version and persistent signing-certificate checks; physical-device acceptance remains open.
+- [ ] T2.7 Add requirement editing/status lifecycle controls and supplier-offer records with line items/evidence links.

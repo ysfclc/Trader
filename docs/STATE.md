@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-25 — company contacts verified; buyer requirement storage increment in progress_
+_Last updated: 2026-11-25 — buyer requirement workflow CI-verified; device acceptance open_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -7,10 +7,10 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 ## Current implementation
 | Area | State | Verified boundary |
 |---|---|---|
-| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; current build `0.5.0-debug`, versionCode 5. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
+| Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; current build `0.7.0-debug`, versionCode 7. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
 | Local data | 🟡 partial | Room schema v10 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs/findings, organizations, organization sources, source-linked claims, company-scoped people/contact records and structured buyer requirements, line items and source-evidence links. Encrypted backup snapshot v7 includes these records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
-| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; physical install-over-existing is still unverified. The earlier one-time signing transition required uninstalling the previous app; no recovery claim is made without an exported .traderbackup. Snapshot v6 includes all current records, including organizations, source snapshots, claims and company contacts; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
+| Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; physical install-over-existing is still unverified. The earlier one-time signing transition required uninstalling the previous app; no recovery claim is made without an exported .traderbackup. Snapshot v7 includes all current records, including organizations, source snapshots, claims, company contacts and buyer requirements with line items/evidence links; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
 | Discover / sources | 🟡 first execution slice CI-verified | Objective-driven DuckDuckGo search plus all enabled local RSS/Atom feeds run through one bounded coordinator. Per-source run history/status, timeout isolation, cancellation, cross-source URL dedupe, manual feed checks, browser handoff and save-to-Work as UNREVIEWED evidence. Findings now require an active matching source run; adapter source-ID mismatches fail closed, and zero-source runs are rejected before persistence. CI run 44998620615 verified the first execution slice. Latest CI run 45394348906 passed the full unit-test, lint and debug-build pipeline plus persistent-certificate and package/version checks. No live-source or physical-device acceptance. |
@@ -62,11 +62,28 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Added company-scoped people/contact records for name, role, email, phone, LinkedIn profile and operator-entered notes. Records can be created, edited and deleted inside a company dossier.
 - Added Room v8→v9 migration with company foreign key/cascade and encrypted backup snapshot v6. Older backup snapshots remain readable with an empty contact list.
 - Contact validation rejects malformed email and non-LinkedIn profile URLs. Similar names are not merged; aliases and reversible identity review remain future work.
-- Implementation committed in [1393cd8](https://github.com/ysfclc/Trader/commit/1393cd89946b66039a872c0784975393fb95f547); CI verification and APK artifact pending. Backup round-trip coverage and distinct save/delete feedback are included in the follow-up commit. No physical-device acceptance is claimed.
-\n\n## Buyer requirement storage increment (2026-11-25)\n\n- Added company-scoped BuyerRequirement records with lifecycle state, destination, required-by text, optional currency/budget and operator notes.\n- Added normalized line items. Quantity is retained as validated decimal text to avoid binary floating-point loss; target prices are integer minor units.\n- Added evidence links constrained to saved sources on the same company dossier.\n- Added Room v9→v10 migration and encrypted backup snapshot v7 support. Dossier UI and acceptance tests remain next.\n
+- Implementation committed in [16cec6a](https://github.com/ysfclc/Trader/commit/16cec6a703cc0b1d07c7c7d3c1c9c00f123da72c); CI run [45570394101](https://github.com/ysfclc/Trader/actions/runs/45570394101) verified the buyer-requirement increment and installable artifact. No physical-device acceptance is claimed.
+
+
+## Buyer requirement storage increment (2026-11-25)
+
+- Added company-scoped BuyerRequirement records with lifecycle state, destination, required-by text, optional currency/budget and operator notes.
+- Added normalized line items. Quantity is retained as validated decimal text to avoid binary floating-point loss; target prices are integer minor units.
+- Added evidence links constrained to saved sources on the same company dossier.
+- Added Room v9→v10 migration and encrypted backup snapshot v7 support. Dossier UI and acceptance tests remain next.
+
 
 ## Buyer requirement dossier UI (2026-11-25)
 
 - Added an EN/PL/TR buyer-requirements section inside each company dossier.
 - Operators can create a requirement, add structured product/service line items and link saved dossier sources as evidence. Linking a source does not auto-verify a claim.
 - Deleting a requirement cascades its line items and evidence links. Physical-device UX acceptance remains open.
+
+## Latest handoff (2026-11-25)
+
+- Latest app commit: [16cec6a](https://github.com/ysfclc/Trader/commit/16cec6a703cc0b1d07c7c7d3c1c9c00f123da72c).
+- Added Room v9→v10 buyer requirement storage: requirement headers, normalized line items, and evidence links constrained to sources in the same company dossier.
+- Added encrypted backup snapshot v7 with strict required-array checks, cross-record reference validation and FK-safe restore order.
+- Added EN/PL/TR dossier UI to create requirements, add line items and link saved sources; no automatic fact verification or person merge.
+- CI run [45570394101](https://github.com/ysfclc/Trader/actions/runs/45570394101) passed build, tests, lint and persistent certificate/package/version verification. Verified identity: `com.yusufculcu.trader.debug`, `0.7.0-debug`, versionCode 7. Installable artifact: [15002260997](https://github.com/ysfclc/Trader/actions/runs/45570394101/artifacts/15002260997).
+- Physical-device update, migration/restore and visual acceptance remain open.
