@@ -198,3 +198,16 @@ Exit gate: evidence of genuine buyer interest and a repeatable path to a paid in
 
 ## Release rule
 A phase is not complete because code compiles or a screen exists. It is complete only when its exit gate is demonstrated on a real device with test evidence and known limitations recorded.
+
+
+## Product P1 — Industrial Sourcing Desk
+
+- [x] Buyer requirement and line-item intake in a company dossier.
+- [x] Supplier offer and line-item records with company-scoped evidence links.
+- [x] Deterministic, explainable comparison for exact product/specification wording, same-unit capacity/MOQ and same-currency target price.
+- [x] Human shortlist / needs-information / not-suitable decisions with rationale.
+- [x] Shareable shortlist brief through explicit Android handoff.
+- [x] Room migration, encrypted backup continuity, EN/PL/TR UI and CI verification (run 45574277490).
+- [ ] Physical-device install/update, migration/restore and real-world workflow acceptance.
+
+Product P1 is the first complete commercial workflow being built. Do not start a second product until its device acceptance and correction lifecycle are closed.

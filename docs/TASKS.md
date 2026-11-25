@@ -178,4 +178,15 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] T2.4 Add Room v9→v10 migration and encrypted backup snapshot v7 with validation and FK-safe restore order.
 - [x] T2.5 Add EN/PL/TR company-dossier UI for requirement creation, line items and evidence linking.
 - [x] T2.6 CI run 45570394101 passed unit tests, lint, build, package/version and persistent signing-certificate checks; physical-device acceptance remains open.
-- [ ] T2.7 Add requirement editing/status lifecycle controls and supplier-offer records with line items/evidence links.
+- [x] T2.7 Add supplier-offer records and line items, supplier-dossier evidence links, persisted sourcing decisions and conservative requirement-to-offer comparison; CI run 45574277490 passed. Offer editing and physical-device acceptance remain open.
+
+
+## Product P1 — Industrial Sourcing Desk
+
+- [x] P1.1 Deliver the buyer-request → supplier-offer → comparison → human-shortlist workflow inside Trader.
+- [x] P1.2 Persist supplier offers, offer line items, evidence links and sourcing decisions in Room v11.
+- [x] P1.3 Preserve all sourcing records in encrypted backup snapshot v8 with relationship validation and safe restore ordering.
+- [x] P1.4 Provide EN/PL/TR sourcing workflow and explicit shareable shortlist handoff.
+- [x] P1.5 CI run 45574277490 passed clean build, tests, lint and persistent APK identity/signature checks.
+- [ ] P1.6 Complete physical-device install-over-existing, migration/restore and real buyer-to-shortlist acceptance.
+- [ ] P1.7 Finish the product's edit/correction lifecycle before starting a second product.

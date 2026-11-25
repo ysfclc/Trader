@@ -1,3 +1,15 @@
+## 2026-11-25 — Industrial Sourcing Desk 0.8.0
+
+- Delivered the first end-to-end sourcing workflow in Trader: buyer request → supplier offer → evidence-linked comparison → operator shortlist → shareable sourcing brief.
+- Added supplier offer headers and normalized line items for product/service, specification, material, available quantity, unit, MOQ, price/currency and lead time. Supplier offers and their source links are scoped to a supplier company dossier.
+- Added a conservative deterministic comparison. Product and specification wording only pass on exact normalized equality; quantity/MOQ require identical units; price comparison requires the same currency. Differences and missing values remain unknown, and exceeding a buyer target is a negotiation flag rather than an automatic rejection.
+- Added persisted sourcing decisions with rationale (shortlisted / needs information / not suitable). A shortlist is a human decision, not a claim of technical qualification. Share creates a user-initiated Android Sharesheet handoff; Trader does not send an RFQ or introduction.
+- Added Room v10→v11 migration and encrypted backup snapshot v8, including cross-record validation and FK-safe restore.
+- Added EN/PL/TR sourcing desk UI, migration, repository, comparison and backup round-trip tests.
+- CI run [45574277490](https://github.com/ysfclc/Trader/actions/runs/45574277490) passed clean build, unit tests, lint, APK package/version assertion and persistent signing-certificate verification in 5m06s.
+- Installable APK: [15003891645](https://github.com/ysfclc/Trader/actions/runs/45574277490/artifacts/15003891645). Identity: `com.yusufculcu.trader.debug`, `0.8.0-debug`, versionCode 8.
+- Physical-device install-over-existing, migration/restore and full sourcing journey acceptance remain open.
+
 ## 2026-11-24 — Fail-closed discovery provenance
 
 - Discovery findings are persisted inside a Room transaction only while the parent discovery run and matching source run are both RUNNING. This prevents findings from being attached to stale, completed, cancelled or unrelated source runs.

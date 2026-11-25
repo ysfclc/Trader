@@ -8,6 +8,12 @@ Trade, services and careers are initial specialized workflows, not the limit of 
 
 Trader is not a promise that software can solve every human problem, an open marketplace, a generic CRM, a bulk sender or an autonomous agent with unrestricted authority.
 
+## First product: Industrial Sourcing Desk
+
+Trader's first complete commercial product is an operator-controlled sourcing workspace for Türkiye ↔ Poland/EU industrial tooling and machining. It takes a buyer requirement through supplier-offer comparison to a documented shortlist. See [the product definition](docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md).
+
+The workflow lives in the app: create a buyer requirement in a company dossier, record supplier offers against supplier dossiers, compare the stated product/specification/quantity/MOQ/price fields, record a human decision with rationale, and share a shortlist brief. Every offer can link to source evidence. Unknowns remain unknown; a shortlist is not a certification or commercial commitment. No messages or RFQs are sent automatically.
+
 ## Product laws
 
 1. **A real problem and its outcome come first.** A crawler, dashboard, AI answer or task count is not success. Trader must help move a clearly stated problem toward a verified outcome, whether commercial, professional, technical or personal/administrative.
@@ -79,3 +85,8 @@ This is not continuous monitoring: feed checks are manual only. Configured publi
 ## App identity and safe updates
 
 The Android launcher icon is now defined as an adaptive icon. The debug package ID remains `com.yusufculcu.trader.debug`; candidate version is `0.4.0-debug` / versionCode 4. CI only publishes a `trader-installable-apk` when the dedicated Trader development keystore is configured through repository Actions secrets. Without those secrets, the artifact is explicitly named `trader-ci-debug-apk-not-for-installation`. Do not uninstall or clear app storage as a routine update step. See [ANDROID_BUILD.md](docs/ANDROID_BUILD.md) for the one-time signing setup and migration caveat.
+
+
+## Industrial Sourcing Desk — current build
+
+The feature branch `feature/discovery-run-persistence` contains the first usable sourcing product. CI run [45574277490](https://github.com/ysfclc/Trader/actions/runs/45574277490) passed the clean Android build, unit tests, lint, package/version assertion and persistent signing-certificate verification. Installable artifact: [15003891645](https://github.com/ysfclc/Trader/actions/runs/45574277490/artifacts/15003891645). Build identity: `com.yusufculcu.trader.debug`, `0.8.0-debug`, versionCode 8. Physical-device update and sourcing-workflow acceptance remain open.
