@@ -9,7 +9,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 |---|---|---|
 | Android identity | 🟡 stable signing configured; device update acceptance open | Package `com.yusufculcu.trader.debug`; current build `0.8.0-debug`, versionCode 8. Dedicated Trader keystore remains configured. CI signature/package verification and install-over-existing device acceptance are tracked separately. |
 | Native shell / EN-PL-TR | 🟡 partial | Discover, Inbox, Sourcing, Pipeline, Activity, Browser and AI tabs exist. Intended Discover / Work / Live / Studio workspace remains unfinished. |
-| Local data | 🟡 partial | Room schema v11 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs/findings, organizations, organization sources, source-linked claims, company-scoped people/contact records structured buyer requirements and line items, supplier offers and line items, source-evidence links, and human sourcing reviews. Encrypted backup snapshot v8 includes these records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
+| Local data | 🟡 partial | Room schema v11 stores cases, plans, evidence, opportunities, workflow records, proof assets, discovery strategies, discovery runs, source runs/findings, organizations, organization sources, source-linked claims, company-scoped people/contact records, structured buyer requirements and line items, supplier offers and line items, source-evidence links, and human sourcing reviews. Encrypted backup snapshot v8 includes these records plus public feed settings; legacy snapshots remain readable. Physical-device migration/restore acceptance open. |
 | Continuity / backup | 🟡 partial | In-place updates retain app-private data only when package ID and signing certificate match; physical install-over-existing is still unverified. The earlier one-time signing transition required uninstalling the previous app; no recovery claim is made without an exported .traderbackup. Snapshot v8 includes all current records, including organizations, source snapshots, claims, company contacts, buyer requirements, supplier offers, evidence links and sourcing decisions; credentials and WebView cookies remain excluded. Restore uses validation, a Room transaction and compensating source-preference rollback. |
 | Browser | 🟡 partial | Trader WebView, app-local cookies/SSO, popups, autofill, file chooser, Google OAuth fallback and visible-page capture/review. User confirmed login works on Redmi; broader device acceptance remains open. |
 | Memo handoff | 🟡 partial | Versioned capture receiver and editable review/redaction are in Trader. Memo sender PR #15 remains draft/unmerged; installed Memo app does not yet expose it. |
@@ -76,7 +76,7 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Operators can create a requirement, add structured product/service line items and link saved dossier sources as evidence. Linking a source does not auto-verify a claim.
 - Deleting a requirement cascades its line items and evidence links. Physical-device UX acceptance remains open.
 
-## Latest handoff (2026-11-25)
+## Buyer requirement UI handoff (2026-11-25)
 
 - Latest app commit: [16cec6a](https://github.com/ysfclc/Trader/commit/16cec6a703cc0b1d07c7c7d3c1c9c00f123da72c).
 - Added Room v9→v10 buyer requirement storage: requirement headers, normalized line items, and evidence links constrained to sources in the same company dossier.
@@ -87,6 +87,8 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 
 
 ## Industrial Sourcing Desk handoff (2026-11-25)
+
+- Documentation alignment CI run [45575324059](https://github.com/ysfclc/Trader/actions/runs/45575324059) passed the same full build, test, lint and signing checks after the product handoff docs were committed.
 
 - Product definition: `docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md`.
 - Latest implementation commit: [b530d4e](https://github.com/ysfclc/Trader/commit/b530d4e05a347f0ff9c2520eaf6f7a3861058d27).

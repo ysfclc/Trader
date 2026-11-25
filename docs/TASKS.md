@@ -42,8 +42,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T2.0 Add an optional one-to-one OpportunityRecord per ProblemCase for a manually tracked trade/service/career/other opportunity: organization and contact labels, fit notes, explicit stage, next action and follow-up date; preserve source/evidence, log stage changes, include it in encrypted backup/restore, and allow scheme-restricted user handoff to browser/email composer/dialer. This does not implement normalized Organization/Person records, discovery, send, call, or background reminders. Implemented on feature/evidence-backed-opportunity-loop; PR #16 CI run 306 passed (59 tests, 0 failures/errors/skipped); physical-device acceptance remains open.
 - [x] T2.1 Organization dossier first slice: canonical company profile, normalized website domain, source snapshots, source-linked claims and explicit unreviewed/supported/contradicted/rejected review states. CI run 45369038355 passed 134 tests, lint, APK assembly and persistent-signature/package checks. Person records, aliases, reversible identity resolution and physical-device acceptance remain open.
 - [x] T2.2a Add company-scoped Person/contact records with validated email and LinkedIn URL, editable/deletable details, cascading company deletion and encrypted backup snapshot v6. Similar names are not merged automatically; identity review/aliases remain separate work.
-- [ ] T2.2 Implement BuyerRequirement and line items: quantity, specification, target price when stated, destination, timing and evidence.
-- [ ] T2.3 Implement SupplierOffer: capability, capacity, MOQ, pricing basis, lead time, certifications and evidence.
+- [x] T2.2 Implement BuyerRequirement and line items: quantity, specification, target price when stated, destination, timing and same-company source evidence. Room v9→v10, encrypted backup snapshot v7, EN/PL/TR dossier UI and CI run 45574277490 verified.
+- [x] T2.3 Implement SupplierOffer and line items for product, specification, material, available quantity, MOQ, unit price/currency and lead time; same-company source evidence, deterministic comparison and human sourcing decisions. Room v10→v11, encrypted backup snapshot v8, EN/PL/TR Sourcing Desk UI and CI run 45574277490 verified. Certification validation remains explicitly unimplemented.
 - [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
 - [ ] T2.5 Implement ServiceNeed and JobOpening using shared organization/source/task primitives.
 - [ ] T2.6 Implement contact basis/consent, suppression, representation and commission terms.
@@ -178,7 +178,7 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] T2.4 Add Room v9→v10 migration and encrypted backup snapshot v7 with validation and FK-safe restore order.
 - [x] T2.5 Add EN/PL/TR company-dossier UI for requirement creation, line items and evidence linking.
 - [x] T2.6 CI run 45570394101 passed unit tests, lint, build, package/version and persistent signing-certificate checks; physical-device acceptance remains open.
-- [x] T2.7 Add supplier-offer records and line items, supplier-dossier evidence links, persisted sourcing decisions and conservative requirement-to-offer comparison; CI run 45574277490 passed. Offer editing and physical-device acceptance remain open.
+- [ ] T2.7 Implement append-only status history and activity log.
 
 
 ## Product P1 — Industrial Sourcing Desk
