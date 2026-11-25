@@ -149,6 +149,7 @@ fun SourcingDeskScreen(
                         SupplierOfferComparisonCard(
                             offer = offer,
                             supplierName = organizationById[offer.organizationId]?.canonicalName ?: stringResource(R.string.sourcing_unknown_supplier),
+                            buyerRequirement = selectedRequirement!!,
                             buyerItems = buyerItems,
                             review = reviews.firstOrNull { it.supplierOfferId == offer.id },
                             repository = supplierRepository,
@@ -231,6 +232,7 @@ private fun SummaryPill(label: String, value: String) {
 private fun SupplierOfferComparisonCard(
     offer: SupplierOfferEntity,
     supplierName: String,
+    buyerRequirement: BuyerRequirementEntity,
     buyerItems: List<BuyerRequirementLineItemEntity>,
     review: SourcingReviewEntity?,
     repository: SupplierOfferRepository,
@@ -262,7 +264,7 @@ private fun SupplierOfferComparisonCard(
                 buyerItems.forEach { buyerItem ->
                     Text(buyerItem.productName, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                     items.forEach { offerItem ->
-                        val assessment = SourcingMatchEngine.compare(buyerItem, offerItem)
+                        val assessment = SourcingMatchEngine.compare(requirement = buyerRequirement, buyer = buyerItem, supplier = offerItem)
                         Column(Modifier.fillMaxWidth().padding(start = 8.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(stringResource(R.string.sourcing_candidate_item, offerItem.productName), style = MaterialTheme.typography.bodySmall)
                             Text(

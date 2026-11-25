@@ -51,6 +51,7 @@ data class BuyerRequirementLineItemDraft(val productName:String,val specificatio
 
 /** User-authored requirements with precise line-item quantities and source links constrained to the same dossier. */
 class BuyerRequirementRepository(private val db:TraderDatabase) {
+ fun observeAll() = db.buyerRequirementDao().observeAll()
  fun observeForOrganization(id:String)=db.buyerRequirementDao().observeForOrganization(id)
  fun observeItems(id:String)=db.buyerRequirementLineItemDao().observeForRequirement(id)
  fun observeEvidence(id:String)=db.buyerRequirementEvidenceDao().observeForRequirement(id)

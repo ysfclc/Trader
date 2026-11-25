@@ -165,7 +165,7 @@ object SourcingMatchEngine {
         val disposition get() = when { hasConflict -> "CONSTRAINT_CONFLICT"; hasUnknown -> "MORE_INFORMATION_NEEDED"; else -> "REVIEWABLE" }
     }
 
-    fun compare(buyer: BuyerRequirementLineItemEntity, supplier: SupplierOfferLineItemEntity): Assessment {
+    fun compare(requirement: BuyerRequirementEntity, buyer: BuyerRequirementLineItemEntity, supplier: SupplierOfferLineItemEntity): Assessment {
         val checks = mutableListOf<Check>()
         val buyerName = normalize(buyer.productName)
         val supplierName = normalize(supplier.productName)
@@ -201,7 +201,7 @@ object SourcingMatchEngine {
         checks += when {
             buyer.targetUnitPriceMinorUnits == null || supplier.unitPriceMinorUnits == null -> Check("Price", UNKNOWN, "Buyer target or supplier price is missing.")
             buyerUnit.isBlank() || supplier.currency.isNullOrBlank() -> Check("Price", UNKNOWN, "Price basis or currency is missing.")
-            !buyer.currency.equals(supplier.currency, ignoreCase = true) -> Check("Price", UNKNOWN, "Currencies differ; no exchange rate is assumed.")
+            !requirement.currency.equals(supplier.currency, ignoreCase = true) -> Check("Price", UNKNOWN, "Currencies differ; no exchange rate is assumed.")
             supplier.unitPriceMinorUnits <= buyer.targetUnitPriceMinorUnits -> Check("Price", SUPPORTED, "Stated supplier unit price is at or below the buyer target.")
             else -> Check("Price", UNKNOWN, "Stated supplier unit price exceeds the target; negotiate or review.")
         }
