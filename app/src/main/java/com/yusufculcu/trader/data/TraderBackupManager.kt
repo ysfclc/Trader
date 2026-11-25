@@ -642,8 +642,8 @@ class TraderBackupManager(
         createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
     )
 
-    private fun encodeSupplierOffer(row: SupplierOfferEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "currency" to row.currency, "originCountry" to row.originCountry, "originCity" to row.originCity, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
-    private fun decodeSupplierOffer(o: JSONObject) = SupplierOfferEntity(o.getString("id"), o.getString("organizationId"), o.getString("title"), o.stringOrNull("description"), o.getString("status"), o.stringOrNull("currency"), o.stringOrNull("originCountry"), o.stringOrNull("originCity"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"))
+    private fun encodeSupplierOffer(row: SupplierOfferEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "currency" to row.currency, "originCountry" to row.originCountry, "originCity" to row.originCity, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt, "deletedAt" to row.deletedAt)
+    private fun decodeSupplierOffer(o: JSONObject) = SupplierOfferEntity(o.getString("id"), o.getString("organizationId"), o.getString("title"), o.stringOrNull("description"), o.getString("status"), o.stringOrNull("currency"), o.stringOrNull("originCountry"), o.stringOrNull("originCity"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"), o.longOrNull("deletedAt"))
     private fun encodeSupplierOfferItem(row: SupplierOfferLineItemEntity) = json("id" to row.id, "offerId" to row.offerId, "productName" to row.productName, "specification" to row.specification, "material" to row.material, "quantityAvailable" to row.quantityAvailable, "quantityUnit" to row.quantityUnit, "minimumOrderQuantity" to row.minimumOrderQuantity, "unitPriceMinorUnits" to row.unitPriceMinorUnits, "currency" to row.currency, "leadTimeDays" to row.leadTimeDays, "createdAt" to row.createdAt)
     private fun decodeSupplierOfferItem(o: JSONObject) = SupplierOfferLineItemEntity(o.getString("id"), o.getString("offerId"), o.getString("productName"), o.stringOrNull("specification"), o.stringOrNull("material"), o.stringOrNull("quantityAvailable"), o.stringOrNull("quantityUnit"), o.stringOrNull("minimumOrderQuantity"), o.longOrNull("unitPriceMinorUnits"), o.stringOrNull("currency"), o.optInt("leadTimeDays").takeIf { !o.isNull("leadTimeDays") }, o.getLong("createdAt"))
     private fun encodeSupplierOfferEvidence(row: SupplierOfferEvidenceEntity) = json("id" to row.id, "offerId" to row.offerId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt)
@@ -667,8 +667,8 @@ class TraderBackupManager(
         details = o.getString("details"), occurredAt = o.getLong("occurredAt")
     )
 
-    private fun encodeBuyerRequirement(row: BuyerRequirementEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "destinationCountry" to row.destinationCountry, "destinationCity" to row.destinationCity, "requiredByText" to row.requiredByText, "currency" to row.currency, "budgetMinorUnits" to row.budgetMinorUnits, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
-    private fun decodeBuyerRequirement(o: JSONObject) = BuyerRequirementEntity(o.getString("id"),o.getString("organizationId"),o.getString("title"),o.stringOrNull("description"),o.getString("status"),o.stringOrNull("destinationCountry"),o.stringOrNull("destinationCity"),o.stringOrNull("requiredByText"),o.stringOrNull("currency"),o.longOrNull("budgetMinorUnits"),o.stringOrNull("notes"),o.getLong("createdAt"),o.getLong("updatedAt"))
+    private fun encodeBuyerRequirement(row: BuyerRequirementEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "destinationCountry" to row.destinationCountry, "destinationCity" to row.destinationCity, "requiredByText" to row.requiredByText, "currency" to row.currency, "budgetMinorUnits" to row.budgetMinorUnits, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt, "deletedAt" to row.deletedAt)
+    private fun decodeBuyerRequirement(o: JSONObject) = BuyerRequirementEntity(o.getString("id"),o.getString("organizationId"),o.getString("title"),o.stringOrNull("description"),o.getString("status"),o.stringOrNull("destinationCountry"),o.stringOrNull("destinationCity"),o.stringOrNull("requiredByText"),o.stringOrNull("currency"),o.longOrNull("budgetMinorUnits"),o.stringOrNull("notes"),o.getLong("createdAt"),o.getLong("updatedAt"),o.longOrNull("deletedAt"))
     private fun encodeBuyerRequirementItem(row: BuyerRequirementLineItemEntity) = json("id" to row.id, "requirementId" to row.requirementId, "productName" to row.productName, "specification" to row.specification, "quantity" to row.quantity, "unit" to row.unit, "targetUnitPriceMinorUnits" to row.targetUnitPriceMinorUnits, "createdAt" to row.createdAt)
     private fun decodeBuyerRequirementItem(o: JSONObject) = BuyerRequirementLineItemEntity(o.getString("id"),o.getString("requirementId"),o.getString("productName"),o.stringOrNull("specification"),o.stringOrNull("quantity"),o.stringOrNull("unit"),o.longOrNull("targetUnitPriceMinorUnits"),o.getLong("createdAt"))
     private fun encodeBuyerRequirementEvidence(row: BuyerRequirementEvidenceEntity) = json("id" to row.id, "requirementId" to row.requirementId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt)
@@ -751,8 +751,8 @@ class TraderBackupManager(
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 9
-        private const val DATABASE_SCHEMA_VERSION = 12
+        private const val SNAPSHOT_VERSION = 10
+        private const val DATABASE_SCHEMA_VERSION = 13
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)

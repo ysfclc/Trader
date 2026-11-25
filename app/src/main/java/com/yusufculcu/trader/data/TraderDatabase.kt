@@ -683,7 +683,7 @@ interface SourceRunDao {
         SourcingReviewEntity::class,
         BusinessActivityEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {

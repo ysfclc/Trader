@@ -70,6 +70,8 @@ fun SourcingDeskScreen(
 ) {
     val requirements by buyerRepository.observeAll().collectAsState(initial = emptyList())
     val offers by supplierRepository.observeOffers().collectAsState(initial = emptyList())
+    val deletedRequirements by buyerRepository.observeDeleted().collectAsState(initial = emptyList())
+    val deletedOffers by supplierRepository.observeDeletedOffers().collectAsState(initial = emptyList())
     val organizations by organizationRepository.observeOrganizations().collectAsState(initial = emptyList())
     var selectedRequirementId by rememberSaveable { mutableStateOf<String?>(null) }
     var showOfferDialog by remember { mutableStateOf(false) }
@@ -78,6 +80,7 @@ fun SourcingDeskScreen(
     var itemEditorTarget by remember { mutableStateOf<Pair<SupplierOfferEntity, SupplierOfferLineItemEntity?>?>(null) }
     var evidenceEditorTarget by remember { mutableStateOf<SupplierOfferEntity?>(null) }
     var removeItemTarget by remember { mutableStateOf<Pair<SupplierOfferEntity, SupplierOfferLineItemEntity>?>(null) }
+    var showTrash by rememberSaveable { mutableStateOf(false) }
     val selectedRequirement = requirements.firstOrNull { it.id == selectedRequirementId }
     LaunchedEffect(requirements) {
         if (selectedRequirementId == null || requirements.none { it.id == selectedRequirementId }) {
@@ -93,7 +96,8 @@ fun SourcingDeskScreen(
     }
     val buyerItems by buyerItemsFlow.collectAsState(initial = emptyList())
     val organizationById = remember(organizations) { organizations.associateBy { it.id } }
-    val shortlisted = reviews.filter { it.status == SourcingReviewStatus.SHORTLISTED }
+    val activeOfferIds = offers.mapTo(hashSetOf()) { it.id }
+    val shortlisted = reviews.filter { it.status == SourcingReviewStatus.SHORTLISTED && it.supplierOfferId in activeOfferIds }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -106,7 +110,54 @@ fun SourcingDeskScreen(
             SummaryPill(stringResource(R.string.sourcing_offers), offers.size.toString())
             SummaryPill(stringResource(R.string.sourcing_shortlisted), shortlisted.size.toString())
         }
-        if (requirements.isEmpty()) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = { showTrash = !showTrash }) {
+                Text(stringResource(if (showTrash) R.string.sourcing_back_to_active else R.string.sourcing_recently_deleted))
+            }
+        }
+        if (showTrash) {
+            Text(stringResource(R.string.sourcing_recently_deleted), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            if (deletedRequirements.isEmpty() && deletedOffers.isEmpty()) {
+                Text(stringResource(R.string.sourcing_trash_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(deletedRequirements, key = { "requirement-${it.id}" }) { requirement ->
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                            Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(requirement.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.sourcing_deleted_requirement), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                TextButton(onClick = {
+                                    scope.launch {
+                                        runCatching { buyerRepository.restoreRequirement(requirement.id) }
+                                            .onSuccess { selectedRequirementId = requirement.id; Toast.makeText(context, R.string.sourcing_record_restored, Toast.LENGTH_SHORT).show() }
+                                            .onFailure { Toast.makeText(context, R.string.sourcing_restore_failed, Toast.LENGTH_LONG).show() }
+                                    }
+                                }) { Text(stringResource(R.string.sourcing_restore_record)) }
+                            }
+                        }
+                    }
+                    items(deletedOffers, key = { "offer-${it.id}" }) { offer ->
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                            Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(offer.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.sourcing_deleted_offer), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                TextButton(onClick = {
+                                    scope.launch {
+                                        runCatching { supplierRepository.restoreOffer(offer.id) }
+                                            .onSuccess { Toast.makeText(context, R.string.sourcing_record_restored, Toast.LENGTH_SHORT).show() }
+                                            .onFailure { Toast.makeText(context, R.string.sourcing_restore_failed, Toast.LENGTH_LONG).show() }
+                                    }
+                                }) { Text(stringResource(R.string.sourcing_restore_record)) }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (requirements.isEmpty()) {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sourcing_no_requests), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -137,6 +188,13 @@ fun SourcingDeskScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(stringResource(R.string.sourcing_line_items_count, buyerItems.size), style = MaterialTheme.typography.labelSmall)
+                    TextButton(onClick = {
+                        scope.launch {
+                            runCatching { buyerRepository.deleteRequirement(request.id) }
+                                .onSuccess { selectedRequirementId = null; Toast.makeText(context, R.string.sourcing_requirement_archived, Toast.LENGTH_SHORT).show() }
+                                .onFailure { Toast.makeText(context, R.string.sourcing_archive_failed, Toast.LENGTH_LONG).show() }
+                        }
+                    }) { Text(stringResource(R.string.sourcing_move_to_trash)) }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -171,7 +229,14 @@ fun SourcingDeskScreen(
                             onAddItem = { itemEditorTarget = offer to null },
                             onEditItem = { item -> itemEditorTarget = offer to item },
                             onDeleteItem = { item -> removeItemTarget = offer to item },
-                            onManageEvidence = { evidenceEditorTarget = offer }
+                            onManageEvidence = { evidenceEditorTarget = offer },
+                            onArchiveOffer = {
+                                scope.launch {
+                                    runCatching { supplierRepository.deleteOffer(offer.id) }
+                                        .onSuccess { Toast.makeText(context, R.string.sourcing_offer_archived, Toast.LENGTH_SHORT).show() }
+                                        .onFailure { Toast.makeText(context, R.string.sourcing_archive_failed, Toast.LENGTH_LONG).show() }
+                                }
+                            }
                         )
                     }
                 }
@@ -331,7 +396,8 @@ private fun SupplierOfferComparisonCard(
     onAddItem: () -> Unit,
     onEditItem: (SupplierOfferLineItemEntity) -> Unit,
     onDeleteItem: (SupplierOfferLineItemEntity) -> Unit,
-    onManageEvidence: () -> Unit
+    onManageEvidence: () -> Unit,
+    onArchiveOffer: () -> Unit
 ) {
     var statusMenu by remember(offer.id) { mutableStateOf(false) }
     val items by repository.observeItems(offer.id).collectAsState(initial = emptyList())
@@ -415,6 +481,7 @@ private fun SupplierOfferComparisonCard(
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onAddItem) { Text(stringResource(R.string.sourcing_add_line_item)) }
                 TextButton(onClick = onEditOffer) { Text(stringResource(R.string.sourcing_edit_offer)) }
+                TextButton(onClick = onArchiveOffer) { Text(stringResource(R.string.sourcing_move_to_trash)) }
             }
             if (evidenceTitles.isNotEmpty()) {
                 Text(stringResource(R.string.sourcing_evidence), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)

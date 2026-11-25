@@ -1021,6 +1021,7 @@ private fun businessActionLabel(type: String): Int = when (type) {
     "LINE_UPDATED" -> R.string.business_action_line_updated
     "DECISION_RECORDED" -> R.string.business_action_decision_recorded
     "DELETED" -> R.string.business_action_deleted
+    "RESTORED" -> R.string.business_action_restored
     else -> R.string.event_activity_recorded
 }
 

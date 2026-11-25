@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, "feature/**"]
   workflow_dispatch:
+    inputs:
+      approve_installable_apk:
+        description: "Set true only after every APK gate in docs/STATE.md is green."
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: trader-android-${{ github.ref }}
@@ -82,18 +88,10 @@ jobs:
             test "$ACTUAL" = "$EXPECTED"
           fi
       - name: Upload persistent installable APK
-        if: steps.stable_signing.outputs.ready == 'true'
+        if: steps.stable_signing.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.approve_installable_apk == true
         uses: actions/upload-artifact@v4
         with:
           name: trader-installable-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
-      - name: Upload CI-only APK (not for installation)
-        if: steps.stable_signing.outputs.ready != 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: trader-ci-debug-apk-not-for-installation
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 7

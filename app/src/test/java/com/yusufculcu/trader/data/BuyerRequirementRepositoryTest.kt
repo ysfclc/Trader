@@ -24,9 +24,26 @@ class BuyerRequirementRepositoryTest {
   assertEquals("12.5",item.quantity)
   val link=repo.linkEvidence(req.id,source.id)
   assertEquals(link.id,repo.linkEvidence(req.id,source.id).id)
+  val supplierOrg=orgs.createOrganization(OrganizationDraft("Supplier"))
+  val supplierRepo=SupplierOfferRepository(db)
+  val offer=supplierRepo.create(supplierOrg.id,SupplierOfferDraft("Offer"),SupplierOfferLineItemDraft("Housing"))
+  supplierRepo.review(req.id,offer.id,SourcingReviewStatus.SHORTLISTED,"Retain decision across requirement archive.")
   assertEquals(1,repo.observeItems(req.id).first().size); assertEquals(1,repo.observeEvidence(req.id).first().size)
-  repo.deleteRequirement(req.id)
-  assertTrue(repo.observeItems(req.id).first().isEmpty()); assertTrue(repo.observeEvidence(req.id).first().isEmpty())
+  assertTrue(repo.deleteRequirement(req.id))
+  assertTrue(repo.observeAll().first().isEmpty())
+  assertEquals(1, repo.observeDeleted().first().size)
+  assertEquals(1, repo.observeItems(req.id).first().size)
+  assertEquals(1, repo.observeEvidence(req.id).first().size)
+  assertEquals(SourcingReviewStatus.SHORTLISTED,supplierRepo.observeReviews(req.id).first().single().status)
+  assertTrue(repo.restoreRequirement(req.id))
+  assertEquals(1, repo.observeAll().first().size)
+  assertTrue(repo.observeDeleted().first().isEmpty())
+  assertEquals(1, repo.observeItems(req.id).first().size)
+  assertEquals(1, repo.observeEvidence(req.id).first().size)
+  assertEquals(SourcingReviewStatus.SHORTLISTED,supplierRepo.observeReviews(req.id).first().single().status)
+  val lifecycle = db.businessActivityDao().getAll().filter { it.entityId == req.id }.map { it.eventType }
+  assertTrue(lifecycle.contains(BusinessActivityAction.DELETED))
+  assertTrue(lifecycle.contains(BusinessActivityAction.RESTORED))
  }
  @Test fun rejectsInvalidQuantityCurrencyAndCrossDossierEvidence()=runBlocking {
   val a=orgs.createOrganization(OrganizationDraft("A")); val b=orgs.createOrganization(OrganizationDraft("B"))
@@ -71,4 +88,14 @@ class BuyerRequirementRepositoryTest {
   try{repo.updateLineItem(item.id,BuyerRequirementLineItemDraft("Bad part",quantity="-1"))}catch(_:IllegalArgumentException){rejected=true}
   assertTrue(rejected)
  }
+
+ @Test fun companyDeletionCannotCascadeBuyerRequirements()=runBlocking {
+  val org=orgs.createOrganization(OrganizationDraft("Protected buyer"))
+  val req=repo.create(org.id,BuyerRequirementDraft("Protected requirement"))
+  var rejected=false
+  try{orgs.deleteOrganization(org.id)}catch(_:IllegalArgumentException){rejected=true}
+  assertTrue(rejected)
+  assertEquals(req.id,repo.observeAll().first().single().id)
+ }
+
 }
