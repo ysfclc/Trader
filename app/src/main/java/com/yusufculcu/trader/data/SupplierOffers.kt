@@ -68,6 +68,7 @@ data class SourcingReviewEntity(@PrimaryKey val id: String, val buyerRequirement
     @Query("SELECT * FROM sourcing_reviews") suspend fun getAll(): List<SourcingReviewEntity>
     @Query("SELECT * FROM sourcing_reviews WHERE buyerRequirementId=:requirementId AND supplierOfferId=:offerId LIMIT 1") suspend fun getPair(requirementId: String, offerId: String): SourcingReviewEntity?
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(row: SourcingReviewEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(rows: List<SourcingReviewEntity>)
     @Update suspend fun update(row: SourcingReviewEntity)
     @Query("DELETE FROM sourcing_reviews") suspend fun deleteAll()
 }
