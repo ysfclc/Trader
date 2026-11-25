@@ -1,3 +1,10 @@
+## 2026-11-25 — Trader numerical coverage baseline and non-regression gate
+
+- Inspected the first native AGP JaCoCo report from CI run [45665570698](https://github.com/ysfclc/Trader/actions/runs/45665570698). Raw coverage was 8.88% lines / 4.38% branches; generated Room `_Impl` classes contributed 6,773 uncovered lines and 1,040 uncovered branches.
+- Established application-source baseline excluding Room-generated `_Impl` classes: 1,394/9,388 lines (14.85%) and 574/12,079 branches (4.75%). Counts are stored in `docs/coverage-baseline.json`.
+- CI now enforces exact line/branch ratio non-regression using integer arithmetic; baseline updates require an intentional reviewed change. Added six Python unit tests for coverage parsing, generated-code exclusion and regression detection.
+- The baseline is a floor, not a quality target. UI, ViewModel and data-layer coverage remain weak. No APK release approval is implied.
+
 ## 2026-11-25 — Trader numerical unit-test coverage instrumentation
 
 - Enabled Android Gradle Plugin native JaCoCo unit-test coverage for the debug variant; no additional coverage plugin or application dependency was introduced.

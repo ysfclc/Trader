@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-25 — Trader 0.12.0 recovery CI-verified; AGP unit-coverage reporting added, baseline pending CI; APK remains gated_
+_Last updated: 2026-11-25 — Trader 0.12.0 recovery and numerical coverage non-regression gate CI-verified; APK remains gated_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
@@ -25,11 +25,11 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - PR audit: #19 is merged; older PR #5 remains draft, while #17 (`feature/discovery-browser-workspace` → `main`) and dependent #18 (`feature/public-search-adapter` → `feature/discovery-browser-workspace`) remain open. No merge/close action taken. Open GitHub issues: none.
 - Last verified installable baseline: versionCode 11 / `0.11.0-debug`; artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). Version 12 / `0.12.0-debug` was assembled and signature-verified in run 45642932647, but its installable artifact upload was intentionally skipped. Test report artifact [15035912637](https://github.com/ysfclc/Trader/actions/runs/45642932647/artifacts/15035912637) records 161 tests, 0 failures, 0 errors and 0 skipped.
 - Persistent Trader development signing remains configured in GitHub Actions. Do not change the package ID or signing certificate; every subsequent build must increment versionCode. The latest CI run and artifact are recorded after verification below.
-- Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, Room 2.8.5, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug`. CI publishes the AGP HTML/XML unit-coverage report; first measured baseline and non-regression threshold are pending successful CI. Installable APK upload still requires manual `workflow_dispatch` input `approve_installable_apk=true`.
+- Toolchain: JDK 17, Gradle 8.13, AGP 8.13.0, Kotlin Android/Compose 2.4.21, KSP 2.3.12, Room 2.8.5, SDK 36; build: `./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug`. CI runs six Python coverage-tool unit tests, publishes the AGP HTML/XML report and enforces the checked-in line/branch baseline in `docs/coverage-baseline.json`. Installable APK upload still requires manual `workflow_dispatch` input `approve_installable_apk=true`.
 
 ## Immediate next increments
-1. Inspect the first AGP coverage report, record exact line/branch coverage and enforce a no-regression floor in CI; then complete a transitive dependency vulnerability scan.
-2. After release evidence is green, manually dispatch the signed 0.12.0 build and verify in-place installation on the Redmi, Room 12→13 migration, process restart and encrypted backup/export/restore. Never downgrade Room 13 in place.
+1. Complete a full transitive dependency vulnerability scan and triage all advisories; document scan database freshness and accepted exceptions (none by default).
+2. After dependency and device gates are green, manually dispatch the signed 0.12.0 build and verify in-place installation on the Redmi, Room 12→13 migration, process restart and encrypted backup/export/restore. Never downgrade Room 13 in place.
 3. Complete the real buyer-to-shortlist journey on-device: multiple supplier offers, evidence reconciliation, revised decisions, Activity history, trash/restore and share handoff. Only then consider the next Product/SKU, Match, Quote and Deal increment.
 
 ## Known risks / constraints
@@ -37,7 +37,7 @@ Trader is an independent Android-first, local-first, free-first problem-solving 
 - Previous ephemeral-signed APK cannot be assumed upgrade-compatible with the new persistent signing identity. If it is already installed, do not attempt a blind reinstall; first protect existing workspace data and separately export source settings because those are not yet in the encrypted backup.
 - Android `allowBackup=false` disables OS cloud backup; explicit encrypted Trader export is the recovery mechanism. In-place signed updates retain app-private data.
 - Local Room database is not separately SQLCipher-encrypted; do not store provider credentials or highly sensitive secrets there.
-- No numerical code-coverage report or coverage-delta gate is configured; coverage non-regression is unverified.
+- Numerical coverage baseline is intentionally low: 14.85% application-source lines and 4.75% branches. The CI gate prevents further regression but does not establish adequate test depth. UI, ViewModel and repository layers remain major test gaps.
 - GitHub dependency graph is disabled in CI; repository Dependabot alerts could not be queried (API authorization denied). Targeted Room searches found no matching CVE advisory, but a complete transitive dependency scan remains unverified.
 - Existing warnings remain outside this increment: Gradle 8.13 deprecation, Node 20 action deprecation, and legacy Compose/WebView deprecations in other screens. No warnings were emitted from the files changed for recoverable sourcing records.
 - APK publication is intentionally blocked by default. Only a manual workflow dispatch with explicit approval can publish an installable APK after every gate is green.

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "variant": "debug",
+  "scope": "AGP JaCoCo JVM/Robolectric unit-test coverage; application-source class counters exclude Room-generated class names containing _Impl",
+  "source_commit": "29a1b1f24ce30f6ce0be2dd69f7bebb7e59a3ff8",
+  "workflow_run_id": 45665570698,
+  "metrics": {
+    "line": {
+      "covered": 1394,
+      "missed": 7994
+    },
+    "branch": {
+      "covered": 574,
+      "missed": 11505
+    }
+  }
+}
