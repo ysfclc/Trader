@@ -396,7 +396,7 @@
     <string name="sourcing_origin_country">Manufacturing origin country</string>
     <string name="sourcing_origin_city">Manufacturing origin city</string>
     <string name="sourcing_attach_evidence">Attach supplier source evidence</string>
-    <string name="sourcing_save_source_first">Add a source to this supplier's company dossier before linking it.</string>
+    <string name="sourcing_save_source_first">Add a source to this supplier\'s company dossier before linking it.</string>
     <string name="sourcing_save_offer">Save supplier offer</string>
     <string name="sourcing_review_note">Decision rationale</string>
     <string name="sourcing_review_warning">Shortlisting is an operator decision, not a verified technical qualification or supplier commitment.</string>
