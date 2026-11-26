@@ -674,6 +674,7 @@ data class FitAssessmentEntity(
     val organizationId: String,
     val proofAssetId: String,
     val computedOutcome: String,
+    val computedSnapshotJson: String?,
     val evaluatedAt: Long,
     val createdAt: Long,
     val updatedAt: Long
@@ -750,7 +751,10 @@ interface FitAssessmentEvidenceDao {
     fun observeForAssessment(assessmentId: String): Flow<List<FitAssessmentEvidenceEntity>>
 
     @Query("SELECT * FROM fit_assessment_evidence")
-    suspend fun getAll(): List<FitAssessmentEvidenceEntity>
+    suspend fun getAll()
+
+    @Query("SELECT * FROM fit_assessment_evidence WHERE assessmentId = :assessmentId ORDER BY createdAt ASC, id ASC")
+    suspend fun getForAssessment(assessmentId: String): List<FitAssessmentEvidenceEntity>: List<FitAssessmentEvidenceEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(evidence: FitAssessmentEvidenceEntity)
@@ -819,7 +823,7 @@ interface FitAssessmentOverrideDao {
         FitAssessmentEvidenceEntity::class,
         FitAssessmentOverrideEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -1153,5 +1157,13 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
         )""".trimIndent())
         db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_overrides_assessmentId ON fit_assessment_overrides (assessmentId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_overrides_assessmentId_reviewedAt ON fit_assessment_overrides (assessmentId, reviewedAt)")
+    }
+}
+
+
+/** Stores the deterministic computed result separately from append-only reviewer overrides. */
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE fit_assessments ADD COLUMN computedSnapshotJson TEXT")
     }
 }
