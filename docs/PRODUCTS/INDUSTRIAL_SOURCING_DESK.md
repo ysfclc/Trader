@@ -45,6 +45,7 @@ No automatic unit conversion, FX conversion, synonym matching, certification val
 ## Current implementation and verification
 
 - Native Android Sourcing destination; buyer requests remain managed in company dossiers.
+- Related company dossiers now include a separate Product/SKU master catalogue with company-scoped SKU uniqueness and source links. Catalogue records are not buyer requirements or supplier offers and do not imply stock, price, availability, technical equivalence or buyer fit. The 0.13.0 catalogue candidate is under CI validation.
 - Supplier offer header, normalized line items, company-scoped evidence links and persistent human review decisions.
 - Room v10→v11 stores supplier offers and sourcing decisions; Room v11→v12 adds append-only business activity history; Room v12→v13 adds recoverable deletion timestamps and indexes.
 - Encrypted workspace backup snapshot v10 preserves all commercial records, business history and deletion state; snapshots v1–v9 remain backward-readable.

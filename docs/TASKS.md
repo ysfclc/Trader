@@ -46,7 +46,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [x] T2.2a Add company-scoped Person/contact records with validated email and LinkedIn URL, editable/deletable details, cascading company deletion and encrypted backup snapshot v6. Similar names are not merged automatically; identity review/aliases remain separate work.
 - [x] T2.2 Implement BuyerRequirement and line items: quantity, specification, target price when stated, destination, timing and same-company source evidence. Room v9→v10, encrypted backup snapshot v7, EN/PL/TR dossier UI and CI run 45574277490 verified.
 - [x] T2.3 Implement SupplierOffer and line items for product, specification, material, available quantity, MOQ, unit price/currency and lead time; same-company source evidence, deterministic comparison and human sourcing decisions. Room v10→v11, encrypted backup snapshot v8, EN/PL/TR Sourcing Desk UI and CI run 45574277490 verified. Certification validation remains explicitly unimplemented.
-- [ ] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records.
+- [~] T2.4 Implement Product/SKU, Match, Quote and Deal as distinct records. The company Product/SKU catalogue is implemented in T2.4a; persistent Match, Quote and Deal records remain open.
+- [x] T2.4a Add a company-owned Product/SKU catalogue with validated product master fields, per-company SKU uniqueness, lifecycle status, source evidence links, Activity history, Room v13→v14 migration, encrypted backup snapshot v11 and EN/PL/TR dossier UI. Product records do not imply inventory, price, supplier availability, technical equivalence or buyer fit. CI validation for 0.13.0 is pending.
 - [ ] T2.5 Implement ServiceNeed and JobOpening using shared organization/source/task primitives.
 - [ ] T2.6 Implement contact basis/consent, suppression, representation and commission terms.
 - [x] T2.7 Implement append-only business status history and a unified Activity timeline for company, contact, claim, buyer-requirement, supplier-offer and sourcing-decision events. Room v11→v12, encrypted backup snapshot v9, EN/PL/TR status controls and restore compatibility are implemented. CI run [45591681856](https://github.com/ysfclc/Trader/actions/runs/45591681856) passed the full build/test/lint workflow and persistent APK signature check; installable artifact ID 15010224455 is available.
@@ -174,7 +175,7 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] Repair legacy migration test to include Room migration 6→7; commit a4950eb; CI run 45345752081 passed.
 - [ ] On Redmi, prove the next APK updates the currently installed stable-signed app in place (adb install -r) without uninstalling or losing app data.
 - [ ] Do not call a phase complete based only on tests or schema work: ship a visible app capability and provide a concise before/after summary with every APK.
-- [ ] Next visible vertical slice: Organization dossier with evidence-backed identity, source-linked claims, contact records, buyer requirements/supplier capabilities, and explainable support/contradiction/unknown states.
+- [ ] Next visible vertical slice: explainable ProofAsset-to-Organization fit assessments with deterministic supporting, contradicting and unknown components, evidence provenance and an explicit reviewer override; do not infer fit from unreviewed claims.
 
 ## T2 — Buyer requirements
 

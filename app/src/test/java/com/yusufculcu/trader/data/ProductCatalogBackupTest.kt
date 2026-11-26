@@ -73,7 +73,23 @@ class ProductCatalogBackupTest {
     }
 
     @Test
-    fun schemaFourteenBackupRequiresBothProductCatalogueArrays() {
+    fun schemaFourteenBackupRequiresProductsArray() {
+    @Test
+    fun schemaFourteenBackupRequiresProductEvidenceArray() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            val root = JSONObject(legacyRoot(14, 11, includeProductEvidence = false))
+                .put("products", JSONArray())
+            var rejected = false
+            try {
+                TraderBackupManager(database).decodeSnapshot(root.toString())
+            } catch (_: IllegalArgumentException) { rejected = true }
+            assertTrue(rejected)
+        } finally {
+            database.close()
+        }
+    }
+
         val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
         try {
             val root = legacyRoot(14, 11, includeProductEvidence = true)
