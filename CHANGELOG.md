@@ -5,6 +5,15 @@
 - Closed PR #17 as included in the consolidated merge, PR #18 as superseded, and the divergent draft PR #5 as superseded by the later workflow-control implementation. No unverified legacy UI was merged.
 - Main-branch CI and installable APK publication are tracked separately; no new installable artifact is claimed until the post-merge CI and manual approval workflow complete.
 
+## 2026-11-26 — T4.9 transactional fit-assessment persistence and backup (CI-verified)
+
+- Added `FitAssessmentRepository`: company/proof ownership, saved proof-asset integrity, source ownership and evidence references are validated inside a Room transaction before a deterministic result is persisted.
+- Persisted the complete computed-result snapshot separately from append-only reviewer overrides. A newer recomputation invalidates an older override as the effective decision; history is retained.
+- Advanced Room schema v15→v16 with nullable computed snapshot storage and added encrypted backup snapshot v11→v12 for assessments, evidence links and reviewer history. Restore uses foreign-key-safe ordering; legacy snapshots v1–v11 remain readable.
+- Added repository, same-timestamp override, full v1→v16 migration and encrypted backup round-trip tests.
+- Final-head CI run [45892674806](https://github.com/ysfclc/Trader/actions/runs/45892674806) (#601) passed **191 Android tests, 0 failures, 0 errors, 0 skipped**, the 67-class historical coverage floor, clean build, lint, SBOM/OSV and persistent package/signature checks.
+- Draft PR [#21](https://github.com/ysfclc/Trader/pull/21) is open. The company-dossier EN/PL/TR UI and physical-device acceptance are not included. The push-triggered run did not publish an installable APK.
+
 ## 2026-11-26 — T4.9 Room persistence schema and migration (CI-verified)
 
 - Added Room v15 entities and DAOs for one company/proof-asset assessment, explicit company-claim-to-proof-claim evidence links, and separate reviewer-override history. Assessment deletion cascades to its evidence and override rows; duplicate company/proof assessments and duplicate evidence pairs are rejected by unique indexes.
