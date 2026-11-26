@@ -123,7 +123,6 @@ class TraderBackupManager(
             }
             try {
                 val snapshot = decodeSnapshot(String(cleartext, StandardCharsets.UTF_8))
-                validateSnapshot(snapshot)
                 require(snapshot.discoverySources.isEmpty() || discoverySourceStore != null) {
                     "This backup contains discovery sources; use the full Trader app restore flow."
                 }
@@ -286,7 +285,7 @@ class TraderBackupManager(
         } else {
             emptyList()
         }
-        return BackupSnapshot(
+        val snapshot = BackupSnapshot(
             problems = decodeArray(root, "problems", ::decodeProblem),
             planSteps = decodeArray(root, "planSteps", ::decodePlanStep),
             activityEvents = decodeArray(root, "activityEvents", ::decodeActivity),
@@ -316,6 +315,8 @@ class TraderBackupManager(
             products = if (backupSchemaVersion >= 14) { require(root.has("products")) { "Backup is missing product catalogue records." }; decodeArray(root, "products", ::decodeProduct) } else emptyList(),
             productEvidence = if (backupSchemaVersion >= 14) { require(root.has("productEvidence")) { "Backup is missing product evidence links." }; decodeArray(root, "productEvidence", ::decodeProductEvidence) } else emptyList()
         )
+        validateSnapshot(snapshot)
+        return snapshot
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
