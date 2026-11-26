@@ -91,6 +91,9 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
 
         val existing = database.fitAssessmentDao()
             .findForOrganizationAndProofAsset(organizationId, proofAssetId)
+        require(existing == null || evaluatedAt >= existing.updatedAt) {
+            "Assessment timestamps must not move backwards."
+        }
         val assessmentId = existing?.id ?: UUID.randomUUID().toString()
         val now = evaluatedAt
         val errors = com.yusufculcu.trader.domain.FitAssessmentRules.validate(
@@ -111,7 +114,7 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
         }
         val currentOverrideRow = latestOverrideRow
             ?: database.fitAssessmentOverrideDao().latestForAssessment(assessmentId)
-        val currentOverride = currentOverrideRow?.let(::toDomainOverride)
+        val currentOverride = currentOverrideRow?.takeIf { it.reviewedAt >= now }?.let(::toDomainOverride)
         val view = FitAssessmentEvaluator.evaluate(
             organizationId = organizationId,
             asset = asset,
@@ -162,7 +165,7 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
         val snapshot = row.computedSnapshotJson ?: return null
         val computed = FitAssessmentSnapshotCodec.decode(snapshot)
         val override = database.fitAssessmentOverrideDao()
-            .latestForAssessment(assessmentId)?.let(::toDomainOverride)
+            .latestForAssessment(assessmentId)?.takeIf { it.reviewedAt >= row.evaluatedAt }?.let(::toDomainOverride)
         return FitAssessmentView(computed, override)
     }
 
