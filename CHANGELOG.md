@@ -1,3 +1,10 @@
+## 2026-11-26 — Trader 0.13.0 Product/SKU catalogue CI verification
+
+- Verified the company-owned Product/SKU catalogue, per-company SKU uniqueness, source-link provenance, Activity events, Room v13→v14 migration and encrypted backup snapshot v11 compatibility.
+- CI run [45807900617](https://github.com/ysfclc/Trader/actions/runs/45807900617) (#573) passed the clean Gradle unit-test/coverage/build/lint pipeline, historical per-class coverage floor, OSV dependency scan, exact package/version checks and persistent Trader signing-certificate verification.
+- Verified APK identity: `com.yusufculcu.trader.debug`, `0.13.0-debug`, versionCode 13. This push-triggered run did not publish an installable artifact; the explicit manual `workflow_dispatch` approval gate remains.
+- Physical Redmi install-over-existing, Room migration and encrypted backup/restore acceptance remain open.
+
 ## 2026-11-26 — Session 14: dependency security audit
 
 - Added a complete resolved-dependency SBOM and OSV-Scanner CI gate; patched transitive `commons-lang3` from 3.14.0 to 3.18.0 on the Android build-tool classpath.
