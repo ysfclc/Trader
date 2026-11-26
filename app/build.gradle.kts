@@ -9,6 +9,7 @@ plugins {
 configurations.configureEach {
     resolutionStrategy.eachDependency {
         when {
+            requested.group == "org.apache.commons" && requested.name == "commons-lang3" && requested.version == "3.14.0" -> useVersion("3.18.0")
             requested.group == "io.netty" && requested.version?.startsWith("4.1.") == true && !requested.name.startsWith("netty-tcnative") -> useVersion("4.1.137.Final")
             requested.group == "com.google.guava" && requested.name == "guava" && requested.version in setOf("32.0.1-jre", "33.2.1-jre", "33.3.1-jre") -> useVersion("33.7.2-jre")
             requested.group == "com.google.protobuf" && requested.version == "3.24.4" && requested.name in setOf("protobuf-java", "protobuf-java-util", "protobuf-kotlin") -> useVersion("3.25.5")
