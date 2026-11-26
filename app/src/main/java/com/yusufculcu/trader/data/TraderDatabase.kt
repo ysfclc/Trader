@@ -751,10 +751,10 @@ interface FitAssessmentEvidenceDao {
     fun observeForAssessment(assessmentId: String): Flow<List<FitAssessmentEvidenceEntity>>
 
     @Query("SELECT * FROM fit_assessment_evidence")
-    suspend fun getAll()
+    suspend fun getAll(): List<FitAssessmentEvidenceEntity>
 
     @Query("SELECT * FROM fit_assessment_evidence WHERE assessmentId = :assessmentId ORDER BY createdAt ASC, id ASC")
-    suspend fun getForAssessment(assessmentId: String): List<FitAssessmentEvidenceEntity>: List<FitAssessmentEvidenceEntity>
+    suspend fun getForAssessment(assessmentId: String): List<FitAssessmentEvidenceEntity>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(evidence: FitAssessmentEvidenceEntity)
