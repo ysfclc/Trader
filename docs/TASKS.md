@@ -4,7 +4,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T0 — Repository and product foundation
 
-- [x] T0.10 Consolidate the verified 324-commit integration line into canonical `main` via PR #20 (merge commit `3041b8c`); close superseded PRs #17/#18 and divergent draft #5. Historical branch refs remain to be pruned after confirming the canonical main build and APK.
+- [x] T0.10 Consolidate the verified 324-commit integration line into canonical `main` via PR #20 (merge commit `3041b8c`); close superseded PRs #17/#18 and divergent draft #5. Main CI #582 and approved installable APK run #583 are verified.
+- [ ] T0.11 Prune obsolete branch refs only after confirming each branch is merged/contained; 27 refs currently remain. Keep branches with unreviewed unique commits. The connected GitHub tools and branch-list UI do not currently expose a safe delete-ref action.
 
 - [x] T0.1 Establish the fresh-start ledger and canonical source of truth in `ysfclc/Trader`.
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
@@ -105,7 +106,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
 - [~] T4.8 Organization dossier foundation is implemented with source-linked claims and human review states. Person records, aliases, identity-resolution state and reversible duplicate review remain open.
-- [~] T4.9 **Domain + Room schema CI-verified** — `FitAssessment.kt` computes explicit supporting/contradicting/unknown evidence from eligible claims; Room v15 now defines assessment, evidence-link and reviewer-override tables with v14→v15 migration. CI run [45854262041](https://github.com/ysfclc/Trader/actions/runs/45854262041) passed 187 tests, including the focused migration constraints test and full v1→v15 migration. Repository transaction/ownership validation, full computed-result snapshot, encrypted backup snapshot v11→v12, EN/PL/TR dossier UI and device acceptance remain open.
+- [~] T4.9 **Domain, Room, repository and backup CI-verified** — deterministic supporting/contradicting/unknown components; transactional company/proof ownership validation; full computed-result snapshot separate from append-only reviewer overrides; Room v16 migration; encrypted backup snapshot v12 with strict validation and legacy compatibility. Draft PR [#21](https://github.com/ysfclc/Trader/pull/21), head `20b36dc`; CI run [#601](https://github.com/ysfclc/Trader/actions/runs/45892674806) passed 191 tests (0 failures/errors/skipped), coverage floor, build, lint, SBOM/OSV and persistent package/signature checks. EN/PL/TR dossier UI and physical-device acceptance remain open.
+- [ ] T4.9a Add the EN/PL/TR dossier UI for ProofAsset selection, explicit claim-to-proof evidence mapping, computed result components and append-only reviewer override history.
 
 ## T5 — Outreach and deal execution
 
@@ -139,6 +141,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T6.0b Verify signed update continuity on Redmi across two releases, including Room, preferences and WebView session retention; no uninstall/clear-data as an update strategy.
 - [ ] T6.0 Verify one non-commercial ProblemCase end-to-end: capture → context/evidence → plan → supported actions → postcondition verification → user-confirmed closure.
 - [ ] T6.0a Verify pause, resume, cancellation and process-death recovery for a multi-step workflow, including truthful partial/failed states.
+- [ ] T6.0c On the Redmi, verify the next signed APK updates the current installation without uninstall/clear-data, Room v15→v16 migration preserves records, and encrypted backup snapshot v12 restores fit assessments, evidence links and reviewer history.
 - [ ] T6.1 Start with industrial tooling and machining between Türkiye and Poland/EU.
 - [ ] T6.2 Build manually verified buyer and supplier records from live, cited evidence.
 - [ ] T6.3 Validate one real buyer requirement against supplier technical evidence.
