@@ -1,3 +1,12 @@
+## 2026-11-26 — T4.9 deterministic fit-assessment domain slice (CI-verified)
+
+- Added typed, deterministic ProofAsset-to-Organization assessment logic. Relationships are explicit operator labels, not guessed from text: SUPPORTS, CONTRADICTS or UNKNOWN.
+- Only source-supported company claims and proof claims with SUPPORTED status, evidence IDs and a verification timestamp can contribute positive/negative fit evidence. Ineligible evidence remains UNKNOWN; support and contradiction on one proof claim becomes CONFLICTED.
+- Reviewer override is represented separately from the computed result and never mutates the underlying evidence assessment.
+- Added ten focused domain tests. CI run [45836135050](https://github.com/ysfclc/Trader/actions/runs/45836135050) (#575) passed **186 tests, 0 failures, 0 errors, 0 skipped**, the 67-class historical coverage floor, OSV scan, lint, APK assembly and persistent certificate/package checks.
+- No dependency, Room schema, encrypted backup format, UI, version code or app identity changed. No installable APK was published on the push-triggered run.
+- This is the domain slice only. Room evidence/override persistence, v14→v15 migration, snapshot v11→v12, EN/PL/TR dossier UI and physical-device acceptance remain open.
+
 ## 2026-11-26 — Trader 0.13.0 Product/SKU catalogue CI verification
 
 - Verified the company-owned Product/SKU catalogue, per-company SKU uniqueness, source-link provenance, Activity events, Room v13→v14 migration and encrypted backup snapshot v11 compatibility.
