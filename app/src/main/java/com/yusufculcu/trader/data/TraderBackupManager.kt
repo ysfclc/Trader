@@ -504,7 +504,6 @@ class TraderBackupManager(
         require(snapshot.fitAssessmentEvidence.all { link ->
             val assessment = fitAssessmentsById[link.assessmentId]
             val claim = fitCompanyClaims[link.organizationClaimId]
-            val asset = assessment?.let { fitProofAssets[it.proofAssetId] }
             val relationship = runCatching {
                 com.yusufculcu.trader.domain.FitEvidenceRelationship.valueOf(link.relationship)
             }.getOrNull()
