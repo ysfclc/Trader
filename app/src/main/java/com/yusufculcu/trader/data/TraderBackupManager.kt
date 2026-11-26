@@ -67,7 +67,10 @@ class TraderBackupManager(
                     sourcingReviews = database.sourcingReviewDao().getAll(),
                     businessActivityEvents = database.businessActivityDao().getAll(),
                     products = database.productDao().getAll(),
-                    productEvidence = database.productEvidenceDao().getAll()
+                    productEvidence = database.productEvidenceDao().getAll(),
+                    fitAssessments = database.fitAssessmentDao().getAll(),
+                    fitAssessmentEvidence = database.fitAssessmentEvidenceDao().getAll(),
+                    fitAssessmentOverrides = database.fitAssessmentOverrideDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -132,6 +135,9 @@ class TraderBackupManager(
                     discoverySourceStore?.replaceAll(snapshot.discoverySources)
                     database.withTransaction {
                         database.workflowEventDao().deleteAll()
+                        database.fitAssessmentOverrideDao().deleteAll()
+                        database.fitAssessmentEvidenceDao().deleteAll()
+                        database.fitAssessmentDao().deleteAll()
                         database.sourcingReviewDao().deleteAll()
                         database.businessActivityDao().deleteAll()
                         database.productEvidenceDao().deleteAll()
@@ -177,6 +183,9 @@ class TraderBackupManager(
                         database.productDao().insertAll(snapshot.products)
                         database.productEvidenceDao().insertAll(snapshot.productEvidence)
                         database.organizationClaimDao().insertAll(snapshot.organizationClaims)
+                        database.fitAssessmentDao().insertAll(snapshot.fitAssessments)
+                        database.fitAssessmentEvidenceDao().insertAll(snapshot.fitAssessmentEvidence)
+                        database.fitAssessmentOverrideDao().insertAll(snapshot.fitAssessmentOverrides)
                         database.organizationPersonDao().insertAll(snapshot.organizationPeople)
                         database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)
                         database.buyerRequirementLineItemDao().insertAll(snapshot.buyerRequirementItems)
@@ -268,6 +277,9 @@ class TraderBackupManager(
             .put("businessActivityEvents", jsonArray(snapshot.businessActivityEvents, ::encodeBusinessActivity))
             .put("products", jsonArray(snapshot.products, ::encodeProduct))
             .put("productEvidence", jsonArray(snapshot.productEvidence, ::encodeProductEvidence))
+            .put("fitAssessments", jsonArray(snapshot.fitAssessments, ::encodeFitAssessment))
+            .put("fitAssessmentEvidence", jsonArray(snapshot.fitAssessmentEvidence, ::encodeFitAssessmentEvidence))
+            .put("fitAssessmentOverrides", jsonArray(snapshot.fitAssessmentOverrides, ::encodeFitAssessmentOverride))
         return root.toString()
     }
 
@@ -313,7 +325,10 @@ class TraderBackupManager(
             sourcingReviews = if (backupSchemaVersion >= 11) { require(root.has("sourcingReviews")) { "Backup is missing sourcing review decisions." }; decodeArray(root, "sourcingReviews", ::decodeSourcingReview) } else emptyList(),
             businessActivityEvents = if (backupSchemaVersion >= 12) { require(root.has("businessActivityEvents")) { "Backup is missing business activity history." }; decodeArray(root, "businessActivityEvents", ::decodeBusinessActivity) } else emptyList(),
             products = if (backupSchemaVersion >= 14) { require(root.has("products")) { "Backup is missing product catalogue records." }; decodeArray(root, "products", ::decodeProduct) } else emptyList(),
-            productEvidence = if (backupSchemaVersion >= 14) { require(root.has("productEvidence")) { "Backup is missing product evidence links." }; decodeArray(root, "productEvidence", ::decodeProductEvidence) } else emptyList()
+            productEvidence = if (backupSchemaVersion >= 14) { require(root.has("productEvidence")) { "Backup is missing product evidence links." }; decodeArray(root, "productEvidence", ::decodeProductEvidence) } else emptyList(),
+            fitAssessments = if (backupSchemaVersion >= 16) { require(root.has("fitAssessments")) { "Backup is missing fit assessments." }; decodeArray(root, "fitAssessments", ::decodeFitAssessment) } else emptyList(),
+            fitAssessmentEvidence = if (backupSchemaVersion >= 16) { require(root.has("fitAssessmentEvidence")) { "Backup is missing fit assessment evidence links." }; decodeArray(root, "fitAssessmentEvidence", ::decodeFitAssessmentEvidence) } else emptyList(),
+            fitAssessmentOverrides = if (backupSchemaVersion >= 16) { require(root.has("fitAssessmentOverrides")) { "Backup is missing fit assessment reviewer history." }; decodeArray(root, "fitAssessmentOverrides", ::decodeFitAssessmentOverride) } else emptyList()
         )
         validateSnapshot(snapshot)
         return snapshot
@@ -322,7 +337,8 @@ class TraderBackupManager(
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size + snapshot.products.size + snapshot.productEvidence.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size + snapshot.products.size + snapshot.productEvidence.size + snapshot.fitAssessments.size +
+            snapshot.fitAssessmentEvidence.size + snapshot.fitAssessmentOverrides.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -363,6 +379,11 @@ class TraderBackupManager(
         unique(snapshot.products.mapNotNull { row -> row.skuKey?.let { row.organizationId + "|" + it } }, "company product SKU")
         unique(snapshot.productEvidence.map { it.id }, "product evidence link")
         unique(snapshot.productEvidence.map { it.productId + "|" + it.sourceId }, "product evidence pair")
+        unique(snapshot.fitAssessments.map { it.id }, "fit assessment")
+        unique(snapshot.fitAssessments.map { it.organizationId + "|" + it.proofAssetId }, "company/proof fit assessment")
+        unique(snapshot.fitAssessmentEvidence.map { it.id }, "fit assessment evidence")
+        unique(snapshot.fitAssessmentEvidence.map { it.assessmentId + "|" + it.organizationClaimId + "|" + it.proofClaimId }, "fit assessment evidence pair")
+        unique(snapshot.fitAssessmentOverrides.map { it.id }, "fit assessment reviewer override")
         unique(snapshot.sourcingReviews.map { it.buyerRequirementId + "|" + it.supplierOfferId }, "sourcing review pair")
         require(snapshot.supplierOffers.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Supplier offer references a missing company." }
         require(snapshot.supplierOfferItems.all { it.offerId in snapshot.supplierOffers.map(SupplierOfferEntity::id) }) { "Supplier offer item references a missing offer." }
@@ -463,6 +484,68 @@ class TraderBackupManager(
         require(proofAssets.flatMap { it.claims }.flatMap { it.evidenceIds }.all { it in evidenceIds }) {
             "A proof claim points to a missing evidence record."
         }
+
+        val fitAssessmentsById = snapshot.fitAssessments.associateBy { it.id }
+        val fitProofAssets = proofAssets.associateBy { it.id }
+        val fitCompanyClaims = snapshot.organizationClaims.associateBy { it.id }
+        require(snapshot.fitAssessments.all { row ->
+            val asset = fitProofAssets[row.proofAssetId]
+            val saved = row.computedSnapshotJson?.let { value ->
+                runCatching { FitAssessmentSnapshotCodec.decode(value) }.getOrNull()
+            }
+            row.id.isNotBlank() && row.organizationId in organizationIds && asset != null &&
+                row.computedOutcome in com.yusufculcu.trader.domain.FitAssessmentOutcome.values().map { it.name } &&
+                row.computedSnapshotJson != null && row.computedSnapshotJson.length <= 1_000_000 &&
+                row.evaluatedAt >= 0 && row.createdAt >= 0 && row.updatedAt >= row.createdAt &&
+                row.updatedAt >= row.evaluatedAt && saved != null &&
+                saved.organizationId == row.organizationId && saved.proofAssetId == row.proofAssetId &&
+                saved.evaluatedAt == row.evaluatedAt && saved.outcome.name == row.computedOutcome
+        }) { "Backup contains an invalid fit assessment or computed snapshot." }
+        require(snapshot.fitAssessmentEvidence.all { link ->
+            val assessment = fitAssessmentsById[link.assessmentId]
+            val claim = fitCompanyClaims[link.organizationClaimId]
+            val asset = assessment?.let { fitProofAssets[it.proofAssetId] }
+            val relationship = runCatching {
+                com.yusufculcu.trader.domain.FitEvidenceRelationship.valueOf(link.relationship)
+            }.getOrNull()
+            link.id.isNotBlank() && assessment != null && claim != null && asset != null &&
+                claim.organizationId == assessment.organizationId &&
+                asset.claims.any { it.id == link.proofClaimId } && relationship != null &&
+                (relationship == com.yusufculcu.trader.domain.FitEvidenceRelationship.UNKNOWN || link.rationale.isNotBlank()) &&
+                link.rationale.length <= 1_000 && link.createdAt >= 0
+        }) { "Backup contains a fit assessment evidence link with an invalid or cross-company relationship." }
+        require(snapshot.fitAssessments.all { row ->
+            val asset = fitProofAssets.getValue(row.proofAssetId)
+            val claims = snapshot.organizationClaims.filter { it.organizationId == row.organizationId }.map { claim ->
+                com.yusufculcu.trader.domain.FitCompanyClaim(
+                    claim.id, claim.organizationId, claim.field, claim.statement,
+                    com.yusufculcu.trader.domain.FitCompanyClaimReviewState.valueOf(claim.reviewState)
+                )
+            }
+            val links = snapshot.fitAssessmentEvidence.filter { it.assessmentId == row.id }.map { link ->
+                com.yusufculcu.trader.domain.FitEvidenceLink(
+                    link.organizationClaimId, link.proofClaimId,
+                    com.yusufculcu.trader.domain.FitEvidenceRelationship.valueOf(link.relationship),
+                    link.rationale, link.createdAt
+                )
+            }
+            val saved = row.computedSnapshotJson?.let { value ->
+                runCatching { FitAssessmentSnapshotCodec.decode(value) }.getOrNull()
+            }
+            val recomputed = runCatching {
+                com.yusufculcu.trader.domain.FitAssessmentEvaluator.evaluate(
+                    row.organizationId, asset, claims, links, row.evaluatedAt
+                ).computed
+            }.getOrNull()
+            saved != null && recomputed != null && saved == recomputed
+        }) { "A fit assessment snapshot does not match its saved evidence and reviewed company claims." }
+        require(snapshot.fitAssessmentOverrides.all { row ->
+            row.id.isNotBlank() && row.assessmentId in fitAssessmentsById &&
+                row.decision in com.yusufculcu.trader.domain.FitAssessmentOverrideDecision.values().map { it.name } &&
+                row.rationale.isNotBlank() && row.rationale.length <= 1_000 &&
+                (row.reviewerLabel == null || row.reviewerLabel.length <= 120) &&
+                row.reviewedAt >= fitAssessmentsById.getValue(row.assessmentId).createdAt
+        }) { "Backup contains invalid fit assessment reviewer history." }
 
         val problems = snapshot.problems.map { it.id }.toSet()
         val runs = snapshot.workflowRuns.associateBy { it.id }
@@ -708,6 +791,38 @@ class TraderBackupManager(
         sourceId = o.getString("sourceId"), linkedAt = o.getLong("linkedAt")
     )
 
+    private fun encodeFitAssessment(row: FitAssessmentEntity) = json(
+        "id" to row.id, "organizationId" to row.organizationId, "proofAssetId" to row.proofAssetId,
+        "computedOutcome" to row.computedOutcome, "computedSnapshotJson" to row.computedSnapshotJson,
+        "evaluatedAt" to row.evaluatedAt, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+    private fun decodeFitAssessment(o: JSONObject) = FitAssessmentEntity(
+        id = o.getString("id"), organizationId = o.getString("organizationId"),
+        proofAssetId = o.getString("proofAssetId"), computedOutcome = o.getString("computedOutcome"),
+        computedSnapshotJson = o.stringOrNull("computedSnapshotJson"), evaluatedAt = o.getLong("evaluatedAt"),
+        createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+    private fun encodeFitAssessmentEvidence(row: FitAssessmentEvidenceEntity) = json(
+        "id" to row.id, "assessmentId" to row.assessmentId, "organizationClaimId" to row.organizationClaimId,
+        "proofClaimId" to row.proofClaimId, "relationship" to row.relationship, "rationale" to row.rationale,
+        "createdAt" to row.createdAt
+    )
+    private fun decodeFitAssessmentEvidence(o: JSONObject) = FitAssessmentEvidenceEntity(
+        id = o.getString("id"), assessmentId = o.getString("assessmentId"),
+        organizationClaimId = o.getString("organizationClaimId"), proofClaimId = o.getString("proofClaimId"),
+        relationship = o.getString("relationship"), rationale = o.getString("rationale"),
+        createdAt = o.getLong("createdAt")
+    )
+    private fun encodeFitAssessmentOverride(row: FitAssessmentOverrideEntity) = json(
+        "id" to row.id, "assessmentId" to row.assessmentId, "decision" to row.decision,
+        "rationale" to row.rationale, "reviewerLabel" to row.reviewerLabel, "reviewedAt" to row.reviewedAt
+    )
+    private fun decodeFitAssessmentOverride(o: JSONObject) = FitAssessmentOverrideEntity(
+        id = o.getString("id"), assessmentId = o.getString("assessmentId"), decision = o.getString("decision"),
+        rationale = o.getString("rationale"), reviewerLabel = o.stringOrNull("reviewerLabel"),
+        reviewedAt = o.getLong("reviewedAt")
+    )
+
     private fun encodeBusinessActivity(row: BusinessActivityEntity) = json(
         "id" to row.id, "organizationId" to row.organizationId, "organizationName" to row.organizationName,
         "entityType" to row.entityType, "entityId" to row.entityId, "entityLabel" to row.entityLabel,
@@ -805,13 +920,16 @@ class TraderBackupManager(
         val sourcingReviews: List<SourcingReviewEntity> = emptyList(),
         val businessActivityEvents: List<BusinessActivityEntity> = emptyList(),
         val products: List<ProductEntity> = emptyList(),
-        val productEvidence: List<ProductEvidenceEntity> = emptyList()
+        val productEvidence: List<ProductEvidenceEntity> = emptyList(),
+        val fitAssessments: List<FitAssessmentEntity> = emptyList(),
+        val fitAssessmentEvidence: List<FitAssessmentEvidenceEntity> = emptyList(),
+        val fitAssessmentOverrides: List<FitAssessmentOverrideEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 11
-        private const val DATABASE_SCHEMA_VERSION = 14
+        private const val SNAPSHOT_VERSION = 12
+        private const val DATABASE_SCHEMA_VERSION = 16
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
