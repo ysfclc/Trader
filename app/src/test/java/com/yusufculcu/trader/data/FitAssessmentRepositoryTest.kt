@@ -110,7 +110,7 @@ class FitAssessmentRepositoryTest {
         }
         assertTrue(rejected)
         assertEquals(1, database.fitAssessmentDao().observeForOrganization(ids.organizationId).first().size)
-        assertEquals(1, database.fitAssessmentOverrideDao().getAll().size.let { 0 }) // No reviewer override was created.
+        assertEquals(0, database.fitAssessmentOverrideDao().getAll().size) // No reviewer override was created.
     }
 
     @Test
