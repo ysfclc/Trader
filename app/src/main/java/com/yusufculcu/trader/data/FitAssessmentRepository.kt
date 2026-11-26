@@ -152,7 +152,7 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
                 )
             )
         }
-        latestOverrideRow?.let(database.fitAssessmentOverrideDao()::append)
+        if (latestOverrideRow != null) database.fitAssessmentOverrideDao().append(latestOverrideRow)
         database.organizationDao().touch(organizationId, now)
         view
     }
