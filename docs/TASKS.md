@@ -103,7 +103,7 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
 - [~] T4.8 Organization dossier foundation is implemented with source-linked claims and human review states. Person records, aliases, identity-resolution state and reversible duplicate review remain open.
-- [~] T4.9 **Domain slice CI-verified** — `FitAssessment.kt` computes explicit supporting/contradicting/unknown evidence components only from source-supported company claims and evidence-backed proof claims; conflicts remain visible and reviewer override is a separate value. CI run [45836135050](https://github.com/ysfclc/Trader/actions/runs/45836135050) passed all 186 tests. Durable assessment/evidence persistence, append-only override history, Room v14→v15 migration, backup snapshot v11→v12, EN/PL/TR dossier UI and device acceptance remain open.
+- [~] T4.9 **Domain + Room schema CI-verified** — `FitAssessment.kt` computes explicit supporting/contradicting/unknown evidence from eligible claims; Room v15 now defines assessment, evidence-link and reviewer-override tables with v14→v15 migration. CI run [45854262041](https://github.com/ysfclc/Trader/actions/runs/45854262041) passed 187 tests, including the focused migration constraints test and full v1→v15 migration. Repository transaction/ownership validation, full computed-result snapshot, encrypted backup snapshot v11→v12, EN/PL/TR dossier UI and device acceptance remain open.
 
 ## T5 — Outreach and deal execution
 

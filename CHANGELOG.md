@@ -1,3 +1,11 @@
+## 2026-11-26 — T4.9 Room persistence schema and migration (CI-verified)
+
+- Added Room v15 entities and DAOs for one company/proof-asset assessment, explicit company-claim-to-proof-claim evidence links, and separate reviewer-override history. Assessment deletion cascades to its evidence and override rows; duplicate company/proof assessments and duplicate evidence pairs are rejected by unique indexes.
+- Registered the non-destructive Room v14→v15 migration. Existing organization, claim and proof-asset rows are retained.
+- Added migration tests for table constraints, foreign-key rejection/cascade behavior, multiple reviewer decisions remaining in history, and the complete v1→v15 Room migration path.
+- CI run [45854262041](https://github.com/ysfclc/Trader/actions/runs/45854262041) (#578) passed **187 tests, 0 failures, 0 errors, 0 skipped**, the 67-class historical coverage floor, lint, APK assembly, SBOM generation, OSV scan, package/version assertions and persistent signing-certificate verification.
+- Encrypted backup remains snapshot v11 and does not yet include these new rows. Repository mapping/transactional validation, full computed-result snapshots, backup snapshot v12, EN/PL/TR dossier UI and physical-device acceptance remain open. Installable APK publication was skipped under the normal push trigger; no new installable artifact is claimed.
+
 ## 2026-11-26 — T4.9 deterministic fit-assessment domain slice (CI-verified)
 
 - Added typed, deterministic ProofAsset-to-Organization assessment logic. Relationships are explicit operator labels, not guessed from text: SUPPORTS, CONTRADICTS or UNKNOWN.
