@@ -73,6 +73,19 @@ class FitAssessmentRepositoryTest {
         assertEquals(1, database.fitAssessmentOverrideDao().observeHistory(row.id).first().size)
         assertEquals(reviewed.computed, repository.getView(row.id)?.computed)
         assertEquals(FitAssessmentDisposition.ACCEPTED_BY_REVIEWER, repository.getView(row.id)?.effectiveDisposition)
+
+        val changedEvidence = repository.assess(
+            ids.organizationId,
+            ids.proofAssetId,
+            listOf(link.copy(
+                relationship = FitEvidenceRelationship.CONTRADICTS,
+                rationale = "A later reviewed company fact contradicts this capability."
+            )),
+            evaluatedAt = 600
+        )
+        assertEquals(FitAssessmentOutcome.CONTRADICTED, changedEvidence.computed.outcome)
+        assertEquals(FitAssessmentDisposition.CONTRADICTED, changedEvidence.effectiveDisposition)
+        assertEquals(1, database.fitAssessmentOverrideDao().observeHistory(row.id).first().size)
     }
 
     @Test
