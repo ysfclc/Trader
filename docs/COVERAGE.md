@@ -1,6 +1,6 @@
 # Requirement coverage matrix
 
-_Branch review: 2026-11-26 against `feature/discovery-run-persistence`; the original coverage floor was measured in CI run 45665570698 and reproduced in run 45666843559. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
+_Branch review: 2026-11-26 against canonical `main` after PR #20 merge (`3041b8c`); the original coverage floor was measured in CI run 45665570698 and reproduced in run 45666843559. Main baseline: PR #15 merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a._
 
 ## Source of truth
 

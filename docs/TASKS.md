@@ -4,6 +4,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T0 — Repository and product foundation
 
+- [x] T0.10 Consolidate the verified 324-commit integration line into canonical `main` via PR #20 (merge commit `3041b8c`); close superseded PRs #17/#18 and divergent draft #5. Historical branch refs remain to be pruned after confirming the canonical main build and APK.
+
 - [x] T0.1 Establish the fresh-start ledger and canonical source of truth in `ysfclc/Trader`.
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
 - [x] T0.6 Expand repository audit to BOS, Oddo, Troy, Kovan, Zommo and Nexus; record exact source paths, known gaps and reuse decisions in `docs/ADDITIONAL_REUSE_AUDIT.md`.

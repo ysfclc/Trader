@@ -1,3 +1,10 @@
+## 2026-11-26 — Trader branch consolidation
+
+- Merged the complete verified integration line from `feature/discovery-run-persistence` into canonical `main` via [PR #20](https://github.com/ysfclc/Trader/pull/20), merge commit [3041b8c](https://github.com/ysfclc/Trader/commit/3041b8cd8046c26a7c4cce27832911f92d5d309a).
+- Consolidated 324 commits and 104 changed files without rewriting history. The integration included browser/discovery, local AI catalogue, sourcing records, persistent install identity, Room/backup evolution and fit-assessment domain/schema work.
+- Closed PR #17 as included in the consolidated merge, PR #18 as superseded, and the divergent draft PR #5 as superseded by the later workflow-control implementation. No unverified legacy UI was merged.
+- Main-branch CI and installable APK publication are tracked separately; no new installable artifact is claimed until the post-merge CI and manual approval workflow complete.
+
 ## 2026-11-26 — T4.9 Room persistence schema and migration (CI-verified)
 
 - Added Room v15 entities and DAOs for one company/proof-asset assessment, explicit company-claim-to-proof-claim evidence links, and separate reviewer-override history. Assessment deletion cascades to its evidence and override rows; duplicate company/proof assessments and duplicate evidence pairs are rejected by unique indexes.
