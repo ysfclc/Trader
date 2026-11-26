@@ -49,7 +49,7 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
         reviewerOverride: FitReviewerOverrideDraft? = null,
         evaluatedAt: Long = System.currentTimeMillis()
     ): FitAssessmentView = database.withTransaction {
-        val organization = database.organizationDao().getById(organizationId)
+        database.organizationDao().getById(organizationId)
             ?: throw IllegalArgumentException("Company dossier does not exist.")
         val proofRow = database.proofAssetDao().getById(proofAssetId)
             ?: throw IllegalArgumentException("Proof asset does not exist.")
@@ -94,8 +94,11 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
         require(existing == null || evaluatedAt >= existing.updatedAt) {
             "Assessment timestamps must not move backwards."
         }
+        require(existing == null || existing.updatedAt < Long.MAX_VALUE) {
+            "The assessment timestamp cannot be advanced safely."
+        }
         val assessmentId = existing?.id ?: UUID.randomUUID().toString()
-        val now = evaluatedAt
+        val now = existing?.updatedAt?.let { previous -> maxOf(evaluatedAt, previous + 1L) } ?: evaluatedAt
         val errors = com.yusufculcu.trader.domain.FitAssessmentRules.validate(
             organizationId, asset, companyClaims, evidenceLinks, now
         )
@@ -160,22 +163,25 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
         view
     }
 
-    suspend fun getView(assessmentId: String): FitAssessmentView? {
+    suspend fun getView(assessmentId: String): FitAssessmentView? =
+        database.withTransaction { readViewInTransaction(assessmentId) }
+
+    suspend fun getForOrganizationAndProofAsset(
+        organizationId: String,
+        proofAssetId: String
+    ): FitAssessmentView? = database.withTransaction {
+        val row = database.fitAssessmentDao()
+            .findForOrganizationAndProofAsset(organizationId, proofAssetId) ?: return@withTransaction null
+        readViewInTransaction(row.id)
+    }
+
+    private suspend fun readViewInTransaction(assessmentId: String): FitAssessmentView? {
         val row = database.fitAssessmentDao().getById(assessmentId) ?: return null
         val snapshot = row.computedSnapshotJson ?: return null
         val computed = FitAssessmentSnapshotCodec.decode(snapshot)
         val override = database.fitAssessmentOverrideDao()
             .latestForAssessment(assessmentId)?.takeIf { it.reviewedAt >= row.evaluatedAt }?.let(::toDomainOverride)
         return FitAssessmentView(computed, override)
-    }
-
-    suspend fun getForOrganizationAndProofAsset(
-        organizationId: String,
-        proofAssetId: String
-    ): FitAssessmentView? {
-        val row = database.fitAssessmentDao()
-            .findForOrganizationAndProofAsset(organizationId, proofAssetId) ?: return null
-        return getView(row.id)
     }
 
     private fun toDomainOverride(row: FitAssessmentOverrideEntity): FitAssessmentOverride {
