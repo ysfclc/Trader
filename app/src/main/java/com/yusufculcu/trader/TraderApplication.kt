@@ -23,6 +23,7 @@ import com.yusufculcu.trader.data.TraderRepository
 import com.yusufculcu.trader.data.DiscoveryStrategyRepository
 import com.yusufculcu.trader.data.DiscoveryRunRepository
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.FitAssessmentRepository
 import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.ai.TraderModelStore
 import com.yusufculcu.trader.ai.TraderModelCandidateVerifier
@@ -38,6 +39,7 @@ class TraderApplication : Application() {
     val discoveryStrategyRepository: DiscoveryStrategyRepository by lazy { DiscoveryStrategyRepository(database) }
     val discoveryRunRepository: DiscoveryRunRepository by lazy { DiscoveryRunRepository(database) }
     val organizationRepository: OrganizationRepository by lazy { OrganizationRepository(database) }
+    val fitAssessmentRepository: FitAssessmentRepository by lazy { FitAssessmentRepository(database) }
     val buyerRequirementRepository: BuyerRequirementRepository by lazy { BuyerRequirementRepository(database) }
     val supplierOfferRepository: SupplierOfferRepository by lazy { SupplierOfferRepository(database) }
     val modelStore: TraderModelStore by lazy { TraderModelStore(this) }
