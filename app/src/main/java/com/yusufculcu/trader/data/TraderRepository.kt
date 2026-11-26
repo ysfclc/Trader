@@ -43,6 +43,7 @@ class TraderRepository(private val database: TraderDatabase) {
     fun observeArchivedProblems(): Flow<List<ProblemEntity>> = database.problemDao().observeArchived()
     fun observeSteps(problemId: String): Flow<List<PlanStepEntity>> = database.planStepDao().observeForProblem(problemId)
     fun observeActivity(): Flow<List<ActivityEventEntity>> = database.activityDao().observeRecent()
+    fun observeBusinessActivity(): Flow<List<BusinessActivityEntity>> = database.businessActivityDao().observeRecent()
     fun observeEvidence(problemId: String): Flow<List<EvidenceEntity>> = database.evidenceDao().observeForProblem(problemId)
     fun observeOpportunity(problemId: String): Flow<OpportunityEntity?> = database.opportunityDao().observeForProblem(problemId)
     fun observeOpportunities(): Flow<List<OpportunityEntity>> = database.opportunityDao().observeAll()
@@ -77,6 +78,146 @@ class TraderRepository(private val database: TraderDatabase) {
             addEvent(id, "created", "Problem captured", "Created from $inputKind", now)
         }
         return id
+    }
+
+    /**
+     * Persists a public discovery result as source-linked, unreviewed research evidence.
+     * Repeated saves of the same canonical URL return the existing research case.
+     */
+    suspend fun captureDiscoveryItem(
+        sourceName: String,
+        title: String,
+        sourceUrl: String,
+        summary: String,
+        publishedAt: Long?
+    ): String? {
+        val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
+        val parsed = runCatching { java.net.URI(sourceUrl.trim()) }.getOrNull()
+        if (cleanTitle.isBlank() || parsed == null || parsed.scheme?.lowercase() != "https" ||
+            parsed.host.isNullOrBlank() || parsed.rawUserInfo != null
+        ) return null
+        val cleanUrl = parsed.toASCIIString().substringBefore("#").takeIf { it.length <= 2_048 } ?: return null
+        val source = sourceName.trim().take(100).ifBlank { "Public source" }
+        val cleanSummary = summary.trim().take(4_000)
+        val now = System.currentTimeMillis()
+        return database.withTransaction {
+            database.evidenceDao().findBySourceUri(cleanUrl)?.let { return@withTransaction it.problemId }
+            val problemId = UUID.randomUUID().toString()
+            val body = buildString {
+                append("Source: ").append(source)
+                if (publishedAt != null) append("\nPublished: ").append(publishedAt)
+                if (cleanSummary.isNotBlank()) append("\n\n").append(cleanSummary)
+                append("\n\nThis is an unreviewed source capture. Verify the original before relying on it.")
+            }
+            database.problemDao().insert(
+                ProblemEntity(
+                    id = problemId,
+                    title = cleanTitle,
+                    description = "Discovered from a configured public source. Review the source-linked evidence before relying on it.",
+                    desiredOutcome = "Assess whether this signal is relevant and identify a justified next action.",
+                    constraintsText = "",
+                    category = "Research",
+                    status = ProblemStatus.OPEN.name,
+                    inputKind = "discovery",
+                    originalContent = cleanUrl,
+                    sourceUri = cleanUrl,
+                    outcomeNote = "",
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+            database.evidenceDao().insert(
+                EvidenceEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = problemId,
+                    title = cleanTitle,
+                    content = body,
+                    sourceUri = cleanUrl,
+                    sourceKind = "PUBLIC_SOURCE",
+                    verificationState = "UNREVIEWED",
+                    capturedAt = now
+                )
+            )
+            addEvent(problemId, "discovery_item_saved", "Discovery item saved", "$source · $cleanTitle", now)
+            problemId
+        }
+    }
+
+    /**
+     * Saves a user-reviewed capture from the currently visible browser page.
+     * A null problemId creates a new research case; otherwise evidence is attached
+     * to the selected active case. Page content and its source link are committed atomically.
+     */
+    suspend fun captureBrowserPage(
+        problemId: String?,
+        title: String,
+        sourceUrl: String,
+        content: String
+    ): String? {
+        val cleanTitle = ProblemRules.normalizeTitle(title).take(180)
+        val candidateUrl = sourceUrl.trim().take(2_048)
+        val cleanContent = content.trim().take(20_000)
+        val parsedUrl = runCatching { java.net.URI(candidateUrl) }.getOrNull()
+        val scheme = parsedUrl?.scheme?.lowercase()
+        if (cleanTitle.isBlank() || scheme !in setOf("https", "http") ||
+            parsedUrl?.host.isNullOrBlank() || parsedUrl?.rawUserInfo != null ||
+            cleanContent.length < 20
+        ) return null
+        // Persist the canonical page path, not potentially credential-bearing query/fragment data.
+        val cleanUrl = parsedUrl.toASCIIString().substringBefore('?').substringBefore('#').take(2_048)
+        if (cleanUrl.isBlank()) return null
+
+        return database.withTransaction {
+            val existing = problemId?.let { database.problemDao().getById(it) }
+            if (problemId != null && (existing == null || existing.archivedAt != null)) {
+                return@withTransaction null
+            }
+
+            val now = System.currentTimeMillis()
+            val targetProblemId = existing?.id ?: UUID.randomUUID().toString()
+            if (existing == null) {
+                database.problemDao().insert(
+                    ProblemEntity(
+                        id = targetProblemId,
+                        title = cleanTitle,
+                        description = "Captured from Trader's signed-in browser. Review the source-linked evidence before relying on it.",
+                        desiredOutcome = "Review the captured page and identify any relevant signal or next action.",
+                        constraintsText = "",
+                        category = "Research",
+                        status = ProblemStatus.OPEN.name,
+                        inputKind = "browser_capture",
+                        originalContent = cleanUrl,
+                        sourceUri = cleanUrl,
+                        outcomeNote = "",
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
+                addEvent(targetProblemId, "created", "Research record created", "Created from a user-reviewed browser page capture", now)
+            }
+
+            database.evidenceDao().insert(
+                EvidenceEntity(
+                    id = UUID.randomUUID().toString(),
+                    problemId = targetProblemId,
+                    title = cleanTitle,
+                    content = cleanContent,
+                    sourceUri = cleanUrl,
+                    sourceKind = "BROWSER_PAGE",
+                    verificationState = "UNREVIEWED",
+                    capturedAt = now
+                )
+            )
+            database.problemDao().touch(targetProblemId, now)
+            addEvent(
+                targetProblemId,
+                "browser_page_captured",
+                "Browser page captured",
+                "Visible page content saved from ${parsedUrl.host}. Evidence remains unreviewed.",
+                now
+            )
+            targetProblemId
+        }
     }
 
     suspend fun updateProblemDetails(

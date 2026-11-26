@@ -37,6 +37,8 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,7 +58,11 @@ import com.yusufculcu.trader.data.OpportunityEntity
 import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
+import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.domain.ContextPacketBuilder
+import com.yusufculcu.trader.domain.SharedBrowserCapture
+import com.yusufculcu.trader.domain.SharedBrowserCaptureParser
 import com.yusufculcu.trader.domain.ProblemStatus
 import com.yusufculcu.trader.domain.OpportunityLane
 import com.yusufculcu.trader.domain.OpportunityStage
@@ -66,16 +72,23 @@ import java.util.Date
 import java.util.Calendar
 import java.util.Locale
 
-private enum class AppTab { INBOX, PIPELINE, ACTIVITY }
+private enum class AppTab { INBOX, DISCOVER, SOURCING, PIPELINE, ACTIVITY, BROWSER, AI }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TraderApp(viewModel: TraderViewModel) {
+fun TraderApp(
+    viewModel: TraderViewModel,
+    incomingBrowserCapture: SharedBrowserCapture? = null,
+    onBrowserCaptureHandled: () -> Unit = {}
+) {
     val problems by viewModel.problems.collectAsState()
     val archivedProblems by viewModel.archivedProblems.collectAsState()
     val events by viewModel.activity.collectAsState()
+    val businessEvents by viewModel.businessActivity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
-    var tab by rememberSaveable { mutableStateOf(AppTab.INBOX) }
+    var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
+    var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingDiscoveryDocument by remember { mutableStateOf<DiscoveryDocument?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showArchived by rememberSaveable { mutableStateOf(false) }
@@ -94,7 +107,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                     val app = context.applicationContext as TraderApplication
                     val output = context.contentResolver.openOutputStream(uri)
                         ?: error("The selected destination could not be opened.")
-                    output.use { TraderBackupManager(app.database).exportEncrypted(it, passphrase.toCharArray()) }
+                    output.use { TraderBackupManager(app.database, app.discoverySourceStore).exportEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_export_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
@@ -113,7 +126,7 @@ fun TraderApp(viewModel: TraderViewModel) {
                     val app = context.applicationContext as TraderApplication
                     val input = context.contentResolver.openInputStream(uri)
                         ?: error("The selected backup file could not be opened.")
-                    input.use { TraderBackupManager(app.database).restoreEncrypted(it, passphrase.toCharArray()) }
+                    input.use { TraderBackupManager(app.database, app.discoverySourceStore).restoreEncrypted(it, passphrase.toCharArray()) }
                     context.getString(R.string.backup_restore_success)
                 }.getOrElse { context.getString(R.string.backup_failed) + " " + (it.message ?: "") }
                 pendingBackupPassphrase = ""
@@ -148,8 +161,12 @@ fun TraderApp(viewModel: TraderViewModel) {
         bottomBar = {
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
+                NavigationBarItem(tab == AppTab.DISCOVER, { tab = AppTab.DISCOVER }, icon = { Icon(Icons.Rounded.Search, null) }, label = { Text(stringResource(R.string.discover_nav)) })
+                NavigationBarItem(tab == AppTab.SOURCING, { tab = AppTab.SOURCING }, icon = { Icon(Icons.Rounded.Inventory2, null) }, label = { Text(stringResource(R.string.sourcing_nav)) })
                 NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
+                NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
+                NavigationBarItem(tab == AppTab.AI, { tab = AppTab.AI }, icon = { Text("AI") }, label = { Text("Models") })
             }
         },
         floatingActionButton = {
@@ -174,13 +191,60 @@ fun TraderApp(viewModel: TraderViewModel) {
                 onOpen = { selectedId = it.id },
                 modifier = Modifier.padding(padding)
             )
-            tab == AppTab.PIPELINE -> OpportunityPipelineContent(
-                opportunities = opportunities,
-                onOpen = { selectedId = it.id },
+            tab == AppTab.DISCOVER -> DiscoveryScreen(
+                repository = (context.applicationContext as TraderApplication).repository,
+                sourceStore = (context.applicationContext as TraderApplication).discoverySourceStore,
+                runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
+                strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
+                onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
+                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
-            else -> ActivityContent(events, Modifier.padding(padding))
+            tab == AppTab.BROWSER -> TraderBrowserScreen(
+                modifier = Modifier.padding(padding),
+                initialUrl = requestedBrowserUrl,
+                onInitialUrlHandled = { requestedBrowserUrl = null },
+                problems = problems,
+                onSaveCapture = { problemId, title, url, content, onSaved ->
+                    viewModel.captureBrowserPage(problemId, title, url, content, onSaved)
+                }
+            )
+            tab == AppTab.AI -> TraderModelHubScreen(Modifier.padding(padding))
+            tab == AppTab.SOURCING -> SourcingDeskScreen(
+                buyerRepository = (context.applicationContext as TraderApplication).buyerRequirementRepository,
+                supplierRepository = (context.applicationContext as TraderApplication).supplierOfferRepository,
+                organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
+                onOpenCompanies = { tab = AppTab.PIPELINE },
+                modifier = Modifier.padding(padding)
+            )
+            tab == AppTab.PIPELINE -> PipelineWorkspaceContent(
+                opportunities = opportunities,
+                onOpenOpportunity = { selectedId = it.id },
+                organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
+                incomingDocument = pendingDiscoveryDocument,
+                onIncomingDocumentHandled = { pendingDiscoveryDocument = null },
+                onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
+                modifier = Modifier.padding(padding)
+            )
+            else -> ActivityContent(events, businessEvents, Modifier.padding(padding))
         }
+    }
+
+    incomingBrowserCapture?.let { capture ->
+        SharedBrowserCaptureReviewDialog(
+            capture = capture,
+            problems = problems,
+            onDismiss = onBrowserCaptureHandled,
+            onSave = { problemId, title, content, onSaved ->
+                viewModel.captureBrowserPage(
+                    problemId = problemId,
+                    title = title,
+                    sourceUrl = capture.sourceUrl,
+                    content = content,
+                    onSaved = onSaved
+                )
+            }
+        )
     }
 
     if (showCreate) CreateProblemDialog(
@@ -214,6 +278,123 @@ fun TraderApp(viewModel: TraderViewModel) {
     }
 }
  
+
+@Composable
+private fun SharedBrowserCaptureReviewDialog(
+    capture: SharedBrowserCapture,
+    problems: List<ProblemEntity>,
+    onDismiss: () -> Unit,
+    onSave: (String?, String, String, (String?) -> Unit) -> Unit,
+) {
+    var title by remember(capture) { mutableStateOf(capture.title.take(180)) }
+    var selectedProblemId by remember(capture) { mutableStateOf<String?>(null) }
+    var destinationExpanded by remember(capture) { mutableStateOf(false) }
+    var content by remember(capture) {
+        mutableStateOf(SharedBrowserCaptureParser.toEvidenceContent(capture).take(18_000))
+    }
+    var saving by remember(capture) { mutableStateOf(false) }
+    var error by remember(capture) { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = { if (!saving) onDismiss() },
+        title = { Text("Review imported page") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "Memo browser capture · Review before saving",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    capture.sourceUrl,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Text(
+                    "This page text came from a signed-in browser. It may contain private details. Remove anything you do not want stored. Account credentials and browser cookies are not included.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it.take(180); error = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Evidence title") },
+                    maxLines = 2
+                )
+                OutlinedTextField(
+                    value = content,
+                    onValueChange = { content = it.take(18_000); error = null },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 300.dp),
+                    label = { Text("Captured page text") },
+                    minLines = 6,
+                    maxLines = 14
+                )
+                Text("Save to", style = MaterialTheme.typography.labelMedium)
+                Box {
+                    OutlinedButton(
+                        onClick = { destinationExpanded = true },
+                        enabled = !saving
+                    ) {
+                        val destinationTitle = selectedProblemId?.let { id ->
+                            problems.firstOrNull { it.id == id }?.title
+                        } ?: "New research record"
+                        Text(destinationTitle, maxLines = 1)
+                    }
+                    DropdownMenu(
+                        expanded = destinationExpanded,
+                        onDismissRequest = { destinationExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("New research record") },
+                            onClick = {
+                                selectedProblemId = null
+                                destinationExpanded = false
+                            }
+                        )
+                        problems.take(40).forEach { problem ->
+                            DropdownMenuItem(
+                                text = { Text(problem.title, maxLines = 1) },
+                                onClick = {
+                                    selectedProblemId = problem.id
+                                    destinationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (title.isBlank() || content.trim().length < 20) {
+                        error = "Add a title and at least 20 characters of evidence."
+                    } else {
+                        saving = true
+                        onSave(selectedProblemId, title.trim(), content.trim()) { savedId ->
+                            saving = false
+                            if (savedId != null) {
+                                onDismiss()
+                            } else {
+                                error = "Trader could not save this capture. Review the source and try again."
+                            }
+                        }
+                    }
+                },
+                enabled = !saving && title.isNotBlank() && content.trim().length >= 20
+            ) { Text(if (saving) "Saving…" else "Save to Trader") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !saving) { Text("Discard") }
+        }
+    )
+}
+
 @Composable
 private fun BackupDialog(
     onDismiss: () -> Unit,
@@ -362,6 +543,55 @@ private fun InboxContent(
     }
 }
 
+
+
+@Composable
+private fun PipelineWorkspaceContent(
+    opportunities: List<OpportunityListItem>,
+    onOpenOpportunity: (ProblemEntity) -> Unit,
+    organizationRepository: OrganizationRepository,
+    incomingDocument: DiscoveryDocument?,
+    onIncomingDocumentHandled: () -> Unit,
+    onOpenSource: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showCompanies by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(incomingDocument?.id, incomingDocument?.url) {
+        if (incomingDocument != null) showCompanies = true
+    }
+    Column(modifier.fillMaxSize()) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = !showCompanies,
+                onClick = { showCompanies = false },
+                label = { Text(stringResource(R.string.pipeline_opportunities)) }
+            )
+            FilterChip(
+                selected = showCompanies,
+                onClick = { showCompanies = true },
+                label = { Text(stringResource(R.string.companies_nav)) }
+            )
+        }
+        if (showCompanies) {
+            OrganizationsScreen(
+                repository = organizationRepository,
+                incomingDocument = incomingDocument,
+                onIncomingDocumentHandled = onIncomingDocumentHandled,
+                onOpenSource = onOpenSource,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
+            OpportunityPipelineContent(
+                opportunities = opportunities,
+                onOpen = onOpenOpportunity,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
 
 @Composable
 private fun OpportunityPipelineContent(
@@ -762,38 +992,109 @@ private fun DetailSection(label: String, value: String) {
     }
 }
 
+private data class ActivityTimelineEntry(
+    val id: String,
+    val occurredAt: Long,
+    val problemEvent: com.yusufculcu.trader.data.ActivityEventEntity? = null,
+    val businessEvent: com.yusufculcu.trader.data.BusinessActivityEntity? = null
+)
+
+private fun businessEntityLabel(type: String): Int = when (type) {
+    "ORGANIZATION" -> R.string.business_entity_organization
+    "CONTACT" -> R.string.business_entity_contact
+    "CLAIM" -> R.string.business_entity_claim
+    "BUYER_REQUIREMENT" -> R.string.business_entity_buyer_requirement
+    "SUPPLIER_OFFER" -> R.string.business_entity_supplier_offer
+    "SOURCING_REVIEW" -> R.string.business_entity_sourcing_review
+    "PRODUCT" -> R.string.business_entity_product
+    else -> R.string.business_entity_record
+}
+
+private fun businessActionLabel(type: String): Int = when (type) {
+    "CREATED" -> R.string.business_action_created
+    "UPDATED" -> R.string.business_action_updated
+    "STATUS_CHANGED" -> R.string.business_action_status_changed
+    "SOURCE_ADDED" -> R.string.business_action_source_added
+    "EVIDENCE_LINKED" -> R.string.business_action_evidence_linked
+    "EVIDENCE_UNLINKED" -> R.string.business_action_evidence_unlinked
+    "CLAIM_REVIEWED" -> R.string.business_action_claim_reviewed
+    "LINE_ADDED" -> R.string.business_action_line_added
+    "LINE_UPDATED" -> R.string.business_action_line_updated
+    "DECISION_RECORDED" -> R.string.business_action_decision_recorded
+    "DELETED" -> R.string.business_action_deleted
+    "RESTORED" -> R.string.business_action_restored
+    else -> R.string.event_activity_recorded
+}
+
 @Composable
-private fun ActivityContent(events: List<com.yusufculcu.trader.data.ActivityEventEntity>, modifier: Modifier = Modifier) {
+private fun ActivityContent(
+    events: List<com.yusufculcu.trader.data.ActivityEventEntity>,
+    businessEvents: List<com.yusufculcu.trader.data.BusinessActivityEntity>,
+    modifier: Modifier = Modifier
+) {
+    val timeline = remember(events, businessEvents) {
+        (events.map { ActivityTimelineEntry("problem:${it.id}", it.occurredAt, problemEvent = it) } +
+            businessEvents.map { ActivityTimelineEntry("business:${it.id}", it.occurredAt, businessEvent = it) })
+            .sortedWith(compareByDescending<ActivityTimelineEntry> { it.occurredAt }.thenBy { it.id })
+            .take(250)
+    }
     Column(modifier.fillMaxSize().padding(20.dp)) {
         Text(stringResource(R.string.history), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary, letterSpacing = 1.6.sp)
         Text(stringResource(R.string.activity), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(16.dp))
-        if (events.isEmpty()) Text(stringResource(R.string.activity_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        else LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(events, key = { it.id }) { event ->
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary)
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(when (event.eventType) {
-                                "created" -> R.string.event_problem_captured
-                                "plan_step_added" -> R.string.event_plan_step_added
-                                "plan_step_done" -> R.string.event_step_completed
-                                "plan_step_reopened" -> R.string.event_step_reopened
-                                "status_changed" -> R.string.event_status_updated
-                                "details_updated" -> R.string.event_details_updated
-                                "archived" -> R.string.event_archived
-                                "restored" -> R.string.event_restored
-                                "evidence_added" -> R.string.event_evidence_added
-                                "evidence_verified" -> R.string.event_evidence_verified
-                                "evidence_unreviewed" -> R.string.event_evidence_unreviewed
-                                "opportunity_created" -> R.string.event_opportunity_created
-                                "opportunity_stage_changed" -> R.string.event_opportunity_stage_changed
-                                "opportunity_updated" -> R.string.event_opportunity_updated
-                                else -> R.string.event_activity_recorded
-                            }), fontWeight = FontWeight.SemiBold)
-                            if (event.details.isNotBlank() && event.eventType != "created") Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                            Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+        if (timeline.isEmpty()) {
+            Text(stringResource(R.string.activity_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(timeline, key = { it.id }) { entry ->
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.secondary)
+                            Column(Modifier.weight(1f)) {
+                                entry.problemEvent?.let { event ->
+                                    Text(stringResource(when (event.eventType) {
+                                        "created" -> R.string.event_problem_captured
+                                        "plan_step_added" -> R.string.event_plan_step_added
+                                        "plan_step_done" -> R.string.event_step_completed
+                                        "plan_step_reopened" -> R.string.event_step_reopened
+                                        "status_changed" -> R.string.event_status_updated
+                                        "details_updated" -> R.string.event_details_updated
+                                        "archived" -> R.string.event_archived
+                                        "restored" -> R.string.event_restored
+                                        "evidence_added" -> R.string.event_evidence_added
+                                        "evidence_verified" -> R.string.event_evidence_verified
+                                        "evidence_unreviewed" -> R.string.event_evidence_unreviewed
+                                        "opportunity_created" -> R.string.event_opportunity_created
+                                        "opportunity_stage_changed" -> R.string.event_opportunity_stage_changed
+                                        "opportunity_updated" -> R.string.event_opportunity_updated
+                                        else -> R.string.event_activity_recorded
+                                    }), fontWeight = FontWeight.SemiBold)
+                                    if (event.details.isNotBlank() && event.eventType != "created") {
+                                        Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                                }
+                                entry.businessEvent?.let { event ->
+                                    Text(
+                                        stringResource(R.string.business_activity_title, stringResource(businessEntityLabel(event.entityType)), stringResource(businessActionLabel(event.eventType))),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    val contextLabel = if (event.entityType == "ORGANIZATION") event.organizationName
+                                        else "${event.organizationName} · ${event.entityLabel}"
+                                    Text(contextLabel, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    if (event.fromStatus != null || (event.toStatus != null && event.eventType != "UPDATED")) {
+                                        Text(
+                                            stringResource(R.string.business_activity_transition, event.fromStatus ?: "—", event.toStatus ?: "—"),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                    if (event.details.isNotBlank()) {
+                                        Text(event.details, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                    Text(formatDate(event.occurredAt), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
                         }
                     }
                 }

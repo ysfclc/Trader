@@ -2,10 +2,16 @@ name: Android CI
 
 on:
   push:
-    branches: [main, "build/**"]
+    branches: [main, "build/**", "feature/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feature/**"]
   workflow_dispatch:
+    inputs:
+      approve_installable_apk:
+        description: "Set true only after every APK gate in docs/STATE.md is green."
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: trader-android-${{ github.ref }}
@@ -20,6 +26,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Test coverage verification utility
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -32,8 +40,69 @@ jobs:
           packages: platform-tools
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Prepare persistent Trader development signing key
+        id: stable_signing
+        env:
+          TRADER_KEYSTORE_BASE64: ${{ secrets.TRADER_KEYSTORE_BASE64 }}
+          TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$TRADER_KEYSTORE_BASE64" ] && [ -n "$TRADER_KEYSTORE_PASSWORD" ]; then
+            echo "$TRADER_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/trader-upload.jks"
+            keytool -list -keystore "$RUNNER_TEMP/trader-upload.jks" -storepass "$TRADER_KEYSTORE_PASSWORD" -alias trader-upload >/dev/null
+            echo "path=$RUNNER_TEMP/trader-upload.jks" >> "$GITHUB_OUTPUT"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Stable signing secrets are not configured; the APK will be CI-only."
+          fi
       - name: Verify and build
-        run: ./gradlew --no-daemon clean testDebugUnitTest assembleDebug lintDebug
+        env:
+          TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
+          TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
+        run: ./gradlew --no-daemon clean testDebugUnitTest createDebugUnitTestCoverageReport assembleDebug lintDebug
+      - name: Capture resolved dependency paths for vulnerability triage
+        run: |
+          ./gradlew --no-daemon :app:dependencies :app:buildEnvironment buildEnvironment --console=plain > dependency-graph-report.txt
+      - name: Upload resolved dependency graph
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-resolved-dependency-graph
+          path: dependency-graph-report.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Generate CycloneDX SBOM
+        run: ./gradlew --no-daemon -I gradle/sbom.init.gradle.kts cyclonedxBom
+      - name: Scan resolved Gradle dependencies with OSV
+        run: |
+          test -s build/reports/cyclonedx/bom.json
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" ghcr.io/google/osv-scanner:v2.7.1 \
+            scan source \
+            -L /src/build/reports/cyclonedx/bom.json \
+            --format=json \
+            --output-file=/src/osv-scan-results.json
+      - name: Upload dependency security audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-dependency-security-audit
+          path: |
+            build/reports/cyclonedx/
+            build/reports/cyclonedx-direct/
+            app/build/reports/cyclonedx-direct/
+            osv-scan-results.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Summarize unit-test code coverage
+        run: python3 scripts/summarize_coverage.py --report app/build/reports/coverage/test/debug/report.xml --baseline docs/coverage-baseline.json --summary-file "$GITHUB_STEP_SUMMARY"
+      - name: Upload unit-test coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-unit-test-coverage
+          path: app/build/reports/coverage/test/debug/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Upload unit test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -42,13 +111,32 @@ jobs:
           path: app/build/test-results/testDebugUnitTest/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Verify APK package and signature
+      - name: Verify APK package, signature and stable certificate
+        env:
+          STABLE_SIGNING_READY: ${{ steps.stable_signing.outputs.ready }}
+          TRADER_KEYSTORE_PATH: ${{ steps.stable_signing.outputs.path }}
+          TRADER_KEYSTORE_PASSWORD: ${{ secrets.TRADER_KEYSTORE_PASSWORD }}
         run: |
-          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/36.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | grep "package: name='com.yusufculcu.trader.debug' versionCode='1' versionName='0.1.0-debug'"
-      - uses: actions/upload-artifact@v4
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          $ANDROID_HOME/build-tools/36.0.0/apksigner verify --verbose "$APK"
+          EXPECTED_VERSION_CODE=$(sed -nE 's/^[[:space:]]*versionCode = ([0-9]+)$/\1/p' app/build.gradle.kts | head -n1)
+          EXPECTED_VERSION_NAME=$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)"$/\1/p' app/build.gradle.kts | head -n1)
+          test -n "$EXPECTED_VERSION_CODE"
+          test -n "$EXPECTED_VERSION_NAME"
+          BADGING=$($ANDROID_HOME/build-tools/36.0.0/aapt dump badging "$APK")
+          echo "$BADGING" | grep -F "package: name='com.yusufculcu.trader.debug' versionCode='${EXPECTED_VERSION_CODE}' versionName='${EXPECTED_VERSION_NAME}-debug'"
+          if [ "$STABLE_SIGNING_READY" = "true" ]; then
+            keytool -exportcert -rfc -keystore "$TRADER_KEYSTORE_PATH" -storepass "$TRADER_KEYSTORE_PASSWORD" -alias trader-upload |
+              openssl x509 -outform DER | sha256sum | awk '{print $1}' > "$RUNNER_TEMP/keystore-cert.sha256"
+            EXPECTED=$(cat "$RUNNER_TEMP/keystore-cert.sha256")
+            ACTUAL=$($ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs "$APK" | awk '/certificate SHA-256 digest:/ {print $NF}' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+            test "$ACTUAL" = "$EXPECTED"
+          fi
+      - name: Upload persistent installable APK
+        if: steps.stable_signing.outputs.ready == 'true' && github.event_name == 'workflow_dispatch' && inputs.approve_installable_apk == true
+        uses: actions/upload-artifact@v4
         with:
-          name: trader-debug-apk
+          name: trader-installable-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30

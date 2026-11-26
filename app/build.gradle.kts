@@ -5,6 +5,29 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+// Keep AGP internal, KSP, test and runtime configurations on patched transitive versions.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        when {
+            requested.group == "org.apache.commons" && requested.name == "commons-lang3" && requested.version == "3.14.0" -> useVersion("3.18.0")
+            requested.group == "io.netty" && requested.version?.startsWith("4.1.") == true && !requested.name.startsWith("netty-tcnative") -> useVersion("4.1.137.Final")
+            requested.group == "com.google.guava" && requested.name == "guava" && requested.version in setOf("32.0.1-jre", "33.2.1-jre", "33.3.1-jre") -> useVersion("33.7.2-jre")
+            requested.group == "com.google.protobuf" && requested.version == "3.24.4" && requested.name in setOf("protobuf-java", "protobuf-java-util", "protobuf-kotlin") -> useVersion("3.25.5")
+            requested.group == "org.bouncycastle" && requested.version in setOf("1.78.1", "1.79") && requested.name in setOf("bcprov-jdk18on", "bcpkix-jdk18on", "bcutil-jdk18on") -> useVersion("1.86")
+            requested.group == "org.apache.commons" && requested.name == "commons-compress" && requested.version == "1.21" -> useVersion("1.26.0")
+            requested.group == "org.bitbucket.b_c" && requested.name == "jose4j" && requested.version == "0.9.5" -> useVersion("0.9.6")
+            requested.group == "org.jdom" && requested.name == "jdom2" && requested.version == "2.0.6" -> useVersion("2.0.6.1")
+            requested.group == "org.apache.httpcomponents" && requested.name == "httpclient" && requested.version == "4.5.6" -> useVersion("4.5.14")
+        }
+    }
+}
+
+val stableDebugKeystore = System.getenv("TRADER_KEYSTORE_PATH")
+    ?.takeIf { it.isNotBlank() }
+    ?.let { file(it) }
+    ?.takeIf { it.isFile }
+val stableDebugPassword = System.getenv("TRADER_KEYSTORE_PASSWORD")
+
 android {
     namespace = "com.yusufculcu.trader"
     compileSdk = 36
@@ -12,12 +35,29 @@ android {
         applicationId = "com.yusufculcu.trader"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 13
+        versionName = "0.13.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        if (stableDebugKeystore != null && !stableDebugPassword.isNullOrBlank()) {
+            create("traderStableDebug") {
+                storeFile = stableDebugKeystore
+                storePassword = stableDebugPassword
+                keyAlias = "trader-upload"
+                keyPassword = stableDebugPassword
+            }
+        }
+    }
     buildTypes {
-        debug { applicationIdSuffix = ".debug"; versionNameSuffix = "-debug" }
+        debug {
+            enableUnitTestCoverage = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            if (stableDebugKeystore != null && !stableDebugPassword.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("traderStableDebug")
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -27,11 +67,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = true }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 ksp { arg("room.schemaLocation", "${projectDir}/schemas") }
 
 dependencies {
@@ -50,21 +96,23 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.room:room-runtime:2.8.2")
-    implementation("androidx.room:room-ktx:2.8.2")
-    ksp("androidx.room:room-compiler:2.8.2")
+    implementation("androidx.room:room-runtime:2.8.5")
+    implementation("androidx.room:room-ktx:2.8.5")
+    ksp("androidx.room:room-compiler:2.8.5")
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.0")
     testImplementation("junit:junit:4.13.2")
+    // Supply a real JVM org.json implementation; Android's mockable android.jar stubs throw from JSONObject.keys() in local unit tests.
+    testImplementation("org.json:json:20260814")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("org.robolectric:robolectric:4.14.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation("androidx.room:room-testing:2.8.2")
+    androidTestImplementation("androidx.room:room-testing:2.8.5")
     androidTestImplementation("androidx.test:runner:1.6.2")
 }
-
 
 tasks.withType<org.gradle.api.tasks.testing.Test>().configureEach {
     // Robolectric's default repo1 endpoint intermittently returns 404 for checksum sidecars.

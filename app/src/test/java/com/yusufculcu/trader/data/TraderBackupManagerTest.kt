@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import org.json.JSONArray
 import org.json.JSONObject
+import com.yusufculcu.trader.discovery.DiscoverySourceStore
 
 @RunWith(RobolectricTestRunner::class)
 class TraderBackupManagerTest {
@@ -55,7 +56,73 @@ class TraderBackupManagerTest {
             assertEquals(1, target.workflowStepDao().getAll().size)
             assertEquals("approval-hash", target.workflowStepDao().getAll().single().approvedPayloadHash)
             assertEquals(1, target.workflowEventDao().getAll().size)
+            assertEquals(1, target.discoveryRunDao().getAll().size)
+            assertEquals("COMPLETED", target.discoveryRunDao().getAll().single().status)
+            assertEquals(1, target.sourceRunDao().getForRun("discovery-run-1").size)
+            assertEquals(3, target.sourceRunDao().getForRun("discovery-run-1").single().resultCount)
+            assertEquals(1, target.discoveryDocumentDao().getAll().size)
+            assertEquals("Buyer requirement", target.discoveryDocumentDao().getAll().single().title)
+            assertEquals(1, target.organizationDao().getAll().size)
+            assertEquals("Acme Industrial", target.organizationDao().getAll().single().canonicalName)
+            assertEquals(1, target.organizationSourceDao().getAll().size)
+            assertEquals("https://acme.example/rfq", target.organizationSourceDao().getAll().single().url)
+            assertEquals(1, target.organizationClaimDao().getAll().size)
+            assertEquals(OrganizationClaimState.SUPPORTED, target.organizationClaimDao().getAll().single().reviewState)
+            assertEquals(1, target.organizationPersonDao().getAll().size)
+            assertEquals("Ada Buyer", target.organizationPersonDao().getAll().single().fullName)
+            assertEquals("ada@acme.example", target.organizationPersonDao().getAll().single().email)
+            assertEquals("User-confirmed contact", target.organizationPersonDao().getAll().single().notes)
+            assertEquals(1, target.buyerRequirementDao().getAll().size)
+            assertEquals(1_700_000_000_026L, target.buyerRequirementDao().getAll().single().deletedAt)
+            assertEquals(1, target.supplierOfferDao().getAll().size)
+            assertEquals(1_700_000_000_027L, target.supplierOfferDao().getAll().single().deletedAt)
+            assertEquals(1, target.supplierOfferLineItemDao().getAll().size)
+            assertEquals(1, target.supplierOfferEvidenceDao().getAll().size)
+            assertEquals(1, target.sourcingReviewDao().getAll().size)
+            assertEquals(SourcingReviewStatus.SHORTLISTED, target.sourcingReviewDao().getAll().single().status)
+            assertEquals(1, target.businessActivityDao().getAll().size)
+            assertEquals("Company dossier created", target.businessActivityDao().getAll().single().summary)
+            assertEquals("Acme Industrial", target.businessActivityDao().getAll().single().organizationName)
         } finally {
+            source.close()
+            target.close()
+        }
+    }
+
+    @Test
+    fun encryptedBackupRoundTripPreservesDiscoverySourceSettingsAndReplacesTargetSources() = runBlocking {
+        val source = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val target = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        val sourceStore = DiscoverySourceStore(context, "backup_source_preferences")
+        val targetStore = DiscoverySourceStore(context, "backup_target_preferences")
+        try {
+            sourceStore.replaceAll(emptyList())
+            targetStore.replaceAll(emptyList())
+            val sourceConfig = sourceStore.add("Hacker News", "https://news.ycombinator.com/rss")
+            sourceStore.setEnabled(sourceConfig.id, false)
+            sourceStore.markChecked(sourceConfig.id, 1_700_000_000_000L, "temporary refresh error")
+            targetStore.add("Local only", "https://example.test/feed.xml")
+
+            val output = ByteArrayOutputStream()
+            TraderBackupManager(source, sourceStore).exportEncrypted(output, "correct horse battery".toCharArray())
+            val bytes = output.toByteArray()
+            assertFalse(String(bytes, StandardCharsets.ISO_8859_1).contains("news.ycombinator.com"))
+
+            TraderBackupManager(target, targetStore).restoreEncrypted(
+                ByteArrayInputStream(bytes),
+                "correct horse battery".toCharArray()
+            )
+
+            assertEquals(sourceStore.list(), targetStore.list())
+            assertEquals(1, targetStore.list().size)
+            assertEquals(false, targetStore.list().single().enabled)
+            assertEquals("temporary refresh error", targetStore.list().single().lastError)
+            assertEquals(1_700_000_000_000L, targetStore.list().single().lastCheckedAt)
+        } finally {
+            sourceStore.replaceAll(emptyList())
+            targetStore.replaceAll(emptyList())
             source.close()
             target.close()
         }
@@ -79,6 +146,48 @@ class TraderBackupManagerTest {
 
             val decoded = TraderBackupManager(database).decodeSnapshot(legacy.toString())
             assertTrue(decoded.opportunities.isEmpty())
+            assertTrue(decoded.discoverySources.isEmpty())
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun schemaElevenBackupRemainsReadableWithoutBusinessActivityHistory() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            val root = JSONObject().put("formatVersion", 8).put("databaseSchemaVersion", 11)
+            listOf(
+                "problems", "planSteps", "activityEvents", "evidence", "opportunities", "workflowRuns", "workflowSteps", "workflowEvents",
+                "discoverySources", "proofAssets", "discoveryStrategies", "organizationPeople", "buyerRequirements",
+                "buyerRequirementItems", "buyerRequirementEvidence", "supplierOffers", "supplierOfferItems",
+                "supplierOfferEvidence", "sourcingReviews"
+            ).forEach { root.put(it, JSONArray()) }
+            val decoded = TraderBackupManager(database).decodeSnapshot(root.toString())
+            assertTrue(decoded.businessActivityEvents.isEmpty())
+        } finally {
+            database.close()
+        }
+    }
+
+    @Test
+    fun schemaTwelveBackupRequiresBusinessActivityHistoryArray() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            val root = JSONObject().put("formatVersion", 9).put("databaseSchemaVersion", 12)
+            listOf(
+                "problems", "planSteps", "activityEvents", "evidence", "opportunities", "workflowRuns", "workflowSteps", "workflowEvents",
+                "discoverySources", "proofAssets", "discoveryStrategies", "organizationPeople", "buyerRequirements",
+                "buyerRequirementItems", "buyerRequirementEvidence", "supplierOffers", "supplierOfferItems",
+                "supplierOfferEvidence", "sourcingReviews"
+            ).forEach { root.put(it, JSONArray()) }
+            var rejected = false
+            try {
+                TraderBackupManager(database).decodeSnapshot(root.toString())
+            } catch (failure: IllegalArgumentException) {
+                rejected = failure.message?.contains("business activity history") == true
+            }
+            assertTrue(rejected)
         } finally {
             database.close()
         }
@@ -219,6 +328,34 @@ class TraderBackupManagerTest {
         )
         database.workflowEventDao().insert(
             WorkflowEventEntity("workflow-event-1", "run-1", "workflow-step-1", "approval_granted", null, null, "Approved", "Exact payload", now + 6)
+        )
+        database.discoveryRunDao().insert(DiscoveryRunEntity("discovery-run-1", null, "Find buyer requirements", "COMPLETED", now + 7, now + 8, now + 10, null, null))
+        database.sourceRunDao().insert(SourceRunEntity("source-run-1", "discovery-run-1", "source-1", "rss.atom", "SUCCEEDED", now + 8, now + 9, 3, null, null))
+        database.discoveryDocumentDao().insert(DiscoveryDocumentEntity("finding-1", "discovery-run-1", "source-1", "Example Feed", "native-1", "Buyer requirement", "https://example.test/requirement", "CNC machining requirement", now + 7, now + 9))
+        database.organizationDao().insert(
+            OrganizationEntity("org-1", "Acme Industrial", "https://acme.example", "acme.example", "Poland", "Kraków", "Industrial machining", "User-entered note", now + 10, now + 11)
+        )
+        database.organizationSourceDao().insert(
+            OrganizationSourceEntity("org-source-1", "org-1", OrganizationSourceKind.DISCOVERY_RESULT, "Acme RFQ", "https://acme.example/rfq", "Public requirement page", now + 12)
+        )
+        database.organizationClaimDao().insert(
+            OrganizationClaimEntity("org-claim-1", "org-1", "org-source-1", "Buyer requirement", "Requests 500 machined parts per quarter.", OrganizationClaimState.SUPPORTED, null, now + 13, now + 12, now + 13)
+        )
+        database.organizationPersonDao().insert(
+            OrganizationPersonEntity("org-person-1", "org-1", "Ada Buyer", "Procurement Manager", "ada@acme.example", "+48 600 000 000", "https://www.linkedin.com/in/ada-buyer", "User-confirmed contact", now + 14, now + 15)
+        )
+        database.buyerRequirementDao().insert(BuyerRequirementEntity("buyer-req-1", "org-1", "CNC housings", "Buyer request", "OPEN", "Poland", "Kraków", "Q1 2027", "EUR", null, null, now + 16, now + 17, now + 26))
+        database.buyerRequirementLineItemDao().insert(BuyerRequirementLineItemEntity("buyer-item-1", "buyer-req-1", "Aluminium housing", "6082-T6", "100", "pcs", 2500, now + 18))
+        database.supplierOfferDao().insert(SupplierOfferEntity("offer-1", "org-1", "Machining offer", "Supplier-stated", "AVAILABLE", "EUR", "Türkiye", "Gaziantep", null, now + 19, now + 20, now + 27))
+        database.supplierOfferLineItemDao().insert(SupplierOfferLineItemEntity("offer-item-1", "offer-1", "Aluminium housing", "6082-T6", "Aluminium", "150", "pcs", "50", 2200, "EUR", 21, now + 21))
+        database.supplierOfferEvidenceDao().insert(SupplierOfferEvidenceEntity("offer-evidence-1", "offer-1", "org-source-1", now + 22))
+        database.sourcingReviewDao().insert(SourcingReviewEntity("review-1", "buyer-req-1", "offer-1", SourcingReviewStatus.SHORTLISTED, "Human review", now + 23, now + 24))
+        database.businessActivityDao().insert(
+            BusinessActivityEntity(
+                "business-activity-1", "org-1", "Acme Industrial", BusinessActivityEntityType.ORGANIZATION,
+                "org-1", "Acme Industrial", BusinessActivityAction.CREATED, null, null,
+                "Company dossier created", "", now + 25
+            )
         )
     }
 

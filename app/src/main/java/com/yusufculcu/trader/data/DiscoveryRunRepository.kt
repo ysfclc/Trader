@@ -1,0 +1,150 @@
+package com.yusufculcu.trader.data
+
+import androidx.room.withTransaction
+import kotlinx.coroutines.flow.Flow
+import java.util.UUID
+
+object DiscoveryRunStatus {
+    const val CREATED = "CREATED"
+    const val RUNNING = "RUNNING"
+    const val COMPLETED = "COMPLETED"
+    const val PARTIAL = "PARTIAL"
+    const val FAILED = "FAILED"
+    const val CANCELLED = "CANCELLED"
+}
+object SourceRunStatus {
+    const val PENDING = "PENDING"
+    const val RUNNING = "RUNNING"
+    const val SUCCEEDED = "SUCCEEDED"
+    const val FAILED = "FAILED"
+    const val SKIPPED = "SKIPPED"
+    const val CANCELLED = "CANCELLED"
+}
+
+data class DiscoveryRunDraft(val strategyId: String?, val objective: String, val createdAt: Long)
+data class SourceRunDraft(val sourceId: String, val adapterId: String, val startedAt: Long)
+
+class DiscoveryRunRepository(private val database: TraderDatabase) {
+    fun observeRuns(): Flow<List<DiscoveryRunEntity>> = database.discoveryRunDao().observeAll()
+    fun observeSources(runId: String): Flow<List<SourceRunEntity>> = database.sourceRunDao().observeForRun(runId)
+    fun observeDocuments(runId: String): Flow<List<DiscoveryDocumentEntity>> = database.discoveryDocumentDao().observeForRun(runId)
+
+    suspend fun saveDocument(runId: String, document: com.yusufculcu.trader.discovery.DiscoveryDocument): DiscoveryDocumentEntity = database.withTransaction {
+        require(document.id.isNotBlank() && document.id.length <= 4096 && document.sourceId.isNotBlank() && document.sourceId.length <= 128)
+        require(document.sourceName.isNotBlank() && document.sourceName.length <= 200 && document.nativeId.length <= 4096)
+        require(document.title.length <= 300 && document.url.startsWith("https://") && document.url.length <= 2048 && document.summary.length <= 4000)
+        require(document.retrievedAt >= 0 && (document.publishedAt == null || document.publishedAt >= 0))
+
+        val run = database.discoveryRunDao().getById(runId)
+            ?: throw IllegalArgumentException("Discovery run does not exist.")
+        require(run.status == DiscoveryRunStatus.RUNNING) {
+            "Discovery findings can only be saved while their run is active."
+        }
+        val sourceRun = database.sourceRunDao().getForRun(runId).firstOrNull {
+            it.sourceId == document.sourceId && it.status == SourceRunStatus.RUNNING
+        }
+        require(sourceRun != null) {
+            "Discovery finding must belong to an active source run in this discovery run."
+        }
+
+        val row = DiscoveryDocumentEntity(UUID.randomUUID().toString(), runId, document.sourceId, document.sourceName, document.nativeId.take(4096), document.title, document.url, document.summary, document.publishedAt, document.retrievedAt)
+        database.discoveryDocumentDao().insert(row)
+        row
+    }
+
+    suspend fun create(draft: DiscoveryRunDraft): DiscoveryRunEntity {
+        require(draft.objective.isNotBlank() && draft.objective.length <= 2000)
+        require(draft.strategyId == null || database.discoveryStrategyDao().getById(draft.strategyId) != null)
+        val run = DiscoveryRunEntity(
+            id = UUID.randomUUID().toString(), strategyId = draft.strategyId,
+            objective = draft.objective.trim(), status = DiscoveryRunStatus.CREATED,
+            createdAt = draft.createdAt, startedAt = null, finishedAt = null,
+            cancellationRequestedAt = null, lastError = null
+        )
+        database.discoveryRunDao().insert(run)
+        return run
+    }
+
+    suspend fun start(runId: String, at: Long): Boolean = database.withTransaction {
+        val run = database.discoveryRunDao().getById(runId) ?: return@withTransaction false
+        if (run.status != DiscoveryRunStatus.CREATED) return@withTransaction false
+        database.discoveryRunDao().update(run.copy(status = DiscoveryRunStatus.RUNNING, startedAt = at))
+        true
+    }
+
+    suspend fun addSource(runId: String, draft: SourceRunDraft): SourceRunEntity = database.withTransaction {
+        require(draft.sourceId.isNotBlank() && draft.adapterId.isNotBlank())
+        require(draft.startedAt >= 0)
+        val parent = database.discoveryRunDao().getById(runId) ?: error("Discovery run does not exist.")
+        require(parent.status == DiscoveryRunStatus.CREATED || parent.status == DiscoveryRunStatus.RUNNING)
+        val row = SourceRunEntity(
+            id = UUID.randomUUID().toString(), discoveryRunId = runId,
+            sourceId = draft.sourceId, adapterId = draft.adapterId,
+            status = SourceRunStatus.PENDING, startedAt = null, finishedAt = null,
+            resultCount = 0, errorCode = null, errorMessage = null
+        )
+        database.sourceRunDao().insert(row)
+        row
+    }
+
+    suspend fun startSource(sourceRunId: String, at: Long): Boolean = database.withTransaction {
+        val row = database.sourceRunDao().getById(sourceRunId) ?: return@withTransaction false
+        val parent = database.discoveryRunDao().getById(row.discoveryRunId) ?: return@withTransaction false
+        if (parent.status != DiscoveryRunStatus.RUNNING || row.status != SourceRunStatus.PENDING) return@withTransaction false
+        database.sourceRunDao().update(row.copy(status = SourceRunStatus.RUNNING, startedAt = at))
+        true
+    }
+
+    suspend fun finishSource(sourceRunId: String, resultCount: Int, at: Long): Boolean {
+        require(resultCount >= 0)
+        return database.withTransaction {
+            val row = database.sourceRunDao().getById(sourceRunId) ?: return@withTransaction false
+            if (row.status != SourceRunStatus.RUNNING) return@withTransaction false
+            database.sourceRunDao().update(row.copy(status = SourceRunStatus.SUCCEEDED, resultCount = resultCount, finishedAt = at))
+            true
+        }
+    }
+
+    suspend fun failSource(sourceRunId: String, code: String, message: String, at: Long): Boolean {
+        require(code.isNotBlank() && code.length <= 80)
+        require(message.length <= 2000)
+        return database.withTransaction {
+            val row = database.sourceRunDao().getById(sourceRunId) ?: return@withTransaction false
+            if (row.status != SourceRunStatus.RUNNING) return@withTransaction false
+            database.sourceRunDao().update(row.copy(status = SourceRunStatus.FAILED, errorCode = code, errorMessage = message, finishedAt = at))
+            true
+        }
+    }
+
+    suspend fun requestCancellation(runId: String, at: Long): Boolean = database.withTransaction {
+        val run = database.discoveryRunDao().getById(runId) ?: return@withTransaction false
+        if (run.status != DiscoveryRunStatus.RUNNING && run.status != DiscoveryRunStatus.CREATED) return@withTransaction false
+        database.discoveryRunDao().update(run.copy(status = DiscoveryRunStatus.CANCELLED, cancellationRequestedAt = at, finishedAt = at))
+        database.sourceRunDao().cancelPending(runId, at)
+        true
+    }
+
+    suspend fun reconcileInterrupted(at: Long): Int = database.withTransaction {
+        val interrupted = database.discoveryRunDao().getRunning()
+        interrupted.forEach { run ->
+            database.discoveryRunDao().update(run.copy(status = DiscoveryRunStatus.PARTIAL, finishedAt = at, lastError = "Interrupted; inspect source runs before resuming."))
+            database.sourceRunDao().markInterrupted(run.id, at)
+        }
+        interrupted.size
+    }
+
+    suspend fun complete(runId: String, at: Long): Boolean = database.withTransaction {
+        val run = database.discoveryRunDao().getById(runId) ?: return@withTransaction false
+        if (run.status != DiscoveryRunStatus.RUNNING) return@withTransaction false
+        val sources = database.sourceRunDao().getForRun(runId)
+        if (sources.any { it.status == SourceRunStatus.PENDING || it.status == SourceRunStatus.RUNNING }) return@withTransaction false
+        val status = when {
+            sources.isEmpty() -> DiscoveryRunStatus.COMPLETED
+            sources.all { it.status == SourceRunStatus.SUCCEEDED || it.status == SourceRunStatus.SKIPPED } -> DiscoveryRunStatus.COMPLETED
+            sources.any { it.status == SourceRunStatus.SUCCEEDED } -> DiscoveryRunStatus.PARTIAL
+            else -> DiscoveryRunStatus.FAILED
+        }
+        database.discoveryRunDao().update(run.copy(status = status, finishedAt = at))
+        true
+    }
+}

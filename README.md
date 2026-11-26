@@ -2,66 +2,90 @@
 
 **Bring a problem. Find a path. Do the work. Verify the result.**
 
-Trader is an Android-first, local-first personal problem-solving and opportunity-execution system. Its purpose is broader than trading: help the operator understand problems, discover useful information and people, connect needs with available skills or resources, plan work, use tools and automations, and follow through until there is a verifiable result.
+Trader is one independent Android-first, local-first workspace for turning captured information, needs and opportunities into evidence-backed work and verified outcomes. It is not a collection of separate mini-products, a generic CRM, a public marketplace, a trading terminal or an unrestricted autonomous agent.
 
-Trade, services and careers are initial specialized workflows, not the limit of the problems Trader may accept. A general problem inbox must also support practical, technical, administrative, research and project problems that do not fit a commercial pipeline. Its core mechanisms include universal capture, evidence-backed research, editable prompt/context preparation, durable workflow orchestration, visible browser and bounded app automation, and verified follow-through.
+## One product, one underlying graph
 
-Trader is not a promise that software can solve every human problem, an open marketplace, a generic CRM, a bulk sender or an autonomous agent with unrestricted authority.
+Every workflow uses the same connected records and lifecycle:
 
-## Product laws
+**Problem / goal → source evidence → organizations and people → requirements and offers (when relevant) → comparison and options → human decision → approved next action → observed result → activity history.**
 
-1. **A real problem and its outcome come first.** A crawler, dashboard, AI answer or task count is not success. Trader must help move a clearly stated problem toward a verified outcome, whether commercial, professional, technical or personal/administrative.
-2. **Trader owns its own runtime and data.** It does not depend on Memo, EBO, Unipile, n8n, a paid model, a paid scraping vendor or a hosted CRM.
-3. **Evidence before claims.** Every external fact has a source, capture time and verification state. Unknown is not true.
-4. **AI proposes; deterministic code and the user decide.** AI may extract, translate, classify, match and draft. It cannot invent evidence, approve a match, claim representation or send a consequential message on its own.
-5. **Human control of external actions.** The exact recipient, channel, content and purpose are visible before external communication or commitment.
-6. **Free-first, replaceable adapters.** Core capture, storage, qualification, matching, tasks and drafting must work without paid API credits.
-7. **No silent failure or fake progress.** Failed and partial operations remain visible, recoverable and attributable to their source.
-8. **Mobile is the primary workspace.** Browser and installed-app workflows are capabilities inside Trader, not a dependency on another assistant app.
+A record is created once and reused across the relevant views. Source facts, user statements, model suggestions, assumptions and unknowns remain distinguishable. AI may help extract, translate, classify and draft; deterministic rules and the operator own decisions. External communication or commitments always require explicit user action.
 
-## Start here
+## First complete workflow: Industrial Sourcing Desk
 
-| Document | Purpose |
-|---|---|
-| [Project lock](docs/PROJECT_LOCK.md) | Canonical problem-solving vision, opportunity workflows, scope and non-goals |
-| [Architecture](docs/ARCHITECTURE.md) | Independent Android runtime, discovery, automation, AI and channel boundaries |
-| [Data model](docs/DATA_MODEL.md) | Buyer needs, supplier offers, organizations, evidence, matches and deals |
-| [Operating rules](docs/OPERATING_RULES.md) | Safety, quality, privacy, approval, provenance and recovery laws |
-| [Decisions](docs/DECISIONS.md) | Locked decisions and reasons |
-| [Roadmap](docs/ROADMAP.md) | Phases and acceptance gates |
-| [Task ledger](docs/TASKS.md) | Ordered implementation queue |
-| [Market and portfolio research](docs/RESEARCH/2026-11-17_MARKET_AND_PORTFOLIO.md) | First Poland–Türkiye pilot, repository map, channels and prospects |
-| [Reuse audit](docs/REUSE_AUDIT.md) | Initial code inspection across discovery, Android and automation references |
-| [Additional reuse audit](docs/ADDITIONAL_REUSE_AUDIT.md) | BOS, Oddo, Troy, Kovan, Zommo, Nexus and remaining repository triage |
-| [QRKey reuse audit](docs/QRKEY_REUSE_AUDIT.md) | QRKey repository-family source audit, reusable patterns and non-reuse decisions |
-| [Workflow runtime](docs/WORKFLOW_RUNTIME.md) | Durable run/step/event model, approval binding, lifecycle and execution limits |
-| [Capability registry](docs/CAPABILITY_REGISTRY.md) | Explicit capability availability, permissions, side-effect and retry policies |
-| [Project state](docs/STATE.md) | Compact current status and next actions |
-| [Coverage matrix](docs/COVERAGE.md) | Requirement → implementation → tests → documentation traceability |
-| [Risk register](docs/RISKS.md) | Current product, runtime, security and acceptance risks |
-| [Changelog](CHANGELOG.md) | Dated project milestones and verification evidence |
-| [Android build](docs/ANDROID_BUILD.md) | Pinned toolchain, local build, CI artifact and signing boundaries |
+The first commercial workflow is a focused operator-controlled sourcing desk for Türkiye ↔ Poland/EU industrial tooling and machining.
 
-## Current state
+It takes a real buyer requirement through supplier-offer capture, source-linked evidence, deterministic comparison, a reasoned human shortlist decision and a shareable brief. It does not certify suppliers, infer technical equivalence, send RFQs, promise representation or make commercial commitments.
 
-**Latest application features:** PR [#8](https://github.com/ysfclc/Trader/pull/8) added passphrase-protected encrypted export/restore for all seven persisted Room record groups. PR [#11](https://github.com/ysfclc/Trader/pull/11) adds conservative startup recovery for interrupted workflows, with explicit human review before a step can be reset. Pull-request CI [run 255](https://github.com/ysfclc/Trader/actions/runs/44478899807) and post-merge main CI [run 256](https://github.com/ysfclc/Trader/actions/runs/44479460220) passed. Run 256 reports **37 tests, 0 failures, 0 errors and 0 skipped**, plus lint, debug APK assembly, signature verification and package identity checks. The documentation-only state/coverage reconciliation was merged as [PR #9](https://github.com/ysfclc/Trader/pull/9); its PR CI run 257 and post-merge main run 258 also passed. PR #11 CI [run 271](https://github.com/ysfclc/Trader/actions/runs/44489948440) passed **38 tests, 0 failures, 0 errors and 0 skipped**, plus lint, debug APK assembly, signature verification and package identity checks. Post-merge main CI [run 276](https://github.com/ysfclc/Trader/actions/runs/44490819804) also passed the full verification/build/signature/package pipeline. PR [#15](https://github.com/ysfclc/Trader/pull/15) hardened incoming Android share-text parsing and merged as 9911be2f97e8e0fa55b1c4dbbd5483e96f90322a after CI run 304 passed. PR [#12](https://github.com/ysfclc/Trader/pull/12) added the typed capability contracts and merged as `cb929afc81b0e04cf5e7b81d1d199c2a78f4fb8b`. PR CI run 279, final-head run 285 and post-merge main run [286](https://github.com/ysfclc/Trader/actions/runs/44500309783) passed **44 tests, 0 failures, 0 errors and 0 skipped**, plus lint, debug APK assembly, signature and package identity checks.
+The workflow is a specialization of Trader's shared problem/evidence/work graph, not a separate product. Do not start another product lane until this workflow is accepted on the target device.
 
-The capability registry now defines typed input/output schemas, cost disclosures, limit policies and required outcome checks for all 16 registered operations; generic field validation rejects missing, mistyped and unexpected values. Adapter-specific policy checks and numeric quotas remain required before any unimplemented adapter can be enabled. The current main build is an offline ProblemCase/evidence/planning/workflow workspace. The feature branch feature/evidence-backed-opportunity-loop adds an optional opportunity profile and Pipeline: manually track a real trade, service or career lead; record organization/contact labels, fit evidence, stage, next action and a date; retain the source case; open a supported contact route by explicit user action. It does not search for prospects, verify a company/person, send messages, place calls or schedule reminders. PR #16 CI run 306 passed 59 tests, lint, debug APK assembly, signature verification and exact package/version checks. Physical-device acceptance remains open. The broader gaps remain physical-device acceptance, WorkManager execution/recovery, file/screenshot/voice capture, deduplication, browser/app automation, embedded AI, live discovery/matching, normalized commercial records and external communication adapters.
+Specification: [Industrial Sourcing Desk](docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md).
 
-PR #8 main debug APK artifact (CI run 256): `com.yusufculcu.trader.debug`, version `0.1.0-debug`, 19,046,757 bytes, SHA-256 `faf4b1abbfa0227b5c274d34ab7bc59be570350c28c89073442cf63d54f0ec76`. It is a CI debug-signed sideload artifact, **not** a production release. Do not uninstall an existing installation to resolve a signing conflict without first protecting local data.
+## How the current app fits together
 
-Use [PROJECT_LOCK.md](docs/PROJECT_LOCK.md) as the canonical product specification; there is no separate `docs/SPEC.md`. Coverage and limitations are tracked in [COVERAGE.md](docs/COVERAGE.md), [RISKS.md](docs/RISKS.md) and [TASKS.md](docs/TASKS.md). Physical-device verification is not inferred from CI.
+These are views and capabilities over the same workspace, not separate products:
 
-## Repository rules
+- **Inbox** captures a problem, goal or incoming context.
+- **Discover** runs bounded public-source research and saves findings as unreviewed evidence.
+- **Companies / dossiers** hold organization details, buyer requirements, supplier offers and their source evidence.
+- **Sourcing** compares buyer requirements with supplier offers and records the operator's decision.
+- **Pipeline** is an operational view over work and opportunities, not a second data silo.
+- **Activity** is the shared history of changes and decisions.
+- **Browser** is the visible research and evidence-capture surface.
+- **AI** is an assisting capability, not a separate chatbot product or a prerequisite for core workflows.
 
-- This repository, `ysfclc/Trader`, is the sole source of truth for Trader.
-- Preserve the fresh-start ledger and update the state before and after material implementation phases.
-- Do not silently discard requirements, regressions or user decisions.
-- Never claim that a capability is implemented or verified because a screen, button, document or source file exists.
-- Build one complete, evidence-backed vertical slice at a time.
-- No external messages are sent by tests, background workers or AI without an explicit user action.
+The intended longer-term navigation is Discover / Work / Live / Studio. That is a consolidation of these existing views, not permission to add more destinations or duplicate records. Navigation changes must preserve local data and deep links.
 
+## Current verified boundary
 
-## First practical workflow in progress
+See [the state ledger](docs/STATE.md) for the authoritative current build and task status.
 
-The current implementation branch is adding an optional Opportunity Pipeline without converting every ProblemCase into a CRM lead. The intended first use is one manually captured job, service prospect or industrial buyer/supplier signal: preserve the original share, attach reviewed evidence, record why it fits, choose a stage, set a next action/date, then open a supported contact route. Updates remain user-controlled. Automatic discovery, qualification, messaging and notifications are not included in this slice. See the state ledger for the acceptance boundary and current verification status.
+- Android package: `com.yusufculcu.trader.debug`; persistent Trader development signing is configured. Keep the package and signing certificate unchanged and increment versionCode for every installable update.
+- Latest verified installable build: `0.11.0-debug`, versionCode 11, CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208), artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). The run passed 157 unit tests, lint, APK assembly, exact package/version checks and persistent-certificate equality. Supplier-offer editing and evidence-link reconciliation are included.
+- Room schema v12 and encrypted backup snapshot v9 are implemented. Physical-device migration, export/restore and install-over-existing acceptance remain open.
+- Discover is a bounded, user-triggered search/feed workflow, not continuous monitoring. Live-source and device acceptance remain open.
+- Workflow state and approvals are persisted, but execution is still manually driven. There is no durable WorkManager capability executor.
+- The model catalogue/download foundation exists, but verified on-device inference and real-device performance acceptance are not complete. Core sourcing must remain usable without an installed model.
+- The Industrial Sourcing Desk is not yet accepted as reliable daily-use software until the real-device completion gate passes.
+
+## The only active delivery sequence
+
+1. On the Redmi Note 12 Pro 5G, export a fresh encrypted workspace backup before installation, then install `0.11.0-debug` over the existing app and verify the Room migration without uninstalling or clearing storage. If the installed APK predates the persistent-signing transition, stop rather than force an update; export and recover data before any uninstall.
+2. Complete the real sourcing journey: buyer dossier and requirement; supplier dossier, offer and source evidence; multiple-offer comparison; decision and revision; shortlist share; edit headers, line items and evidence links; inspect Activity; close/reopen; encrypted export and restore.
+3. Fix every observed regression and repeat the affected acceptance checks. Add recoverable deletion for important sourcing records before expanding the commercial data model.
+4. Only after this gate passes, integrate discovery and optional local AI into the same sourcing journey. AI may propose extracted fields and questions; it must not replace evidence review or deterministic comparison.
+
+Do not start Product/SKU, Match, Quote, Deal, social connectors, autonomous outreach or another product specialization in parallel with this acceptance work.
+
+## Product and engineering laws
+
+1. One canonical repository: `ysfclc/Trader`. The repository and its current state ledger are the source of truth.
+2. One connected data graph; do not duplicate records or create parallel mini-products.
+3. Evidence before claims. Unknown remains unknown.
+4. AI proposes; validated code and the operator decide.
+5. No external action without visible scope and explicit user approval.
+6. Free-first, local-first and replaceable adapters. No dependency on Memo, EBO, n8n, Unipile, paid AI or a hosted CRM.
+7. No fake progress: attempted, completed and verified are different states.
+8. CI success is not device acceptance. A screen or source file is not proof that a workflow works.
+9. Preserve the fresh-start ledger, user decisions, regressions and acceptance evidence. Never silently drop scope.
+10. Work one complete vertical slice at a time; do not widen scope before the current gate passes.
+
+## Canonical documents
+
+- [Project lock](docs/PROJECT_LOCK.md) — product intent and non-goals
+- [State ledger](docs/STATE.md) — current implementation, verification and next actions
+- [Task ledger](docs/TASKS.md) — ordered implementation backlog
+- [Roadmap](docs/ROADMAP.md) — phase gates
+- [Architecture](docs/ARCHITECTURE.md) — system boundaries and layers
+- [Product experience](docs/PRODUCT_EXPERIENCE.md) — unified interaction model
+- [Industrial Sourcing Desk](docs/PRODUCTS/INDUSTRIAL_SOURCING_DESK.md) — first workflow and completion gate
+- [Data model](docs/DATA_MODEL.md) — records and relationships
+- [Operating rules](docs/OPERATING_RULES.md) — safety, evidence and approval
+- [Workflow runtime](docs/WORKFLOW_RUNTIME.md) — durable lifecycle and current executor limitations
+- [Capability registry](docs/CAPABILITY_REGISTRY.md) — declared capabilities and availability
+- [Local AI architecture](docs/LOCAL_AI_ARCHITECTURE.md) — model, context and orchestration direction
+- [Android build and signing](docs/ANDROID_BUILD.md) — toolchain and update safety
+- [Coverage matrix](docs/COVERAGE.md) — requirement-to-test traceability
+- [Risk register](docs/RISKS.md) — known product and engineering risks
+- [Changelog](CHANGELOG.md) — dated implementation and verification history

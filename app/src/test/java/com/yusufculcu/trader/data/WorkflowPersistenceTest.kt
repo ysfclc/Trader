@@ -344,7 +344,7 @@ class WorkflowPersistenceTest {
     }
 
     @Test
-    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsWorkflowTables() = runBlocking {
+    fun migrationFromRoomVersionOnePreservesProblemDataAndAddsAllCurrentTables() = runBlocking {
         val dbName = "trader-v1-${UUID.randomUUID()}.db"
         val file = context.getDatabasePath(dbName)
         file.parentFile?.mkdirs()
@@ -400,7 +400,7 @@ class WorkflowPersistenceTest {
         old.close()
 
         val migrated = Room.databaseBuilder(context, TraderDatabase::class.java, dbName)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
             .allowMainThreadQueries()
             .build()
         try {
@@ -437,6 +437,20 @@ class WorkflowPersistenceTest {
                 assertTrue(opportunityTable.moveToFirst())
             } finally {
                 opportunityTable.close()
+            }
+            val proofAssetTable = migrated.openHelper.readableDatabase.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='proof_assets'"
+            )
+            try { assertTrue(proofAssetTable.moveToFirst()) } finally { proofAssetTable.close() }
+            val discoveryStrategyTable = migrated.openHelper.readableDatabase.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='discovery_strategies'"
+            )
+            try { assertTrue(discoveryStrategyTable.moveToFirst()) } finally { discoveryStrategyTable.close() }
+            listOf("discovery_runs", "source_runs", "discovery_documents", "organizations", "organization_sources", "organization_claims", "organization_people", "buyer_requirements", "supplier_offers", "supplier_offer_items", "supplier_offer_evidence", "sourcing_reviews", "business_activity_events", "products", "product_evidence").forEach { table ->
+                val cursor = migrated.openHelper.readableDatabase.query(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='$table'"
+                )
+                try { assertTrue("Missing $table", cursor.moveToFirst()) } finally { cursor.close() }
             }
             val archiveColumn = migrated.openHelper.readableDatabase.query("PRAGMA table_info(problem_cases)")
             try {

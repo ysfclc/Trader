@@ -238,3 +238,37 @@ A backend may be introduced only for a specific evidenced need such as shared mu
 - Automation has an immediate stop mechanism.
 - The exact approved destination and payload are checked again before execution.
 - No fake success: a side effect needs a source-confirmed postcondition or is marked uncertain.
+
+
+## 10. Discovery-first company workflow
+
+The next product priority is a problem-led prospecting loop that starts from a user-approved ProofAsset and searches for companies showing public evidence of a relevant need. It is not a generic lead scraper. The detailed experience contract is in `docs/PRODUCT_EXPERIENCE.md`.
+
+The discovery pipeline is:
+
+`ProofAsset → DiscoveryStrategy → DiscoveryRun/SourceRun → raw SourceDocument → Organization/Person resolution → EvidenceClaim → FitAssessment → OutreachDraft → approved channel action → receipt/reply/follow-up`.
+
+Keep each stage independently testable and resumable. Source adapters are provider-specific and must declare access mode, terms/policy, authentication, origin scope, rate limits, byte/time/concurrency limits, cost, freshness and failure states. A run may return partial results when a source fails, but the failure must be visible. Cache raw results and retain canonical source URLs and capture timestamps. Deduplication produces reviewable match candidates rather than silently merging records.
+
+Proof assets and discovery strategies are user-owned and versioned. Strategy generation can suggest problem signatures, search phrases, buyer roles and disqualifiers, but the user can inspect/edit them. Discovery queries should find observable signals (public requests, hiring, procurement, product/process changes, public announcements or directory evidence) that the company is already addressing a problem. Fit scoring must show its components and evidence; a model-generated score alone is not evidence.
+
+## 11. Trader-owned browser runtime
+
+Trader owns a visible Android WebView session and its lifecycle. It must support ordinary browsing fundamentals and expose current origin, loading state, tabs, navigation, bookmarks/history, find-in-page, downloads, session/cookie controls and page-to-dossier evidence capture. Browser sessions may be opened contextually from Discover, Work or a workflow and are surfaced in Live for inspection and takeover.
+
+Automation is an explicit task over a visible session. Each step has an origin scope, timeout, cancellation path, expected postcondition and evidence requirement. Login, CAPTCHA, OTP, consent walls and unexpected page states pause for the user. Do not bypass access controls. Form submission and messaging are separate external side effects, require exact payload/recipient/destination approval and are never blindly retried after an ambiguous result.
+
+The browser is not a Memo dependency. Do not copy Memo code, services, storage, signing identity or runtime. Reuse only product-neutral interaction lessons: visible work, contextual runtime panes, explicit checkpoints, user takeover and safe recovery.
+
+
+## 4a. Configurable source ecosystem
+
+Separate adapter code, configured source instances and watch rules. Adapter IDs are stable protocol/provider identifiers; source instances are user-owned configuration and must not be compile-time provider lists. One adapter can serve many feeds, subreddits, company sites or instance hosts. Adding a new source instance must not require a database migration. A new protocol/provider may require code and tests but must reuse the common source-run, evidence, health and deletion contracts.
+
+Support one-shot search, manual refresh, scheduled polling, streaming, authenticated webhook receipt, visible browser capture and user import as distinct execution modes. A button that checks a feed once is not a background monitor. Scheduled and streaming modes remain unavailable until durable bounded execution, cursor/checkpoint recovery, per-source backoff, battery/network budgets and user pause/stop controls exist.
+
+Source families include search engines; RSS/Atom/JSON feeds; company websites/careers/changelogs; official business registers and procurement portals; job/project marketplaces; communities and social networks; developer/product ecosystems; reviews; explicitly authorized messaging workspaces; user-supplied files/shares; and signed webhooks. See docs/SOURCE_ECOSYSTEM.md for current provider research and access boundaries.
+
+The first configurable source type is a public HTTPS RSS/Atom feed. The existing DuckDuckGo prototype remains a separate one-shot search adapter. Community connectors are not interchangeable: Reddit requires OAuth and deletion/retention controls; Bluesky has public read APIs; Mastodon search depends on instance configuration; Telegram bots need explicit group installation/permission; Facebook's Meta Content Library is a restricted research cleanroom product, not a general-purpose app API. Facebook browser capture is visible and user initiated.
+
+Every adapter must return common source documents with native identity, source instance ID, canonical URL, publication and retrieval times, original excerpt, adapter version and verification/deletion state. AI-derived signals link back to these records. Search snippets are unverified claims. Do not store provider credentials inside ordinary source configs, and do not retain personal/community content beyond the relevant provider's permitted window.
