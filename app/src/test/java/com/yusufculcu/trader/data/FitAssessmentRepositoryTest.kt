@@ -55,7 +55,7 @@ class FitAssessmentRepositoryTest {
         assertEquals(FitAssessmentOutcome.SUPPORTED.name, row?.computedOutcome)
         assertNotNull(row?.computedSnapshotJson)
         assertEquals(computed.computed, repository.getView(requireNotNull(row).id)?.computed)
-        assertEquals(1, database.fitAssessmentEvidenceDao().getForAssessment(row!!.id).size)
+        assertEquals(1, database.fitAssessmentEvidenceDao().getForAssessment(row.id).size)
 
         val reviewed = repository.assess(
             ids.organizationId,
@@ -81,7 +81,7 @@ class FitAssessmentRepositoryTest {
                 relationship = FitEvidenceRelationship.CONTRADICTS,
                 rationale = "A later reviewed company fact contradicts this capability."
             )),
-            evaluatedAt = 600
+            evaluatedAt = 500
         )
         assertEquals(FitAssessmentOutcome.CONTRADICTED, changedEvidence.computed.outcome)
         assertEquals(FitAssessmentDisposition.CONTRADICTED, changedEvidence.effectiveDisposition)
