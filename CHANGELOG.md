@@ -1,3 +1,9 @@
+## 2026-11-26 — Session 14: dependency security audit
+
+- Added a complete resolved-dependency SBOM and OSV-Scanner CI gate; patched transitive `commons-lang3` from 3.14.0 to 3.18.0 on the Android build-tool classpath.
+- Verified 421 SBOM components with 0 OSV findings. CI run #565 passed 161 Android unit tests, coverage-baseline enforcement, debug build, lint, APK identity, and persistent-certificate checks.
+- No installable APK was uploaded; manual approval and physical-device acceptance remain separate release gates.
+
 ## 2026-11-25 — Trader numerical coverage baseline and non-regression gate
 
 - Inspected the first native AGP JaCoCo report from CI run [45665570698](https://github.com/ysfclc/Trader/actions/runs/45665570698). Raw coverage was 8.88% lines / 4.38% branches; generated Room `_Impl` classes contributed 6,773 uncovered lines and 1,040 uncovered branches.

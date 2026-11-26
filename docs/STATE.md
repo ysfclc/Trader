@@ -158,3 +158,12 @@ Older session-by-session notes are preserved in `docs/STATE_HISTORY.md`.
 - Sourcing Trash UI and error/empty states are localized in English, Polish and Turkish. Room runtime, KTX, compiler and testing components upgraded together to 2.8.5.
 - CI run [45642932647](https://github.com/ysfclc/Trader/actions/runs/45642932647) passed the clean build, all 161 unit tests, lint, APK package/version checks and persistent signing-certificate equality. Test report [15035912637](https://github.com/ysfclc/Trader/actions/runs/45642932647/artifacts/15035912637).
 - No installable APK was published. The workflow now requires explicit manual release-gate approval. Physical-device migration/restore, numerical coverage non-regression and a full dependency scan remain open.
+
+
+## Session 14 — dependency security audit (2026-11-26)
+
+- **Verified CI:** [run #565](https://github.com/ysfclc/Trader/actions/runs/45740433726) completed successfully on the dependency-remediation commit. Android unit tests: **161 passed, 0 failures, 0 errors, 0 skipped**; coverage baseline, `assembleDebug`, `lintDebug`, APK package/version identity, and persistent signing-certificate checks passed.
+- **SBOM and scan:** aggregate CycloneDX SBOM contained **421 components**. OSV-Scanner **v2.7.1** returned an empty findings list (**0 findings**). The archived SBOM resolves `org.apache.commons:commons-lang3` to **3.18.0**; the previous 3.14.0 finding was in the Android Gradle Plugin/build classpath, not the app runtime classpaths.
+- **Freshness note:** the scanner output records no distinct advisory-database revision/timestamp. The scan date and scanner version are recorded; no database snapshot timestamp is asserted.
+- **Evidence:** [dependency audit](https://github.com/ysfclc/Trader/actions/runs/45740433726/artifacts/15081127622), [resolved dependency graph](https://github.com/ysfclc/Trader/actions/runs/45740433726/artifacts/15080279512), [JUnit reports](https://github.com/ysfclc/Trader/actions/runs/45740433726/artifacts/15081152443), [coverage report](https://github.com/ysfclc/Trader/actions/runs/45740433726/artifacts/15081212428).
+- **Release gate:** no installable APK artifact was uploaded because this was a push-triggered CI run without the explicit manual approval input. Physical Redmi device acceptance remains outstanding.

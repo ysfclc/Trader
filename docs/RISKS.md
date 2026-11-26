@@ -1,6 +1,6 @@
 # Risk register
 
-_Last reviewed: 2026-11-21 against the PR #18 source-ingestion branch; CI validation run 385 passed._
+_Last reviewed: 2026-11-26 (Session 14)
 
 | ID | Risk | Severity | Current control / evidence | Required mitigation / trigger |
 |---|---|---|---|---|
@@ -40,3 +40,4 @@ A risk is not closed because a related screen or safeguard exists. Close it only
 | R-21 | A manual feed check may be mistaken for continuous monitoring. | Medium | Initial Discover feed refresh is user-triggered only; no polling worker is wired. | Use the label “Check now”; add scheduled monitoring only after durable jobs, cancellation, cursor/backoff and recovery are implemented. |
 
 | R-23 | Launcher icon absence and version/signing drift make test builds look disposable and risk accidental data loss during reinstall. | Medium | Adaptive launcher and round icons are now wired; package ID is unchanged and versionCode is 2. CI signing is conditional on the dedicated stable key. | Verify icon on Redmi and enforce monotonically increasing versionCode plus stable certificate before publishing any sideloadable APK. |
+| R-24 | Vulnerable transitive Commons Lang version on the Android build-tool classpath | Medium | Force the vulnerable 3.14.0 request to fixed 3.18.0; aggregate SBOM has 421 components and OSV-Scanner v2.7.1 reports 0 findings in CI run #565 | Closed for audited commit; rerun the full scan whenever dependency or build-plugin versions change |
