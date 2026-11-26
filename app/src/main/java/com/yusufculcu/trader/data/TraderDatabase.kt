@@ -655,6 +655,137 @@ interface SourceRunDao {
     suspend fun markInterrupted(runId: String, at: Long)
 }
 
+
+@Entity(
+    tableName = "fit_assessments",
+    foreignKeys = [
+        ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = ProofAssetEntity::class, parentColumns = ["id"], childColumns = ["proofAssetId"], onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [
+        Index(value = ["organizationId"]),
+        Index(value = ["proofAssetId"]),
+        Index(value = ["organizationId", "proofAssetId"], unique = true),
+        Index(value = ["updatedAt"])
+    ]
+)
+data class FitAssessmentEntity(
+    @PrimaryKey val id: String,
+    val organizationId: String,
+    val proofAssetId: String,
+    val computedOutcome: String,
+    val evaluatedAt: Long,
+    val createdAt: Long,
+    val updatedAt: Long
+)
+
+@Entity(
+    tableName = "fit_assessment_evidence",
+    foreignKeys = [
+        ForeignKey(entity = FitAssessmentEntity::class, parentColumns = ["id"], childColumns = ["assessmentId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = OrganizationClaimEntity::class, parentColumns = ["id"], childColumns = ["organizationClaimId"], onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [
+        Index(value = ["assessmentId"]),
+        Index(value = ["organizationClaimId"]),
+        Index(value = ["assessmentId", "organizationClaimId", "proofClaimId"], unique = true)
+    ]
+)
+data class FitAssessmentEvidenceEntity(
+    @PrimaryKey val id: String,
+    val assessmentId: String,
+    val organizationClaimId: String,
+    val proofClaimId: String,
+    val relationship: String,
+    val rationale: String,
+    val createdAt: Long
+)
+
+@Entity(
+    tableName = "fit_assessment_overrides",
+    foreignKeys = [
+        ForeignKey(entity = FitAssessmentEntity::class, parentColumns = ["id"], childColumns = ["assessmentId"], onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [Index(value = ["assessmentId"]), Index(value = ["assessmentId", "reviewedAt"])]
+)
+data class FitAssessmentOverrideEntity(
+    @PrimaryKey val id: String,
+    val assessmentId: String,
+    val decision: String,
+    val rationale: String,
+    val reviewerLabel: String?,
+    val reviewedAt: Long
+)
+
+@Dao
+interface FitAssessmentDao {
+    @Query("SELECT * FROM fit_assessments WHERE organizationId = :organizationId ORDER BY updatedAt DESC, id ASC")
+    fun observeForOrganization(organizationId: String): Flow<List<FitAssessmentEntity>>
+
+    @Query("SELECT * FROM fit_assessments WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): FitAssessmentEntity?
+
+    @Query("SELECT * FROM fit_assessments WHERE organizationId = :organizationId AND proofAssetId = :proofAssetId LIMIT 1")
+    suspend fun findForOrganizationAndProofAsset(organizationId: String, proofAssetId: String): FitAssessmentEntity?
+
+    @Query("SELECT * FROM fit_assessments")
+    suspend fun getAll(): List<FitAssessmentEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(assessment: FitAssessmentEntity)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<FitAssessmentEntity>)
+
+    @Update
+    suspend fun update(assessment: FitAssessmentEntity)
+
+    @Query("DELETE FROM fit_assessments")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface FitAssessmentEvidenceDao {
+    @Query("SELECT * FROM fit_assessment_evidence WHERE assessmentId = :assessmentId ORDER BY createdAt ASC, id ASC")
+    fun observeForAssessment(assessmentId: String): Flow<List<FitAssessmentEvidenceEntity>>
+
+    @Query("SELECT * FROM fit_assessment_evidence")
+    suspend fun getAll(): List<FitAssessmentEvidenceEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(evidence: FitAssessmentEvidenceEntity)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<FitAssessmentEvidenceEntity>)
+
+    @Query("DELETE FROM fit_assessment_evidence WHERE assessmentId = :assessmentId")
+    suspend fun deleteForAssessment(assessmentId: String): Int
+
+    @Query("DELETE FROM fit_assessment_evidence")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface FitAssessmentOverrideDao {
+    @Query("SELECT * FROM fit_assessment_overrides WHERE assessmentId = :assessmentId ORDER BY reviewedAt DESC, id DESC")
+    fun observeHistory(assessmentId: String): Flow<List<FitAssessmentOverrideEntity>>
+
+    @Query("SELECT * FROM fit_assessment_overrides WHERE assessmentId = :assessmentId ORDER BY reviewedAt DESC, id DESC LIMIT 1")
+    suspend fun latestForAssessment(assessmentId: String): FitAssessmentOverrideEntity?
+
+    @Query("SELECT * FROM fit_assessment_overrides")
+    suspend fun getAll(): List<FitAssessmentOverrideEntity>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun append(override: FitAssessmentOverrideEntity)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(items: List<FitAssessmentOverrideEntity>)
+
+    @Query("DELETE FROM fit_assessment_overrides")
+    suspend fun deleteAll()
+}
+
 @Database(
     entities = [
         ProblemEntity::class,
@@ -683,9 +814,12 @@ interface SourceRunDao {
         SourcingReviewEntity::class,
         ProductEntity::class,
         ProductEvidenceEntity::class,
-        BusinessActivityEntity::class
+        BusinessActivityEntity::class,
+        FitAssessmentEntity::class,
+        FitAssessmentEvidenceEntity::class,
+        FitAssessmentOverrideEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -716,6 +850,9 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun productEvidenceDao(): ProductEvidenceDao
     abstract fun businessActivityDao(): BusinessActivityDao
+    abstract fun fitAssessmentDao(): FitAssessmentDao
+    abstract fun fitAssessmentEvidenceDao(): FitAssessmentEvidenceDao
+    abstract fun fitAssessmentOverrideDao(): FitAssessmentOverrideDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -978,5 +1115,43 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_sourcing_reviews_buyerRequirementId ON sourcing_reviews (buyerRequirementId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_sourcing_reviews_supplierOfferId ON sourcing_reviews (supplierOfferId)")
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_sourcing_reviews_buyerRequirementId_supplierOfferId ON sourcing_reviews (buyerRequirementId, supplierOfferId)")
+    }
+}
+
+
+/** Adds durable, separately reviewable company-to-proof fit assessments. */
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS fit_assessments (
+            id TEXT NOT NULL, organizationId TEXT NOT NULL, proofAssetId TEXT NOT NULL,
+            computedOutcome TEXT NOT NULL, evaluatedAt INTEGER NOT NULL,
+            createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, PRIMARY KEY(id),
+            FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(proofAssetId) REFERENCES proof_assets(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessments_organizationId ON fit_assessments (organizationId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessments_proofAssetId ON fit_assessments (proofAssetId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_fit_assessments_organizationId_proofAssetId ON fit_assessments (organizationId, proofAssetId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessments_updatedAt ON fit_assessments (updatedAt)")
+
+        db.execSQL("""CREATE TABLE IF NOT EXISTS fit_assessment_evidence (
+            id TEXT NOT NULL, assessmentId TEXT NOT NULL, organizationClaimId TEXT NOT NULL,
+            proofClaimId TEXT NOT NULL, relationship TEXT NOT NULL, rationale TEXT NOT NULL,
+            createdAt INTEGER NOT NULL, PRIMARY KEY(id),
+            FOREIGN KEY(assessmentId) REFERENCES fit_assessments(id) ON UPDATE NO ACTION ON DELETE CASCADE,
+            FOREIGN KEY(organizationClaimId) REFERENCES organization_claims(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_evidence_assessmentId ON fit_assessment_evidence (assessmentId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_evidence_organizationClaimId ON fit_assessment_evidence (organizationClaimId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_fit_assessment_evidence_assessmentId_organizationClaimId_proofClaimId ON fit_assessment_evidence (assessmentId, organizationClaimId, proofClaimId)")
+
+        db.execSQL("""CREATE TABLE IF NOT EXISTS fit_assessment_overrides (
+            id TEXT NOT NULL, assessmentId TEXT NOT NULL, decision TEXT NOT NULL,
+            rationale TEXT NOT NULL, reviewerLabel TEXT, reviewedAt INTEGER NOT NULL,
+            PRIMARY KEY(id),
+            FOREIGN KEY(assessmentId) REFERENCES fit_assessments(id) ON UPDATE NO ACTION ON DELETE CASCADE
+        )""".trimIndent())
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_overrides_assessmentId ON fit_assessment_overrides (assessmentId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_fit_assessment_overrides_assessmentId_reviewedAt ON fit_assessment_overrides (assessmentId, reviewedAt)")
     }
 }
