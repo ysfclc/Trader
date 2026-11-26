@@ -508,37 +508,50 @@ class TraderBackupManager(
             val relationship = runCatching {
                 com.yusufculcu.trader.domain.FitEvidenceRelationship.valueOf(link.relationship)
             }.getOrNull()
-            link.id.isNotBlank() && assessment != null && claim != null && asset != null &&
-                claim.organizationId == assessment.organizationId &&
-                asset.claims.any { it.id == link.proofClaimId } && relationship != null &&
+            link.id.isNotBlank() && assessment != null && claim != null &&
+                claim.organizationId == assessment.organizationId && link.proofClaimId.isNotBlank() &&
+                relationship != null &&
                 (relationship == com.yusufculcu.trader.domain.FitEvidenceRelationship.UNKNOWN || link.rationale.isNotBlank()) &&
                 link.rationale.length <= 1_000 && link.createdAt >= 0
         }) { "Backup contains a fit assessment evidence link with an invalid or cross-company relationship." }
         require(snapshot.fitAssessments.all { row ->
-            val asset = fitProofAssets.getValue(row.proofAssetId)
-            val claims = snapshot.organizationClaims.filter { it.organizationId == row.organizationId }.map { claim ->
-                com.yusufculcu.trader.domain.FitCompanyClaim(
-                    claim.id, claim.organizationId, claim.field, claim.statement,
-                    com.yusufculcu.trader.domain.FitCompanyClaimReviewState.valueOf(claim.reviewState)
-                )
-            }
-            val links = snapshot.fitAssessmentEvidence.filter { it.assessmentId == row.id }.map { link ->
-                com.yusufculcu.trader.domain.FitEvidenceLink(
-                    link.organizationClaimId, link.proofClaimId,
-                    com.yusufculcu.trader.domain.FitEvidenceRelationship.valueOf(link.relationship),
-                    link.rationale, link.createdAt
-                )
-            }
             val saved = row.computedSnapshotJson?.let { value ->
                 runCatching { FitAssessmentSnapshotCodec.decode(value) }.getOrNull()
+            } ?: return@all false
+            val components = saved.components
+            val componentIds = components.map { it.proofClaimId }
+            val componentOutcomesValid = components.all { component ->
+                val expected = when {
+                    component.supportingEvidence.isNotEmpty() && component.contradictingEvidence.isNotEmpty() ->
+                        com.yusufculcu.trader.domain.FitComponentOutcome.CONFLICTED
+                    component.contradictingEvidence.isNotEmpty() ->
+                        com.yusufculcu.trader.domain.FitComponentOutcome.CONTRADICTED
+                    component.supportingEvidence.isNotEmpty() ->
+                        com.yusufculcu.trader.domain.FitComponentOutcome.SUPPORTED
+                    else -> com.yusufculcu.trader.domain.FitComponentOutcome.UNKNOWN
+                }
+                component.outcome == expected &&
+                    component.supportingEvidence.all { it.proofClaimId == component.proofClaimId && it.effectiveState == com.yusufculcu.trader.domain.FitEvidenceFindingState.SUPPORTS } &&
+                    component.contradictingEvidence.all { it.proofClaimId == component.proofClaimId && it.effectiveState == com.yusufculcu.trader.domain.FitEvidenceFindingState.CONTRADICTS } &&
+                    component.unknownEvidence.all { it.proofClaimId == component.proofClaimId && it.effectiveState == com.yusufculcu.trader.domain.FitEvidenceFindingState.UNKNOWN }
             }
-            val recomputed = runCatching {
-                com.yusufculcu.trader.domain.FitAssessmentEvaluator.evaluate(
-                    row.organizationId, asset, claims, links, row.evaluatedAt
-                ).computed
-            }.getOrNull()
-            saved != null && recomputed != null && saved == recomputed
-        }) { "A fit assessment snapshot does not match its saved evidence and reviewed company claims." }
+            val counts = com.yusufculcu.trader.domain.FitAssessmentCounts(
+                supported = components.count { it.outcome == com.yusufculcu.trader.domain.FitComponentOutcome.SUPPORTED },
+                contradicted = components.count { it.outcome == com.yusufculcu.trader.domain.FitComponentOutcome.CONTRADICTED },
+                conflicted = components.count { it.outcome == com.yusufculcu.trader.domain.FitComponentOutcome.CONFLICTED },
+                unknown = components.count { it.outcome == com.yusufculcu.trader.domain.FitComponentOutcome.UNKNOWN }
+            )
+            val outcome = when {
+                counts.conflicted > 0 -> com.yusufculcu.trader.domain.FitAssessmentOutcome.CONFLICTED
+                counts.contradicted > 0 -> com.yusufculcu.trader.domain.FitAssessmentOutcome.CONTRADICTED
+                counts.unknown == 0 && counts.supported == components.size -> com.yusufculcu.trader.domain.FitAssessmentOutcome.SUPPORTED
+                counts.supported > 0 -> com.yusufculcu.trader.domain.FitAssessmentOutcome.PARTIAL
+                else -> com.yusufculcu.trader.domain.FitAssessmentOutcome.UNKNOWN
+            }
+            components.isNotEmpty() && componentIds.all { it.isNotBlank() } &&
+                componentIds.size == componentIds.toSet().size && componentOutcomesValid &&
+                saved.counts == counts && saved.outcome == outcome
+        }) { "Backup contains a structurally inconsistent computed fit assessment snapshot." }
         require(snapshot.fitAssessmentOverrides.all { row ->
             row.id.isNotBlank() && row.assessmentId in fitAssessmentsById &&
                 row.decision in com.yusufculcu.trader.domain.FitAssessmentOverrideDecision.values().map { it.name } &&
