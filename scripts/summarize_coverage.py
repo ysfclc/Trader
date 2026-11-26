@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize AGP JaCoCo coverage and enforce the checked-in source-coverage floor."""
+"""Summarize AGP JaCoCo coverage and enforce the historical per-class coverage floor."""
 from __future__ import annotations
 
 import argparse
@@ -24,20 +24,27 @@ def _read_counters(node: ET.Element) -> dict[str, dict[str, int]]:
     return result
 
 
-def read_coverage(report: Path) -> dict[str, dict[str, dict[str, int]]]:
+def read_coverage(report: Path) -> dict[str, Any]:
     if not report.is_file():
         raise ValueError(f"Coverage XML report is missing: {report}")
 
     root = ET.parse(report).getroot()
     all_bytecode = _read_counters(root)
     application_source = {kind: {"covered": 0, "missed": 0} for kind in METRICS}
+    classes: dict[str, dict[str, int]] = {}
 
     for package in root.findall("package"):
         for class_node in package.findall("class"):
+            name = class_node.attrib.get("name", "")
             # Room's KSP-generated DAO/database implementations are not app-authored source.
-            if "_Impl" in class_node.attrib.get("name", ""):
+            if "_Impl" in name:
                 continue
-            for kind, values in _read_counters(class_node).items():
+            counters = _read_counters(class_node)
+            classes[name] = {
+                "line": counters.get("LINE", {}).get("covered", 0),
+                "branch": counters.get("BRANCH", {}).get("covered", 0),
+            }
+            for kind, values in counters.items():
                 application_source[kind]["covered"] += values["covered"]
                 application_source[kind]["missed"] += values["missed"]
 
@@ -47,33 +54,45 @@ def read_coverage(report: Path) -> dict[str, dict[str, dict[str, int]]]:
     branch = application_source["BRANCH"]
     if branch["covered"] + branch["missed"] <= 0:
         raise ValueError("Coverage XML has zero application-source branches")
-    return {"all_bytecode": all_bytecode, "application_source": application_source}
+    return {
+        "all_bytecode": all_bytecode,
+        "application_source": application_source,
+        "classes": classes,
+    }
 
 
-def is_below_baseline(current: dict[str, int], baseline: dict[str, int]) -> bool:
-    current_total = current["covered"] + current["missed"]
-    baseline_total = baseline["covered"] + baseline["missed"]
-    if current_total <= 0 or baseline_total <= 0:
-        raise ValueError("Coverage baseline and current counters must both be non-empty")
-    # Compare exact ratios using integer arithmetic; avoid rounded-percentage loopholes.
-    return current["covered"] * baseline_total < baseline["covered"] * current_total
+def enforce_baseline(coverage: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
+    if baseline.get("comparison_policy") != "per-class-covered-count-non-regression":
+        raise ValueError("Unsupported coverage baseline comparison policy")
+    baseline_classes = baseline.get("classes")
+    if not isinstance(baseline_classes, dict) or not baseline_classes:
+        raise ValueError("Coverage baseline has no per-class counters")
 
+    # Guard the baseline file itself: the class map must account for its aggregate
+    # historical covered counts, otherwise a truncated baseline could weaken the gate.
+    for metric in ("line", "branch"):
+        expected_total = baseline.get("metrics", {}).get(metric, {}).get("covered")
+        mapped_total = sum(values.get(metric, 0) for values in baseline_classes.values())
+        if expected_total is None or mapped_total != expected_total:
+            raise ValueError(f"Coverage baseline {metric} class counters do not match its aggregate")
 
-def enforce_baseline(
-    current: dict[str, dict[str, int]], baseline: dict[str, Any]
-) -> list[str]:
-    failures = []
-    for kind, label in (("LINE", "line"), ("BRANCH", "branch")):
-        expected = baseline["metrics"][label]
-        actual = current[kind]
-        if is_below_baseline(actual, expected):
-            current_total = actual["covered"] + actual["missed"]
-            baseline_total = expected["covered"] + expected["missed"]
-            current_pct = actual["covered"] / current_total * 100
-            baseline_pct = expected["covered"] / baseline_total * 100
-            failures.append(
-                f"{label} coverage regressed: {current_pct:.4f}% < baseline {baseline_pct:.4f}%"
-            )
+    current_classes = coverage.get("classes", {})
+    failures: list[str] = []
+    for class_name, expected in baseline_classes.items():
+        actual = current_classes.get(class_name)
+        if actual is None:
+            failures.append(f"previously covered class disappeared from report: {class_name}")
+            continue
+        for metric in ("line", "branch"):
+            if metric not in expected:
+                continue
+            expected_count = int(expected[metric])
+            actual_count = int(actual.get(metric, 0))
+            if actual_count < expected_count:
+                failures.append(
+                    f"{class_name} {metric} coverage regressed: "
+                    f"{actual_count} covered < historical {expected_count}"
+                )
     return failures
 
 
@@ -82,7 +101,9 @@ def _format(values: dict[str, int]) -> str:
     return f"{values['covered'] / total * 100:.2f}% ({values['covered']}/{total})" if total else "n/a"
 
 
-def render_summary(coverage: dict[str, dict[str, dict[str, int]]], baseline_status: str) -> str:
+def render_summary(
+    coverage: dict[str, Any], baseline_status: str, baseline_class_count: int
+) -> str:
     rows = [
         "## Trader debug unit-test coverage",
         "",
@@ -104,7 +125,11 @@ def render_summary(coverage: dict[str, dict[str, dict[str, int]]], baseline_stat
             values = coverage[scope].get(kind)
             if values is not None:
                 rows.append(f"| {title} | {label} | {_format(values)} |")
-    rows.extend(["", f"Baseline check: **{baseline_status}**"])
+    rows.extend([
+        "",
+        f"Historical per-class covered-count floor ({baseline_class_count} classes): **{baseline_status}**",
+        "New classes do not enlarge the historical floor; their behavior still requires focused feature tests.",
+    ])
     return "\n".join(rows)
 
 
@@ -118,13 +143,13 @@ def main() -> int:
     try:
         coverage = read_coverage(args.report)
         baseline = json.loads(args.baseline.read_text(encoding="utf-8"))
-        failures = enforce_baseline(coverage["application_source"], baseline)
+        failures = enforce_baseline(coverage, baseline)
     except (OSError, ValueError, KeyError, TypeError, ET.ParseError) as error:
         print(f"Coverage verification failed: {error}", file=sys.stderr)
         return 1
 
     status = "FAIL" if failures else "PASS"
-    message = render_summary(coverage, status)
+    message = render_summary(coverage, status, len(baseline["classes"]))
     print(message)
     if args.summary_file:
         args.summary_file.parent.mkdir(parents=True, exist_ok=True)

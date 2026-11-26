@@ -1,9 +1,10 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "variant": "debug",
-  "scope": "AGP JaCoCo JVM/Robolectric unit-test coverage; application-source class counters exclude Room-generated class names containing _Impl",
+  "scope": "AGP JaCoCo application-source class counters; Room-generated class names containing _Impl excluded. Historical covered-count floor is enforced per previously covered class because new Robolectric/Compose classes can expand denominators without JaCoCo observing sandbox-loaded execution.",
   "source_commit": "29a1b1f24ce30f6ce0be2dd69f7bebb7e59a3ff8",
   "workflow_run_id": 45665570698,
+  "comparison_policy": "per-class-covered-count-non-regression",
   "metrics": {
     "line": {
       "covered": 1394,
@@ -12,6 +13,231 @@
     "branch": {
       "covered": 574,
       "missed": 11505
+    }
+  },
+  "classes": {
+    "com/yusufculcu/trader/ai/CandidateVerificationCancelledException": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/ModelArtifactLookupStatus": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/ModelArtifactMetadata": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/ModelSourceSnapshot": {
+      "branch": 2,
+      "line": 5
+    },
+    "com/yusufculcu/trader/ai/ModelSourceStatus": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/ModelUpdateResult": {
+      "line": 8
+    },
+    "com/yusufculcu/trader/ai/TraderContextFact": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/ai/TraderContextPacket": {
+      "branch": 19,
+      "line": 34
+    },
+    "com/yusufculcu/trader/ai/TraderDiscoveryStrategyDraft": {
+      "branch": 6,
+      "line": 20
+    },
+    "com/yusufculcu/trader/ai/TraderDiscoveryStrategyOutputParser": {
+      "branch": 63,
+      "line": 112
+    },
+    "com/yusufculcu/trader/ai/TraderDiscoveryStrategyParseResult": {
+      "branch": 3,
+      "line": 4
+    },
+    "com/yusufculcu/trader/ai/TraderDiscoveryStrategyPromptBuilder": {
+      "branch": 21,
+      "line": 47
+    },
+    "com/yusufculcu/trader/ai/TraderFactStatus": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/TraderModelCandidateVerifierKt": {
+      "branch": 20,
+      "line": 24
+    },
+    "com/yusufculcu/trader/ai/TraderModelCatalog": {
+      "branch": 3,
+      "line": 51
+    },
+    "com/yusufculcu/trader/ai/TraderModelRole": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/ai/TraderModelSpec": {
+      "branch": 41,
+      "line": 32
+    },
+    "com/yusufculcu/trader/ai/TraderModelUpdateCheckerKt": {
+      "branch": 8,
+      "line": 11
+    },
+    "com/yusufculcu/trader/ai/TraderModelUpdatePolicy": {
+      "branch": 15,
+      "line": 15
+    },
+    "com/yusufculcu/trader/data/DiscoveryStrategyCodec": {
+      "branch": 10,
+      "line": 74
+    },
+    "com/yusufculcu/trader/data/EvidenceEntity": {
+      "line": 10
+    },
+    "com/yusufculcu/trader/data/PlanStepEntity": {
+      "line": 12
+    },
+    "com/yusufculcu/trader/data/ProblemEntity": {
+      "line": 17
+    },
+    "com/yusufculcu/trader/discovery/DiscoveryAdapterRegistry": {
+      "branch": 6,
+      "line": 7
+    },
+    "com/yusufculcu/trader/discovery/DiscoverySourceConfig": {
+      "line": 9
+    },
+    "com/yusufculcu/trader/discovery/DuckDuckGoHtmlSearch": {
+      "line": 5
+    },
+    "com/yusufculcu/trader/discovery/DuckDuckGoHtmlSearch$Companion": {
+      "branch": 46,
+      "line": 48
+    },
+    "com/yusufculcu/trader/discovery/FeedSourceException": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/discovery/PublicSearchResult": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/CapabilityAssessment": {
+      "line": 9
+    },
+    "com/yusufculcu/trader/domain/CapabilityAvailability": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/domain/CapabilityCostContract": {
+      "line": 4
+    },
+    "com/yusufculcu/trader/domain/CapabilityCostKind": {
+      "line": 2
+    },
+    "com/yusufculcu/trader/domain/CapabilityDataType": {
+      "line": 2
+    },
+    "com/yusufculcu/trader/domain/CapabilityDescriptor": {
+      "line": 18
+    },
+    "com/yusufculcu/trader/domain/CapabilityEffect": {
+      "line": 2
+    },
+    "com/yusufculcu/trader/domain/CapabilityField": {
+      "line": 6
+    },
+    "com/yusufculcu/trader/domain/CapabilityIoContract": {
+      "line": 5
+    },
+    "com/yusufculcu/trader/domain/CapabilityLimitMode": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/domain/CapabilityLimits": {
+      "line": 9
+    },
+    "com/yusufculcu/trader/domain/CapabilityPostcondition": {
+      "line": 5
+    },
+    "com/yusufculcu/trader/domain/CapabilityRegistry": {
+      "branch": 74,
+      "line": 464
+    },
+    "com/yusufculcu/trader/domain/CapabilityRegistryKt": {
+      "line": 14
+    },
+    "com/yusufculcu/trader/domain/CapabilityValidationResult": {
+      "line": 3
+    },
+    "com/yusufculcu/trader/domain/ContextPacketBuilder": {
+      "branch": 25,
+      "line": 50
+    },
+    "com/yusufculcu/trader/domain/DiscoveryQuery": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/DiscoveryStrategy": {
+      "line": 12
+    },
+    "com/yusufculcu/trader/domain/DiscoveryStrategyRules": {
+      "branch": 66,
+      "line": 41
+    },
+    "com/yusufculcu/trader/domain/DiscoveryTarget": {
+      "line": 8
+    },
+    "com/yusufculcu/trader/domain/OpportunityLane": {
+      "line": 4
+    },
+    "com/yusufculcu/trader/domain/OpportunityRules": {
+      "branch": 4,
+      "line": 3
+    },
+    "com/yusufculcu/trader/domain/OpportunityStage": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/PostconditionVerification": {
+      "line": 2
+    },
+    "com/yusufculcu/trader/domain/ProblemRules": {
+      "branch": 16,
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/ProblemSignature": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/ProblemStatus": {
+      "line": 2
+    },
+    "com/yusufculcu/trader/domain/ProofAsset": {
+      "line": 11
+    },
+    "com/yusufculcu/trader/domain/ProofAssetKind": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/domain/ProofClaim": {
+      "line": 7
+    },
+    "com/yusufculcu/trader/domain/ProofClaimStatus": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/domain/RetryPolicy": {
+      "line": 1
+    },
+    "com/yusufculcu/trader/domain/SharedBrowserCapture": {
+      "line": 5
+    },
+    "com/yusufculcu/trader/domain/SharedBrowserCaptureParser": {
+      "branch": 29,
+      "line": 26
+    },
+    "com/yusufculcu/trader/domain/WorkflowRules": {
+      "branch": 75,
+      "line": 48
+    },
+    "com/yusufculcu/trader/domain/WorkflowRunStatus": {
+      "line": 10
+    },
+    "com/yusufculcu/trader/domain/WorkflowStepStatus": {
+      "line": 8
+    },
+    "com/yusufculcu/trader/ui/TraderBrowserRouting": {
+      "branch": 22,
+      "line": 15
     }
   }
 }
