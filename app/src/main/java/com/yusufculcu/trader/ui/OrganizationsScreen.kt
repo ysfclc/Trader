@@ -197,6 +197,7 @@ private fun OrganizationDossierScreen(
     val people by repository.observePeople(organizationId).collectAsState(initial = emptyList())
     val buyerRepository = remember(repository) { repository.buyerRequirementRepository() }
     val buyerRequirements by buyerRepository.observeForOrganization(organizationId).collectAsState(initial = emptyList())
+    val productRepository = remember(repository) { repository.productCatalogRepository() }
     val scope = rememberCoroutineScope()
     var showEditDialog by remember { mutableStateOf(false) }
     var showSourceDialog by remember { mutableStateOf(false) }
@@ -287,6 +288,12 @@ private fun OrganizationDossierScreen(
                 }
             }
         }
+
+        ProductCatalogSection(
+            organizationId = organizationId,
+            repository = productRepository,
+            sources = sources
+        )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.buyer_requirements), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))

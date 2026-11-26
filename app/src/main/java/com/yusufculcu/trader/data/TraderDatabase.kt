@@ -681,9 +681,11 @@ interface SourceRunDao {
         SupplierOfferLineItemEntity::class,
         SupplierOfferEvidenceEntity::class,
         SourcingReviewEntity::class,
+        ProductEntity::class,
+        ProductEvidenceEntity::class,
         BusinessActivityEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -711,6 +713,8 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun supplierOfferLineItemDao(): SupplierOfferLineItemDao
     abstract fun supplierOfferEvidenceDao(): SupplierOfferEvidenceDao
     abstract fun sourcingReviewDao(): SourcingReviewDao
+    abstract fun productDao(): ProductDao
+    abstract fun productEvidenceDao(): ProductEvidenceDao
     abstract fun businessActivityDao(): BusinessActivityDao
 }
 

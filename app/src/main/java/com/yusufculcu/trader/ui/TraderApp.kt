@@ -1006,6 +1006,7 @@ private fun businessEntityLabel(type: String): Int = when (type) {
     "BUYER_REQUIREMENT" -> R.string.business_entity_buyer_requirement
     "SUPPLIER_OFFER" -> R.string.business_entity_supplier_offer
     "SOURCING_REVIEW" -> R.string.business_entity_sourcing_review
+    "PRODUCT" -> R.string.business_entity_product
     else -> R.string.business_entity_record
 }
 

@@ -54,6 +54,7 @@ data class OrganizationClaimDraft(
  */
 class OrganizationRepository(private val database: TraderDatabase) {
     fun buyerRequirementRepository(): BuyerRequirementRepository = BuyerRequirementRepository(database)
+    fun productCatalogRepository(): ProductCatalogRepository = ProductCatalogRepository(database)
 
     fun observeOrganizations(): Flow<List<OrganizationEntity>> = database.organizationDao().observeAll()
     fun observeOrganization(id: String): Flow<OrganizationEntity?> = database.organizationDao().observeById(id)
@@ -259,8 +260,9 @@ class OrganizationRepository(private val database: TraderDatabase) {
         val organization = database.organizationDao().getById(id) ?: return@withTransaction false
         val hasBuyerRequirements = database.buyerRequirementDao().getAll().any { it.organizationId == id }
         val hasSupplierOffers = database.supplierOfferDao().getAll().any { it.organizationId == id }
-        require(!hasBuyerRequirements && !hasSupplierOffers) {
-            "Cannot delete this company dossier while it has buyer requirements or supplier offers; this prevents cascading loss of recoverable sourcing records."
+        val hasProducts = database.productDao().getAll().any { it.organizationId == id }
+        require(!hasBuyerRequirements && !hasSupplierOffers && !hasProducts) {
+            "Cannot delete this company dossier while it has buyer requirements, supplier offers or product catalogue records; this prevents cascading loss of recoverable commercial data."
         }
         val now = System.currentTimeMillis()
         database.appendBusinessActivity(
