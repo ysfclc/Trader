@@ -65,7 +65,9 @@ class TraderBackupManager(
                     supplierOfferItems = database.supplierOfferLineItemDao().getAll(),
                     supplierOfferEvidence = database.supplierOfferEvidenceDao().getAll(),
                     sourcingReviews = database.sourcingReviewDao().getAll(),
-                    businessActivityEvents = database.businessActivityDao().getAll()
+                    businessActivityEvents = database.businessActivityDao().getAll(),
+                    products = database.productDao().getAll(),
+                    productEvidence = database.productEvidenceDao().getAll()
                 )
             }
             val cleartext = encodeSnapshot(snapshot).toByteArray(StandardCharsets.UTF_8)
@@ -133,6 +135,8 @@ class TraderBackupManager(
                         database.workflowEventDao().deleteAll()
                         database.sourcingReviewDao().deleteAll()
                         database.businessActivityDao().deleteAll()
+                        database.productEvidenceDao().deleteAll()
+                        database.productDao().deleteAll()
                         database.supplierOfferEvidenceDao().deleteAll()
                         database.supplierOfferLineItemDao().deleteAll()
                         database.supplierOfferDao().deleteAll()
@@ -171,6 +175,8 @@ class TraderBackupManager(
                         database.discoveryDocumentDao().insertAll(snapshot.discoveryDocuments)
                         database.organizationDao().insertAll(snapshot.organizations)
                         database.organizationSourceDao().insertAll(snapshot.organizationSources)
+                        database.productDao().insertAll(snapshot.products)
+                        database.productEvidenceDao().insertAll(snapshot.productEvidence)
                         database.organizationClaimDao().insertAll(snapshot.organizationClaims)
                         database.organizationPersonDao().insertAll(snapshot.organizationPeople)
                         database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)
@@ -261,6 +267,8 @@ class TraderBackupManager(
             .put("supplierOfferEvidence", jsonArray(snapshot.supplierOfferEvidence, ::encodeSupplierOfferEvidence))
             .put("sourcingReviews", jsonArray(snapshot.sourcingReviews, ::encodeSourcingReview))
             .put("businessActivityEvents", jsonArray(snapshot.businessActivityEvents, ::encodeBusinessActivity))
+            .put("products", jsonArray(snapshot.products, ::encodeProduct))
+            .put("productEvidence", jsonArray(snapshot.productEvidence, ::encodeProductEvidence))
         return root.toString()
     }
 
@@ -304,14 +312,16 @@ class TraderBackupManager(
             supplierOfferItems = if (backupSchemaVersion >= 11) { require(root.has("supplierOfferItems")) { "Backup is missing supplier offer line items." }; decodeArray(root, "supplierOfferItems", ::decodeSupplierOfferItem) } else emptyList(),
             supplierOfferEvidence = if (backupSchemaVersion >= 11) { require(root.has("supplierOfferEvidence")) { "Backup is missing supplier offer evidence links." }; decodeArray(root, "supplierOfferEvidence", ::decodeSupplierOfferEvidence) } else emptyList(),
             sourcingReviews = if (backupSchemaVersion >= 11) { require(root.has("sourcingReviews")) { "Backup is missing sourcing review decisions." }; decodeArray(root, "sourcingReviews", ::decodeSourcingReview) } else emptyList(),
-            businessActivityEvents = if (backupSchemaVersion >= 12) { require(root.has("businessActivityEvents")) { "Backup is missing business activity history." }; decodeArray(root, "businessActivityEvents", ::decodeBusinessActivity) } else emptyList()
+            businessActivityEvents = if (backupSchemaVersion >= 12) { require(root.has("businessActivityEvents")) { "Backup is missing business activity history." }; decodeArray(root, "businessActivityEvents", ::decodeBusinessActivity) } else emptyList(),
+            products = if (backupSchemaVersion >= 14) { require(root.has("products")) { "Backup is missing product catalogue records." }; decodeArray(root, "products", ::decodeProduct) } else emptyList(),
+            productEvidence = if (backupSchemaVersion >= 14) { require(root.has("productEvidence")) { "Backup is missing product evidence links." }; decodeArray(root, "productEvidence", ::decodeProductEvidence) } else emptyList()
         )
     }
 
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size + snapshot.products.size + snapshot.productEvidence.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
         fun unique(values: List<String>, label: String) {
@@ -348,6 +358,10 @@ class TraderBackupManager(
         unique(snapshot.supplierOfferEvidence.map { it.offerId + "|" + it.sourceId }, "supplier offer evidence pair")
         unique(snapshot.sourcingReviews.map { it.id }, "sourcing review")
         unique(snapshot.businessActivityEvents.map { it.id }, "business activity event")
+        unique(snapshot.products.map { it.id }, "product")
+        unique(snapshot.products.mapNotNull { row -> row.skuKey?.let { row.organizationId + "|" + it } }, "company product SKU")
+        unique(snapshot.productEvidence.map { it.id }, "product evidence link")
+        unique(snapshot.productEvidence.map { it.productId + "|" + it.sourceId }, "product evidence pair")
         unique(snapshot.sourcingReviews.map { it.buyerRequirementId + "|" + it.supplierOfferId }, "sourcing review pair")
         require(snapshot.supplierOffers.all { it.organizationId in snapshot.organizations.map(OrganizationEntity::id) }) { "Supplier offer references a missing company." }
         require(snapshot.supplierOfferItems.all { it.offerId in snapshot.supplierOffers.map(SupplierOfferEntity::id) }) { "Supplier offer item references a missing offer." }
@@ -414,6 +428,26 @@ class TraderBackupManager(
                 it.title.isNotBlank() && it.title.length <= 300 && it.url.startsWith("https://") &&
                 it.url.length <= 2_048 && !it.url.contains("@") && it.excerpt.length <= 8_000 && it.capturedAt >= 0
         }) { "Backup contains an invalid organization source." }
+        val productsById = snapshot.products.associateBy { it.id }
+        require(snapshot.products.all { row ->
+            val skuValid = if (row.skuCode == null) row.skuKey == null else
+                row.skuCode.isNotBlank() && row.skuCode == row.skuCode.trim() && row.skuCode.length <= 80 &&
+                    row.skuKey == row.skuCode.uppercase(java.util.Locale.ROOT)
+            row.id.isNotBlank() && row.organizationId in organizationIds && skuValid &&
+                (row.skuKey == null || row.skuKey.length <= 80) &&
+                row.name.isNotBlank() && row.name.length <= 200 &&
+                (row.description == null || row.description.length <= 4_000) &&
+                (row.specification == null || row.specification.length <= 2_000) &&
+                (row.material == null || row.material.length <= 120) &&
+                (row.unit == null || row.unit.length <= 40) &&
+                row.status in ProductStatus.ALL && row.createdAt >= 0 && row.updatedAt >= row.createdAt
+        }) { "Backup contains an invalid product catalogue record." }
+        require(snapshot.productEvidence.all { link ->
+            val product = productsById[link.productId]
+            val source = organizationSources[link.sourceId]
+            link.id.isNotBlank() && product != null && source != null &&
+                product.organizationId == source.organizationId && link.linkedAt >= 0
+        }) { "Backup contains a product evidence link with a missing or cross-company relationship." }
         require(snapshot.organizationClaims.all {
             val source = organizationSources[it.sourceId]
             it.id.isNotBlank() && it.organizationId in organizationIds && source != null &&
@@ -651,6 +685,28 @@ class TraderBackupManager(
     private fun encodeSourcingReview(row: SourcingReviewEntity) = json("id" to row.id, "buyerRequirementId" to row.buyerRequirementId, "supplierOfferId" to row.supplierOfferId, "status" to row.status, "rationale" to row.rationale, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
     private fun decodeSourcingReview(o: JSONObject) = SourcingReviewEntity(o.getString("id"), o.getString("buyerRequirementId"), o.getString("supplierOfferId"), o.getString("status"), o.stringOrNull("rationale"), o.getLong("createdAt"), o.getLong("updatedAt"))
 
+    private fun encodeProduct(row: ProductEntity) = json(
+        "id" to row.id, "organizationId" to row.organizationId, "skuCode" to row.skuCode,
+        "skuKey" to row.skuKey, "name" to row.name, "description" to row.description,
+        "specification" to row.specification, "material" to row.material, "unit" to row.unit,
+        "status" to row.status, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+    )
+    private fun decodeProduct(o: JSONObject) = ProductEntity(
+        id = o.getString("id"), organizationId = o.getString("organizationId"),
+        skuCode = o.stringOrNull("skuCode"), skuKey = o.stringOrNull("skuKey"),
+        name = o.getString("name"), description = o.stringOrNull("description"),
+        specification = o.stringOrNull("specification"), material = o.stringOrNull("material"),
+        unit = o.stringOrNull("unit"), status = o.getString("status"),
+        createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
+    )
+    private fun encodeProductEvidence(row: ProductEvidenceEntity) = json(
+        "id" to row.id, "productId" to row.productId, "sourceId" to row.sourceId, "linkedAt" to row.linkedAt
+    )
+    private fun decodeProductEvidence(o: JSONObject) = ProductEvidenceEntity(
+        id = o.getString("id"), productId = o.getString("productId"),
+        sourceId = o.getString("sourceId"), linkedAt = o.getLong("linkedAt")
+    )
+
     private fun encodeBusinessActivity(row: BusinessActivityEntity) = json(
         "id" to row.id, "organizationId" to row.organizationId, "organizationName" to row.organizationName,
         "entityType" to row.entityType, "entityId" to row.entityId, "entityLabel" to row.entityLabel,
@@ -746,13 +802,15 @@ class TraderBackupManager(
         val supplierOfferItems: List<SupplierOfferLineItemEntity> = emptyList(),
         val supplierOfferEvidence: List<SupplierOfferEvidenceEntity> = emptyList(),
         val sourcingReviews: List<SourcingReviewEntity> = emptyList(),
-        val businessActivityEvents: List<BusinessActivityEntity> = emptyList()
+        val businessActivityEvents: List<BusinessActivityEntity> = emptyList(),
+        val products: List<ProductEntity> = emptyList(),
+        val productEvidence: List<ProductEvidenceEntity> = emptyList()
     )
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 10
-        private const val DATABASE_SCHEMA_VERSION = 13
+        private const val SNAPSHOT_VERSION = 11
+        private const val DATABASE_SCHEMA_VERSION = 14
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)
