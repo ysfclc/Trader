@@ -40,7 +40,7 @@ class SourcingOpenCompaniesButtonTest {
             }
         }
 
-        composeRule.onNodeWithText("Open Companies").performClick()
+        composeRule.onNodeWithTag("sourcing-open-companies").performClick()
         composeRule.runOnIdle { assertTrue(clicked) }
     }
 }
