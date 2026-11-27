@@ -11,7 +11,6 @@ internal enum class PipelineWorkspaceAction {
 }
 
 internal fun reducePipelineWorkspaceSection(
-    current: PipelineWorkspaceSection,
     action: PipelineWorkspaceAction
 ): PipelineWorkspaceSection = when (action) {
     PipelineWorkspaceAction.OPEN_OPPORTUNITIES -> PipelineWorkspaceSection.OPPORTUNITIES
