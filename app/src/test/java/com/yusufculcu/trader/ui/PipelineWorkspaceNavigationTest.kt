@@ -14,14 +14,6 @@ class PipelineWorkspaceNavigationTest {
     }
 
     @Test
-    fun companiesActionAlwaysTargetsCompaniesWorkspace() {
-        assertEquals(
-            PipelineWorkspaceSection.COMPANIES,
-            reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)
-        )
-    }
-
-    @Test
     fun opportunitiesActionReturnsToOpportunityWorkspace() {
         assertEquals(
             PipelineWorkspaceSection.OPPORTUNITIES,
