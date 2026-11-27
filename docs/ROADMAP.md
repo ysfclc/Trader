@@ -31,7 +31,8 @@ Current Inbox, Pipeline, Sourcing, Activity, Browser and AI surfaces are capabil
 
 **Release status:** installable candidate; physical-device acceptance still open.
 
-- **Build:** `0.14.0-debug`, versionCode 14
+- **Latest released build:** `0.14.0-debug`, versionCode 14
+- **Next candidate (pending PR #23 CI/merge):** `0.14.1-debug`, versionCode 15; deliberately increments versionCode so it can update the existing install without uninstalling
 - **Package:** `com.yusufculcu.trader.debug`
 - **Canonical main commit:** `94c241d8971d624857295069635baee12c2ea436`
 - **Approved main CI:** [run #626](https://github.com/ysfclc/Trader/actions/runs/46041691925)
