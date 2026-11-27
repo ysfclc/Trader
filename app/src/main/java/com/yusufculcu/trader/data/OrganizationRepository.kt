@@ -280,6 +280,44 @@ class OrganizationRepository(private val database: TraderDatabase) {
         )
         claim
     }
+    suspend fun updateClaim(claimId: String, draft: OrganizationClaimDraft): OrganizationClaimEntity = database.withTransaction {
+        val existing = database.organizationClaimDao().getById(claimId)
+            ?: throw IllegalArgumentException("Company claim no longer exists.")
+        val organization = database.organizationDao().getById(existing.organizationId)
+            ?: throw IllegalArgumentException("Company dossier no longer exists.")
+        val source = database.organizationSourceDao().getById(draft.sourceId)
+            ?: throw IllegalArgumentException("Select a saved source for this claim.")
+        require(source.organizationId == existing.organizationId) {
+            "A claim can only use a source attached to the same company dossier."
+        }
+        val field = cleanRequired(draft.field, 80, "Claim field")
+        val statement = cleanRequired(draft.statement, 2_000, "Claim statement")
+        if (existing.sourceId == source.id && existing.field == field && existing.statement == statement) {
+            return@withTransaction existing
+        }
+
+        val now = System.currentTimeMillis()
+        val updated = existing.copy(
+            sourceId = source.id,
+            field = field,
+            statement = statement,
+            reviewState = OrganizationClaimState.UNREVIEWED,
+            reviewNote = null,
+            reviewedAt = null,
+            updatedAt = now
+        )
+        database.organizationClaimDao().update(updated)
+        database.organizationDao().touch(existing.organizationId, now)
+        database.appendBusinessActivity(
+            existing.organizationId, organization.canonicalName, BusinessActivityEntityType.CLAIM, existing.id,
+            updated.field, BusinessActivityAction.UPDATED, "Company claim corrected",
+            fromStatus = existing.reviewState, toStatus = OrganizationClaimState.UNREVIEWED,
+            details = "Claim content or source association was corrected; the previous review was cleared and must be repeated.",
+            occurredAt = now
+        )
+        updated
+    }
+
     suspend fun reviewClaim(claimId: String, state: String, note: String = ""): Boolean = database.withTransaction {
         require(state in OrganizationClaimState.ALL) { "Unsupported claim review state." }
         require(note.length <= 1_000) { "Review note is too long." }
