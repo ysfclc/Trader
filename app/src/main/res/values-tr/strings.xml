@@ -574,4 +574,19 @@
     <string name="company_duplicate_same_email">Aynı normalize edilmiş e-posta adresi</string>
     <string name="company_duplicate_same_profile">Aynı LinkedIn profil bağlantısı</string>
     <string name="company_duplicate_same_name_role">Aynı ad ve rol (zayıf sinyal)</string>
+    <string name="company_add_alias">Takma ad ekle</string>
+    <string name="company_alias_type">Takma ad türü</string>
+    <string name="company_alias_value">Takma ad değeri</string>
+    <string name="company_alias_source">Kaynak</string>
+    <string name="company_alias_manual">Kullanıcı girişi (kaynak yok)</string>
+    <string name="company_alias_remove">Kaldır</string>
+    <string name="company_identity_unreviewed">İncelenmedi</string>
+    <string name="company_identity_same">Aynı kişi olarak onaylandı</string>
+    <string name="company_identity_distinct">Farklı kişiler olarak onaylandı</string>
+    <string name="company_identity_reopened">İnceleme yeniden açıldı</string>
+    <string name="company_identity_status">Karar: %1$s</string>
+    <string name="company_identity_mark_same">Aynı kişi</string>
+    <string name="company_identity_mark_distinct">Farklı kişiler</string>
+    <string name="company_identity_reopen">Yeniden aç</string>
+    <string name="company_identity_history">Kimlik inceleme geçmişi</string>
 </resources>
