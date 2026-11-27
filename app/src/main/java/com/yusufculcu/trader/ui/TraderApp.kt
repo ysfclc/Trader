@@ -200,7 +200,7 @@ fun TraderApp(
                 runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
                 strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
-                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; pipelineSection = reducePipelineWorkspaceSection(pipelineSection, PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
+                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; pipelineSection = reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
