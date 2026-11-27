@@ -1,5 +1,5 @@
 # State Ledger
-_Last updated: 2026-11-27 — Trader 0.14.1-debug candidate on canonical main at `684e9cd`; post-merge CI #669 passed all gates; manual artifact publication and physical-device acceptance remain open_
+_Last updated: 2026-11-27 — Trader 0.14.1-debug candidate on canonical main at `0abfdba`; post-merge CI #687 is running; manual artifact publication and physical-device acceptance remain open_
 
 ## Product snapshot
 Trader is an independent Android-first, local-first, free-first problem-solving and opportunity-execution system. The product loop is capture → understand outcome/constraints → gather evidence/context → discover options/resources/people → plan → execute bounded actions with permission/approval → verify outcomes → retain learning. It is not a trading-only app and must not force every problem into a lead. Trade, services and careers are initial specialist workflows, not product boundaries. Canonical scope: `docs/PROJECT_LOCK.md`; architecture, data, operating rules, product experience, source ecosystem and local AI designs remain authoritative.
