@@ -162,7 +162,7 @@ fun SourcingDeskScreen(
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sourcing_no_requests), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.sourcing_create_request_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Button(onClick = onOpenCompanies) { Text(stringResource(R.string.sourcing_open_companies)) }
+                    SourcingOpenCompaniesButton(onClick = onOpenCompanies, primary = true)
                 }
             }
         } else {
@@ -203,7 +203,7 @@ fun SourcingDeskScreen(
             }
             if (offers.isEmpty()) {
                 Text(stringResource(R.string.sourcing_no_offers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onClick = onOpenCompanies) { Text(stringResource(R.string.sourcing_open_companies)) }
+                SourcingOpenCompaniesButton(onClick = onOpenCompanies, primary = false)
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -824,4 +824,18 @@ private fun SourcingReviewDialog(
         confirmButton = { Button(onClick = { onSave(status, rationale) }) { Text(stringResource(R.string.company_save)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
     )
+}
+
+
+@Composable
+internal fun SourcingOpenCompaniesButton(
+    onClick: () -> Unit,
+    primary: Boolean
+) {
+    val label = stringResource(R.string.sourcing_open_companies)
+    if (primary) {
+        Button(onClick = onClick) { Text(label) }
+    } else {
+        TextButton(onClick = onClick) { Text(label) }
+    }
 }
