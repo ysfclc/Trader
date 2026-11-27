@@ -31,7 +31,8 @@ Current Inbox, Pipeline, Sourcing, Activity, Browser and AI surfaces are capabil
 
 **Release status:** installable candidate; physical-device acceptance still open.
 
-- **Build:** `0.14.0-debug`, versionCode 14
+- **Latest released build:** `0.14.0-debug`, versionCode 14
+- **Next candidate (pending PR #23 CI/merge):** `0.14.1-debug`, versionCode 15; deliberately increments versionCode so it can update the existing install without uninstalling
 - **Package:** `com.yusufculcu.trader.debug`
 - **Canonical main commit:** `94c241d8971d624857295069635baee12c2ea436`
 - **Approved main CI:** [run #626](https://github.com/ysfclc/Trader/actions/runs/46041691925)
@@ -64,7 +65,7 @@ Target device: Redmi Note 12 Pro 5G, Android 14.
 6. Export and restore encrypted snapshot v13 in a controlled test workspace. Never overwrite the only copy of real data. Confirm companies, people, source claims, products, requirements, offers, fit assessments, aliases and reviewer history survive.
 7. Record every crash, broken control, data loss, incorrect status, confusing screen and manual workaround. Fix the actual defects and repeat the affected tests before adding features.
 
-**Known navigation defect found in the source audit:** the Sourcing empty-state `Open Companies` action currently switches to Pipeline, while Pipeline initializes on Opportunities. The next code increment must route that action directly to Companies and add a regression UI test; the current 0.14.0 APK contains this defect. The user can reach Companies manually via Pipeline → Companies, but this workaround is not acceptance.
+**Known navigation defect and current fix:** the released `0.14.0-debug` main baseline sends Sourcing's `Open Companies` action to Pipeline → Opportunities. A fix is now implemented on `fix/sourcing-open-companies-route`: the Pipeline section is owned by the parent workspace, and Sourcing plus discovery entry use one explicit destination reducer. Reducer tests are added; full CI, merge and a new installable APK are still pending. The 0.14.0 artifact remains affected.
 
 **Exit gate:** the operator can complete and repeat that journey on the target phone without crashes, data loss, misleading status or workarounds, and can recover the workspace from the encrypted backup. Until then, this phase remains open.
 

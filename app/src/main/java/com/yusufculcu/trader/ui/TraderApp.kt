@@ -89,6 +89,7 @@ fun TraderApp(
     val businessEvents by viewModel.businessActivity.collectAsState()
     val opportunities by viewModel.opportunities.collectAsState()
     var tab by rememberSaveable { mutableStateOf(AppTab.DISCOVER) }
+    var pipelineSection by rememberSaveable { mutableStateOf(PipelineWorkspaceSection.OPPORTUNITIES) }
     var requestedBrowserUrl by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDiscoveryDocument by remember { mutableStateOf<DiscoveryDocument?>(null) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -199,7 +200,7 @@ fun TraderApp(
                 runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
                 strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
-                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; tab = AppTab.PIPELINE },
+                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; pipelineSection = reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
@@ -216,7 +217,7 @@ fun TraderApp(
                 buyerRepository = (context.applicationContext as TraderApplication).buyerRequirementRepository,
                 supplierRepository = (context.applicationContext as TraderApplication).supplierOfferRepository,
                 organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
-                onOpenCompanies = { tab = AppTab.PIPELINE },
+                onOpenCompanies = { pipelineSection = reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.PIPELINE -> PipelineWorkspaceContent(
@@ -227,6 +228,8 @@ fun TraderApp(
                 fitAssessmentRepository = (context.applicationContext as TraderApplication).fitAssessmentRepository,
                 incomingDocument = pendingDiscoveryDocument,
                 onIncomingDocumentHandled = { pendingDiscoveryDocument = null },
+                section = pipelineSection,
+                onSectionChange = { pipelineSection = it },
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
                 modifier = Modifier.padding(padding)
             )
@@ -558,12 +561,13 @@ private fun PipelineWorkspaceContent(
     fitAssessmentRepository: FitAssessmentRepository,
     incomingDocument: DiscoveryDocument?,
     onIncomingDocumentHandled: () -> Unit,
+    section: PipelineWorkspaceSection,
+    onSectionChange: (PipelineWorkspaceSection) -> Unit,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showCompanies by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(incomingDocument?.id, incomingDocument?.url) {
-        if (incomingDocument != null) showCompanies = true
+        if (incomingDocument != null) onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES))
     }
     Column(modifier.fillMaxSize()) {
         Row(
@@ -571,17 +575,17 @@ private fun PipelineWorkspaceContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilterChip(
-                selected = !showCompanies,
-                onClick = { showCompanies = false },
+                selected = section == PipelineWorkspaceSection.OPPORTUNITIES,
+                onClick = { onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_OPPORTUNITIES)) },
                 label = { Text(stringResource(R.string.pipeline_opportunities)) }
             )
             FilterChip(
-                selected = showCompanies,
-                onClick = { showCompanies = true },
+                selected = section == PipelineWorkspaceSection.COMPANIES,
+                onClick = { onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)) },
                 label = { Text(stringResource(R.string.companies_nav)) }
             )
         }
-        if (showCompanies) {
+        if (section == PipelineWorkspaceSection.COMPANIES) {
             OrganizationsScreen(
                 repository = organizationRepository,
                 strategyRepository = strategyRepository,
