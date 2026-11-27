@@ -200,7 +200,7 @@ fun TraderApp(
                 runRepository = (context.applicationContext as TraderApplication).discoveryRunRepository,
                 strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
-                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; pipelineSection = PipelineWorkspaceSection.COMPANIES; tab = AppTab.PIPELINE },
+                onCreateOrganizationFromDiscovery = { document -> pendingDiscoveryDocument = document; pipelineSection = reducePipelineWorkspaceSection(pipelineSection, PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.BROWSER -> TraderBrowserScreen(
@@ -552,11 +552,6 @@ private fun InboxContent(
 
 
 
-private enum class PipelineWorkspaceSection {
-    OPPORTUNITIES,
-    COMPANIES
-}
-
 @Composable
 private fun PipelineWorkspaceContent(
     opportunities: List<OpportunityListItem>,
@@ -572,7 +567,7 @@ private fun PipelineWorkspaceContent(
     modifier: Modifier = Modifier
 ) {
     LaunchedEffect(incomingDocument?.id, incomingDocument?.url) {
-        if (incomingDocument != null) onSectionChange(PipelineWorkspaceSection.COMPANIES)
+        if (incomingDocument != null) onSectionChange(reducePipelineWorkspaceSection(section, PipelineWorkspaceAction.OPEN_COMPANIES))
     }
     Column(modifier.fillMaxSize()) {
         Row(
@@ -581,7 +576,7 @@ private fun PipelineWorkspaceContent(
         ) {
             FilterChip(
                 selected = section == PipelineWorkspaceSection.OPPORTUNITIES,
-                onClick = { onSectionChange(PipelineWorkspaceSection.OPPORTUNITIES) },
+                onClick = { onSectionChange(reducePipelineWorkspaceSection(section, PipelineWorkspaceAction.OPEN_OPPORTUNITIES)) },
                 label = { Text(stringResource(R.string.pipeline_opportunities)) }
             )
             FilterChip(
