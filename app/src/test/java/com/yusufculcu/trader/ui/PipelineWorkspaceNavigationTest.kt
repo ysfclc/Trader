@@ -6,32 +6,26 @@ import org.junit.Test
 class PipelineWorkspaceNavigationTest {
 
     @Test
-    fun openingCompaniesFromSourcingSelectsCompaniesWorkspace() {
-        val section = reducePipelineWorkspaceSection(
-            current = PipelineWorkspaceSection.OPPORTUNITIES,
-            action = PipelineWorkspaceAction.OPEN_COMPANIES
+    fun sourcingOpenCompaniesActionSelectsCompaniesWorkspace() {
+        assertEquals(
+            PipelineWorkspaceSection.COMPANIES,
+            reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)
         )
-
-        assertEquals(PipelineWorkspaceSection.COMPANIES, section)
     }
 
     @Test
-    fun openingCompaniesFromOpportunitiesDoesNotDependOnPreviousSelection() {
-        val section = reducePipelineWorkspaceSection(
-            current = PipelineWorkspaceSection.OPPORTUNITIES,
-            action = PipelineWorkspaceAction.OPEN_COMPANIES
+    fun companiesActionAlwaysTargetsCompaniesWorkspace() {
+        assertEquals(
+            PipelineWorkspaceSection.COMPANIES,
+            reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)
         )
-
-        assertEquals(PipelineWorkspaceSection.COMPANIES, section)
     }
 
     @Test
-    fun selectingOpportunitiesReturnsToOpportunityWorkspace() {
-        val section = reducePipelineWorkspaceSection(
-            current = PipelineWorkspaceSection.COMPANIES,
-            action = PipelineWorkspaceAction.OPEN_OPPORTUNITIES
+    fun opportunitiesActionReturnsToOpportunityWorkspace() {
+        assertEquals(
+            PipelineWorkspaceSection.OPPORTUNITIES,
+            reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_OPPORTUNITIES)
         )
-
-        assertEquals(PipelineWorkspaceSection.OPPORTUNITIES, section)
     }
 }
