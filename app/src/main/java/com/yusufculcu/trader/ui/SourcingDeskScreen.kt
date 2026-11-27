@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -162,7 +163,7 @@ fun SourcingDeskScreen(
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sourcing_no_requests), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(stringResource(R.string.sourcing_create_request_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Button(onClick = onOpenCompanies) { Text(stringResource(R.string.sourcing_open_companies)) }
+                    SourcingOpenCompaniesButton(onClick = onOpenCompanies, primary = true)
                 }
             }
         } else {
@@ -203,7 +204,7 @@ fun SourcingDeskScreen(
             }
             if (offers.isEmpty()) {
                 Text(stringResource(R.string.sourcing_no_offers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                TextButton(onClick = onOpenCompanies) { Text(stringResource(R.string.sourcing_open_companies)) }
+                SourcingOpenCompaniesButton(onClick = onOpenCompanies, primary = false)
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -824,4 +825,20 @@ private fun SourcingReviewDialog(
         confirmButton = { Button(onClick = { onSave(status, rationale) }) { Text(stringResource(R.string.company_save)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } }
     )
+}
+
+
+@Composable
+internal fun SourcingOpenCompaniesButton(
+    onClick: () -> Unit,
+    primary: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val label = stringResource(R.string.sourcing_open_companies)
+    val taggedModifier = modifier.testTag("sourcing-open-companies")
+    if (primary) {
+        Button(onClick = onClick, modifier = taggedModifier) { Text(label) }
+    } else {
+        TextButton(onClick = onClick, modifier = taggedModifier) { Text(label) }
+    }
 }
