@@ -64,6 +64,8 @@ Target device: Redmi Note 12 Pro 5G, Android 14.
 6. Export and restore encrypted snapshot v13 in a controlled test workspace. Never overwrite the only copy of real data. Confirm companies, people, source claims, products, requirements, offers, fit assessments, aliases and reviewer history survive.
 7. Record every crash, broken control, data loss, incorrect status, confusing screen and manual workaround. Fix the actual defects and repeat the affected tests before adding features.
 
+**Known navigation defect found in the source audit:** the Sourcing empty-state `Open Companies` action currently switches to Pipeline, while Pipeline initializes on Opportunities. The next code increment must route that action directly to Companies and add a regression UI test; the current 0.14.0 APK contains this defect. The user can reach Companies manually via Pipeline → Companies, but this workaround is not acceptance.
+
 **Exit gate:** the operator can complete and repeat that journey on the target phone without crashes, data loss, misleading status or workarounds, and can recover the workspace from the encrypted backup. Until then, this phase remains open.
 
 ## 5. Product workstreams after device acceptance
