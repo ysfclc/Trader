@@ -523,6 +523,31 @@ data class OrganizationClaimEntity(
 @Entity(tableName = "organization_people", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)], indices = [Index(value = ["organizationId"]), Index(value = ["email"])])
 data class OrganizationPersonEntity(@PrimaryKey val id: String, val organizationId: String, val fullName: String, val role: String?, val email: String?, val phone: String?, val profileUrl: String?, val notes: String?, val createdAt: Long, val updatedAt: Long)
 
+@Entity(tableName = "organization_person_aliases", foreignKeys = [ForeignKey(entity = OrganizationPersonEntity::class, parentColumns = ["id"], childColumns = ["personId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = OrganizationSourceEntity::class, parentColumns = ["id"], childColumns = ["sourceId"], onDelete = ForeignKey.SET_NULL)], indices = [Index(value = ["personId"]), Index(value = ["organizationId"]), Index(value = ["sourceId"]), Index(value = ["personId", "aliasType", "normalizedValue"], unique = true)])
+data class OrganizationPersonAliasEntity(@PrimaryKey val id: String, val personId: String, val organizationId: String, val aliasType: String, val value: String, val normalizedValue: String, val sourceId: String?, val provenanceKind: String, val note: String?, val createdAt: Long)
+
+@Entity(tableName = "organization_person_identity_decisions", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = OrganizationPersonEntity::class, parentColumns = ["id"], childColumns = ["firstPersonId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = OrganizationPersonEntity::class, parentColumns = ["id"], childColumns = ["secondPersonId"], onDelete = ForeignKey.CASCADE), ForeignKey(entity = OrganizationSourceEntity::class, parentColumns = ["id"], childColumns = ["sourceId"], onDelete = ForeignKey.SET_NULL)], indices = [Index(value = ["organizationId"]), Index(value = ["firstPersonId"]), Index(value = ["secondPersonId"]), Index(value = ["sourceId"]), Index(value = ["organizationId", "firstPersonId", "secondPersonId", "reviewedAt"])])
+data class OrganizationPersonIdentityDecisionEntity(@PrimaryKey val id: String, val organizationId: String, val firstPersonId: String, val secondPersonId: String, val decision: String, val rationale: String?, val sourceId: String?, val reviewedAt: Long)
+
+@Dao
+interface OrganizationPersonAliasDao {
+ @Query("SELECT * FROM organization_person_aliases WHERE organizationId = :organizationId ORDER BY createdAt ASC, id ASC") fun observeForOrganization(organizationId: String): Flow<List<OrganizationPersonAliasEntity>>
+ @Query("SELECT * FROM organization_person_aliases") suspend fun getAll(): List<OrganizationPersonAliasEntity>
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insert(alias: OrganizationPersonAliasEntity)
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(items: List<OrganizationPersonAliasEntity>)
+ @Query("DELETE FROM organization_person_aliases WHERE id = :id") suspend fun deleteById(id: String): Int
+ @Query("DELETE FROM organization_person_aliases") suspend fun deleteAll()
+}
+
+@Dao
+interface OrganizationPersonIdentityDecisionDao {
+ @Query("SELECT * FROM organization_person_identity_decisions WHERE organizationId = :organizationId ORDER BY reviewedAt ASC, id ASC") fun observeForOrganization(organizationId: String): Flow<List<OrganizationPersonIdentityDecisionEntity>>
+ @Query("SELECT * FROM organization_person_identity_decisions") suspend fun getAll(): List<OrganizationPersonIdentityDecisionEntity>
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun append(decision: OrganizationPersonIdentityDecisionEntity)
+ @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertAll(items: List<OrganizationPersonIdentityDecisionEntity>)
+ @Query("DELETE FROM organization_person_identity_decisions") suspend fun deleteAll()
+}
+
 @Dao
 interface OrganizationPersonDao {
  @Query("SELECT * FROM organization_people WHERE organizationId = :organizationId ORDER BY fullName COLLATE NOCASE ASC, createdAt ASC") fun observeForOrganization(organizationId: String): Flow<List<OrganizationPersonEntity>>
@@ -809,6 +834,8 @@ interface FitAssessmentOverrideDao {
         OrganizationSourceEntity::class,
         OrganizationClaimEntity::class,
         OrganizationPersonEntity::class,
+        OrganizationPersonAliasEntity::class,
+        OrganizationPersonIdentityDecisionEntity::class,
         BuyerRequirementEntity::class,
         BuyerRequirementLineItemEntity::class,
         BuyerRequirementEvidenceEntity::class,
@@ -823,7 +850,7 @@ interface FitAssessmentOverrideDao {
         FitAssessmentEvidenceEntity::class,
         FitAssessmentOverrideEntity::class
     ],
-    version = 16,
+    version = 17,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -844,6 +871,8 @@ abstract class TraderDatabase : RoomDatabase() {
     abstract fun organizationSourceDao(): OrganizationSourceDao
     abstract fun organizationClaimDao(): OrganizationClaimDao
     abstract fun organizationPersonDao(): OrganizationPersonDao
+    abstract fun organizationPersonAliasDao(): OrganizationPersonAliasDao
+    abstract fun organizationPersonIdentityDecisionDao(): OrganizationPersonIdentityDecisionDao
     abstract fun buyerRequirementDao(): BuyerRequirementDao
     abstract fun buyerRequirementLineItemDao(): BuyerRequirementLineItemDao
     abstract fun buyerRequirementEvidenceDao(): BuyerRequirementEvidenceDao
@@ -1165,5 +1194,22 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
 val MIGRATION_15_16 = object : Migration(15, 16) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE fit_assessments ADD COLUMN computedSnapshotJson TEXT")
+    }
+}
+
+/** Adds explicit contact aliases and append-only identity review decisions; no contacts are merged. */
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""CREATE TABLE IF NOT EXISTS organization_person_aliases (id TEXT NOT NULL, personId TEXT NOT NULL, organizationId TEXT NOT NULL, aliasType TEXT NOT NULL, value TEXT NOT NULL, normalizedValue TEXT NOT NULL, sourceId TEXT, provenanceKind TEXT NOT NULL, note TEXT, createdAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(personId) REFERENCES organization_people(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(sourceId) REFERENCES organization_sources(id) ON UPDATE NO ACTION ON DELETE SET NULL)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_aliases_personId ON organization_person_aliases (personId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_aliases_organizationId ON organization_person_aliases (organizationId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_aliases_sourceId ON organization_person_aliases (sourceId)")
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_organization_person_aliases_personId_aliasType_normalizedValue ON organization_person_aliases (personId, aliasType, normalizedValue)")
+        db.execSQL("""CREATE TABLE IF NOT EXISTS organization_person_identity_decisions (id TEXT NOT NULL, organizationId TEXT NOT NULL, firstPersonId TEXT NOT NULL, secondPersonId TEXT NOT NULL, decision TEXT NOT NULL, rationale TEXT, sourceId TEXT, reviewedAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(organizationId) REFERENCES organizations(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(firstPersonId) REFERENCES organization_people(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(secondPersonId) REFERENCES organization_people(id) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(sourceId) REFERENCES organization_sources(id) ON UPDATE NO ACTION ON DELETE SET NULL)""")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_organizationId ON organization_person_identity_decisions (organizationId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_firstPersonId ON organization_person_identity_decisions (firstPersonId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_secondPersonId ON organization_person_identity_decisions (secondPersonId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_sourceId ON organization_person_identity_decisions (sourceId)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_organizationId_firstPersonId_secondPersonId_reviewedAt ON organization_person_identity_decisions (organizationId, firstPersonId, secondPersonId, reviewedAt)")
     }
 }

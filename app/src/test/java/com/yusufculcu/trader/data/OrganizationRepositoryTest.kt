@@ -6,6 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -94,6 +96,49 @@ class OrganizationRepositoryTest {
         var invalidProfile = false
         try { repository.addPerson(company.id, OrganizationPersonDraft("Bad", profileUrl = "https://example.com/person")) } catch (_: IllegalArgumentException) { invalidProfile = true }
         assertTrue(invalidProfile)
+    }
+
+    @Test
+    fun aliasesAndIdentityDecisionsPersistWithProvenanceAndReversibleHistory() = runBlocking {
+        val company = repository.createOrganization(OrganizationDraft("Identity Works"))
+        val source = repository.addSource(company.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Team page", "https://identity.example/team", "", 10))
+        val first = repository.addPerson(company.id, OrganizationPersonDraft("Ada Example"))
+        val second = repository.addPerson(company.id, OrganizationPersonDraft("Ada E."))
+        val alias = repository.addPersonAlias(first.id, OrganizationPersonAliasDraft(PersonAliasType.EMAIL, " ADA@EXAMPLE.COM ", source.id))
+        assertEquals("ada@example.com", alias.normalizedValue)
+        assertEquals(PersonAliasProvenance.SOURCE_LINKED, alias.provenanceKind)
+        repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.SAME_PERSON, "Confirmed from company team page", source.id)
+        repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.REOPENED, "New evidence needed")
+        val decisions = repository.observeIdentityDecisions(company.id).first()
+        assertEquals(listOf(PersonIdentityDecisionKind.SAME_PERSON, PersonIdentityDecisionKind.REOPENED), decisions.map { it.decision })
+        assertEquals(1, repository.observePersonAliases(company.id).first().size)
+        val other = repository.createOrganization(OrganizationDraft("Other Works"))
+        val otherSource = repository.addSource(other.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Other", "https://other.example", "", 11))
+        var crossCompanyAliasRejected = false
+        try { repository.addPersonAlias(first.id, OrganizationPersonAliasDraft(PersonAliasType.NAME, "A. Example", otherSource.id)) } catch (_: IllegalArgumentException) { crossCompanyAliasRejected = true }
+        assertTrue(crossCompanyAliasRejected)
+        var crossCompanyDecisionRejected = false
+        val otherPerson = repository.addPerson(other.id, OrganizationPersonDraft("Ada Example"))
+        try { repository.reviewPersonIdentity(first.id, otherPerson.id, PersonIdentityDecisionKind.SAME_PERSON) } catch (_: IllegalArgumentException) { crossCompanyDecisionRejected = true }
+        assertTrue(crossCompanyDecisionRejected)
+    }
+
+    @Test
+    fun aliasesAndAppendOnlyIdentityHistorySurviveEncryptedBackupRestore() = runBlocking {
+        val company = repository.createOrganization(OrganizationDraft("Backup Identity"))
+        val source = repository.addSource(company.id, OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Source", "https://backup-identity.example", "", 10))
+        val first = repository.addPerson(company.id, OrganizationPersonDraft("Ada Example"))
+        val second = repository.addPerson(company.id, OrganizationPersonDraft("A. Example"))
+        repository.addPersonAlias(first.id, OrganizationPersonAliasDraft(PersonAliasType.NAME, "Ada E.", source.id))
+        repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.SAME_PERSON, "Reviewed", source.id)
+        val output = ByteArrayOutputStream()
+        TraderBackupManager(database).exportEncrypted(output, "long-enough-test-passphrase".toCharArray())
+        val restored = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            TraderBackupManager(restored).restoreEncrypted(ByteArrayInputStream(output.toByteArray()), "long-enough-test-passphrase".toCharArray())
+            assertEquals(1, restored.organizationPersonAliasDao().getAll().size)
+            assertEquals(PersonIdentityDecisionKind.SAME_PERSON, restored.organizationPersonIdentityDecisionDao().getAll().single().decision)
+        } finally { restored.close() }
     }
 
     @Test

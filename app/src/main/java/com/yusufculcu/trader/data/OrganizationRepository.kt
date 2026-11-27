@@ -23,6 +23,10 @@ object OrganizationClaimState {
 }
 
 data class OrganizationPersonDraft(val fullName: String, val role: String = "", val email: String = "", val phone: String = "", val profileUrl: String = "", val notes: String = "")
+data class OrganizationPersonAliasDraft(val aliasType: String, val value: String, val sourceId: String? = null, val note: String = "")
+object PersonAliasType { const val NAME = "NAME"; const val EMAIL = "EMAIL"; const val PROFILE_URL = "PROFILE_URL"; const val OTHER = "OTHER"; val ALL = setOf(NAME, EMAIL, PROFILE_URL, OTHER) }
+object PersonAliasProvenance { const val OPERATOR_ENTERED = "OPERATOR_ENTERED"; const val SOURCE_LINKED = "SOURCE_LINKED"; val ALL = setOf(OPERATOR_ENTERED, SOURCE_LINKED) }
+object PersonIdentityDecisionKind { const val SAME_PERSON = "SAME_PERSON"; const val DISTINCT_PEOPLE = "DISTINCT_PEOPLE"; const val REOPENED = "REOPENED"; val ALL = setOf(SAME_PERSON, DISTINCT_PEOPLE, REOPENED) }
 
 data class OrganizationDraft(
     val canonicalName: String,
@@ -63,6 +67,52 @@ class OrganizationRepository(private val database: TraderDatabase) {
     fun observeClaims(organizationId: String): Flow<List<OrganizationClaimEntity>> =
         database.organizationClaimDao().observeForOrganization(organizationId)
     fun observePeople(organizationId: String): Flow<List<OrganizationPersonEntity>> = database.organizationPersonDao().observeForOrganization(organizationId)
+    fun observePersonAliases(organizationId: String): Flow<List<OrganizationPersonAliasEntity>> = database.organizationPersonAliasDao().observeForOrganization(organizationId)
+    fun observeIdentityDecisions(organizationId: String): Flow<List<OrganizationPersonIdentityDecisionEntity>> = database.organizationPersonIdentityDecisionDao().observeForOrganization(organizationId)
+    suspend fun addPersonAlias(personId: String, draft: OrganizationPersonAliasDraft): OrganizationPersonAliasEntity = database.withTransaction {
+        val person = database.organizationPersonDao().getById(personId) ?: throw IllegalArgumentException("Contact no longer exists.")
+        require(draft.aliasType in PersonAliasType.ALL) { "Unsupported alias type." }
+        val value = cleanRequired(draft.value, 512, "Alias")
+        val normalized = when (draft.aliasType) {
+            PersonAliasType.NAME -> normalizeAliasText(value)
+            PersonAliasType.EMAIL -> value.lowercase(Locale.ROOT).also { require(Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(it)) { "Alias email is invalid." } }
+            PersonAliasType.PROFILE_URL -> normalizeAliasProfile(value)
+            else -> normalizeAliasText(value)
+        }
+        val source = draft.sourceId?.let { database.organizationSourceDao().getById(it) ?: throw IllegalArgumentException("Alias source does not exist.") }
+        require(source == null || source.organizationId == person.organizationId) { "An alias can only use a source attached to the same company dossier." }
+        val now = System.currentTimeMillis()
+        val alias = OrganizationPersonAliasEntity(UUID.randomUUID().toString(), person.id, person.organizationId, draft.aliasType, value, normalized, source?.id, if (source == null) PersonAliasProvenance.OPERATOR_ENTERED else PersonAliasProvenance.SOURCE_LINKED, cleanOptional(draft.note, 1000, "Alias note"), now)
+        database.organizationPersonAliasDao().insert(alias)
+        database.organizationDao().touch(person.organizationId, now)
+        alias
+    }
+    suspend fun deletePersonAlias(aliasId: String): Boolean = database.withTransaction { database.organizationPersonAliasDao().deleteById(aliasId) > 0 }
+    suspend fun reviewPersonIdentity(firstPersonId: String, secondPersonId: String, decision: String, rationale: String = "", sourceId: String? = null): OrganizationPersonIdentityDecisionEntity = database.withTransaction {
+        require(decision in PersonIdentityDecisionKind.ALL) { "Unsupported identity review decision." }
+        require(firstPersonId != secondPersonId) { "Choose two different contacts." }
+        require(rationale.length <= 1000) { "Identity review note is too long." }
+        val first = database.organizationPersonDao().getById(firstPersonId) ?: throw IllegalArgumentException("First contact no longer exists.")
+        val second = database.organizationPersonDao().getById(secondPersonId) ?: throw IllegalArgumentException("Second contact no longer exists.")
+        require(first.organizationId == second.organizationId) { "Contacts must belong to the same company." }
+        val source = sourceId?.let { database.organizationSourceDao().getById(it) ?: throw IllegalArgumentException("Review source does not exist.") }
+        require(source == null || source.organizationId == first.organizationId) { "Identity review evidence must belong to the same company." }
+        val latestReviewedAt = database.organizationPersonIdentityDecisionDao().getAll().asSequence().filter { it.organizationId == first.organizationId }.maxOfOrNull { it.reviewedAt } ?: -1L
+        val now = maxOf(System.currentTimeMillis(), latestReviewedAt + 1L)
+        val row = OrganizationPersonIdentityDecisionEntity(UUID.randomUUID().toString(), first.organizationId, minOf(first.id, second.id), maxOf(first.id, second.id), decision, rationale.trim().ifBlank { null }, source?.id, now)
+        database.organizationPersonIdentityDecisionDao().append(row)
+        database.organizationDao().touch(first.organizationId, now)
+        row
+    }
+    private fun normalizeAliasText(value: String): String = java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFKC).lowercase(Locale.ROOT).replace(Regex("\\s+"), " ").trim()
+    private fun normalizeAliasProfile(value: String): String {
+        val uri = runCatching { URI(value.trim()) }.getOrElse { throw IllegalArgumentException("Alias profile URL is invalid.") }
+        val host = uri.host?.lowercase(Locale.ROOT)?.removePrefix("www.") ?: throw IllegalArgumentException("Alias profile URL is invalid.")
+        require(host == "linkedin.com" || host.endsWith(".linkedin.com")) { "Profile alias must point to linkedin.com." }
+        val path = uri.path.orEmpty().trimEnd('/').lowercase(Locale.ROOT)
+        require(uri.scheme.equals("https", true) && path.isNotBlank() && uri.userInfo == null) { "Alias profile URL must be a public HTTPS LinkedIn profile." }
+        return "https://$host$path"
+    }
     suspend fun addPerson(organizationId: String, draft: OrganizationPersonDraft): OrganizationPersonEntity = database.withTransaction {
         val organization = database.organizationDao().getById(organizationId)
             ?: throw IllegalArgumentException("Company dossier does not exist.")

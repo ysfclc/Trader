@@ -5,10 +5,25 @@ import com.yusufculcu.trader.domain.DiscoveryStrategy
 import com.yusufculcu.trader.domain.DiscoveryStrategyRules
 import com.yusufculcu.trader.domain.ProofAsset
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /** Validates provenance and persists editable proof assets and discovery intent atomically. */
 class DiscoveryStrategyRepository(private val database: TraderDatabase) {
     fun observeProofAssets(): Flow<List<ProofAssetEntity>> = database.proofAssetDao().observeAll()
+
+    /** Decodes saved, user-owned proof assets for dossier matching without changing their provenance. */
+    fun observeProofAssetModels(): Flow<List<ProofAsset>> =
+        database.proofAssetDao().observeAll().map { rows ->
+            rows.map { row ->
+                val asset = DiscoveryStrategyCodec.decodeAsset(row.payloadJson)
+                require(asset.id == row.id && asset.schemaVersion == row.schemaVersion &&
+                    asset.kind.name == row.kind && asset.createdAt == row.createdAt &&
+                    asset.updatedAt == row.updatedAt) {
+                    "Proof asset metadata does not match its saved payload."
+                }
+                asset
+            }
+        }
 
     fun observeStrategies(): Flow<List<DiscoveryStrategyEntity>> = database.discoveryStrategyDao().observeAll()
 

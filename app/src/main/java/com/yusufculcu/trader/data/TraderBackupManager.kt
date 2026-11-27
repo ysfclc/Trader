@@ -58,6 +58,8 @@ class TraderBackupManager(
                     organizationSources = database.organizationSourceDao().getAll(),
                     organizationClaims = database.organizationClaimDao().getAll(),
                     organizationPeople = database.organizationPersonDao().getAll(),
+                    organizationPersonAliases = database.organizationPersonAliasDao().getAll(),
+                    organizationPersonIdentityDecisions = database.organizationPersonIdentityDecisionDao().getAll(),
                     buyerRequirements = database.buyerRequirementDao().getAll(),
                     buyerRequirementItems = database.buyerRequirementLineItemDao().getAll(),
                     buyerRequirementEvidence = database.buyerRequirementEvidenceDao().getAll(),
@@ -148,6 +150,8 @@ class TraderBackupManager(
                         database.buyerRequirementEvidenceDao().deleteAll()
                         database.buyerRequirementLineItemDao().deleteAll()
                         database.buyerRequirementDao().deleteAll()
+                        database.organizationPersonAliasDao().deleteAll()
+                        database.organizationPersonIdentityDecisionDao().deleteAll()
                         database.organizationPersonDao().deleteAll()
                         database.organizationClaimDao().deleteAll()
                         database.organizationSourceDao().deleteAll()
@@ -187,6 +191,8 @@ class TraderBackupManager(
                         database.fitAssessmentEvidenceDao().insertAll(snapshot.fitAssessmentEvidence)
                         database.fitAssessmentOverrideDao().insertAll(snapshot.fitAssessmentOverrides)
                         database.organizationPersonDao().insertAll(snapshot.organizationPeople)
+                        database.organizationPersonAliasDao().insertAll(snapshot.organizationPersonAliases)
+                        database.organizationPersonIdentityDecisionDao().insertAll(snapshot.organizationPersonIdentityDecisions)
                         database.buyerRequirementDao().insertAll(snapshot.buyerRequirements)
                         database.buyerRequirementLineItemDao().insertAll(snapshot.buyerRequirementItems)
                         database.buyerRequirementEvidenceDao().insertAll(snapshot.buyerRequirementEvidence)
@@ -267,6 +273,8 @@ class TraderBackupManager(
             .put("organizationSources", jsonArray(snapshot.organizationSources, ::encodeOrganizationSource))
             .put("organizationClaims", jsonArray(snapshot.organizationClaims, ::encodeOrganizationClaim))
             .put("organizationPeople", jsonArray(snapshot.organizationPeople, ::encodeOrganizationPerson))
+            .put("organizationPersonAliases", jsonArray(snapshot.organizationPersonAliases, ::encodeOrganizationPersonAlias))
+            .put("organizationPersonIdentityDecisions", jsonArray(snapshot.organizationPersonIdentityDecisions, ::encodeOrganizationPersonIdentityDecision))
             .put("buyerRequirements", jsonArray(snapshot.buyerRequirements, ::encodeBuyerRequirement))
             .put("buyerRequirementItems", jsonArray(snapshot.buyerRequirementItems, ::encodeBuyerRequirementItem))
             .put("buyerRequirementEvidence", jsonArray(snapshot.buyerRequirementEvidence, ::encodeBuyerRequirementEvidence))
@@ -316,6 +324,8 @@ class TraderBackupManager(
             organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
             organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList(),
             organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList(),
+            organizationPersonAliases = if (backupSchemaVersion >= 17) { require(root.has("organizationPersonAliases")) { "Backup is missing contact aliases." }; decodeArray(root, "organizationPersonAliases", ::decodeOrganizationPersonAlias) } else emptyList(),
+            organizationPersonIdentityDecisions = if (backupSchemaVersion >= 17) { require(root.has("organizationPersonIdentityDecisions")) { "Backup is missing identity review history." }; decodeArray(root, "organizationPersonIdentityDecisions", ::decodeOrganizationPersonIdentityDecision) } else emptyList(),
             buyerRequirements = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirements")) { "Backup is missing buyer requirements." }; decodeArray(root, "buyerRequirements", ::decodeBuyerRequirement) } else emptyList(),
             buyerRequirementItems = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementItems")) { "Backup is missing buyer requirement line items." }; decodeArray(root, "buyerRequirementItems", ::decodeBuyerRequirementItem) } else emptyList(),
             buyerRequirementEvidence = if (backupSchemaVersion >= 10) { require(root.has("buyerRequirementEvidence")) { "Backup is missing buyer requirement evidence links." }; decodeArray(root, "buyerRequirementEvidence", ::decodeBuyerRequirementEvidence) } else emptyList(),
@@ -337,7 +347,7 @@ class TraderBackupManager(
     private fun validateSnapshot(snapshot: BackupSnapshot) {
         val rowCount = snapshot.problems.size.toLong() + snapshot.planSteps.size +
             snapshot.activityEvents.size + snapshot.evidence.size + snapshot.opportunities.size + snapshot.workflowRuns.size +
-            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size + snapshot.products.size + snapshot.productEvidence.size + snapshot.fitAssessments.size +
+            snapshot.workflowSteps.size + snapshot.workflowEvents.size + snapshot.discoverySources.size + snapshot.proofAssets.size + snapshot.discoveryStrategies.size + snapshot.discoveryRuns.size + snapshot.sourceRuns.size + snapshot.discoveryDocuments.size + snapshot.organizations.size + snapshot.organizationSources.size + snapshot.organizationClaims.size + snapshot.organizationPeople.size + snapshot.organizationPersonAliases.size + snapshot.organizationPersonIdentityDecisions.size + snapshot.buyerRequirements.size + snapshot.buyerRequirementItems.size + snapshot.buyerRequirementEvidence.size + snapshot.supplierOffers.size + snapshot.supplierOfferItems.size + snapshot.supplierOfferEvidence.size + snapshot.sourcingReviews.size + snapshot.businessActivityEvents.size + snapshot.products.size + snapshot.productEvidence.size + snapshot.fitAssessments.size +
             snapshot.fitAssessmentEvidence.size + snapshot.fitAssessmentOverrides.size
         require(rowCount <= MAX_ROWS) { "Backup contains more records than this version supports." }
 
@@ -365,6 +375,9 @@ class TraderBackupManager(
         unique(snapshot.organizationSources.map { it.organizationId + "|" + it.url }, "organization source URL")
         unique(snapshot.organizationClaims.map { it.id }, "organization claim")
         unique(snapshot.organizationPeople.map { it.id }, "organization person")
+        unique(snapshot.organizationPersonAliases.map { it.id }, "organization person alias")
+        unique(snapshot.organizationPersonAliases.map { it.personId + "|" + it.aliasType + "|" + it.normalizedValue }, "person alias")
+        unique(snapshot.organizationPersonIdentityDecisions.map { it.id }, "person identity decision")
         unique(snapshot.buyerRequirements.map { it.id }, "buyer requirement")
         unique(snapshot.buyerRequirementItems.map { it.id }, "buyer requirement line item")
         unique(snapshot.buyerRequirementEvidence.map { it.id }, "buyer requirement evidence link")
@@ -431,6 +444,15 @@ class TraderBackupManager(
         require(snapshot.discoveryDocuments.all { it.id.isNotBlank() && it.discoveryRunId in discoveryRuns && it.sourceId.isNotBlank() && it.sourceId.length <= 128 && it.sourceName.isNotBlank() && it.sourceName.length <= 200 && it.nativeId.length <= 4096 && it.title.length <= 300 && it.url.startsWith("https://") && it.url.length <= 2048 && it.summary.length <= 4000 && it.retrievedAt >= 0 && (it.publishedAt == null || it.publishedAt >= 0) }) { "Backup contains an invalid discovery document." }
         val organizationIds = snapshot.organizations.map { it.id }.toSet()
         val organizationSources = snapshot.organizationSources.associateBy { it.id }
+        val peopleById = snapshot.organizationPeople.associateBy { it.id }
+        require(snapshot.organizationPersonAliases.all { alias ->
+            val person = peopleById[alias.personId]
+            alias.id.isNotBlank() && person != null && alias.organizationId in organizationIds && person.organizationId == alias.organizationId && alias.aliasType in PersonAliasType.ALL && alias.value.isNotBlank() && alias.value.length <= 512 && alias.normalizedValue.isNotBlank() && alias.normalizedValue.length <= 512 && alias.provenanceKind in PersonAliasProvenance.ALL && ((alias.provenanceKind == PersonAliasProvenance.OPERATOR_ENTERED && alias.sourceId == null) || (alias.provenanceKind == PersonAliasProvenance.SOURCE_LINKED && (alias.sourceId == null || organizationSources[alias.sourceId]?.organizationId == alias.organizationId))) && (alias.note == null || alias.note.length <= 1000) && alias.createdAt >= 0
+        }) { "Backup contains an invalid contact alias or provenance relationship." }
+        require(snapshot.organizationPersonIdentityDecisions.all { decision ->
+            val first = peopleById[decision.firstPersonId]; val second = peopleById[decision.secondPersonId]
+            decision.id.isNotBlank() && decision.organizationId in organizationIds && first != null && second != null && first.organizationId == decision.organizationId && second.organizationId == decision.organizationId && decision.firstPersonId < decision.secondPersonId && decision.firstPersonId != decision.secondPersonId && decision.decision in PersonIdentityDecisionKind.ALL && (decision.rationale == null || decision.rationale.length <= 1000) && (decision.sourceId == null || organizationSources[decision.sourceId]?.organizationId == decision.organizationId) && decision.reviewedAt >= 0
+        }) { "Backup contains invalid contact identity review history." }
         require(snapshot.organizationPeople.all { person ->
             person.id.isNotBlank() && person.organizationId in organizationIds && person.fullName.isNotBlank() && person.fullName.length <= 160 &&
                 (person.role == null || person.role.length <= 160) && (person.email == null || (person.email.length <= 254 && Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(person.email))) &&
@@ -860,6 +882,10 @@ class TraderBackupManager(
 
     private fun encodeOrganizationPerson(row: OrganizationPersonEntity) = json("id" to row.id, "organizationId" to row.organizationId, "fullName" to row.fullName, "role" to row.role, "email" to row.email, "phone" to row.phone, "profileUrl" to row.profileUrl, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt)
     private fun decodeOrganizationPerson(o: JSONObject) = OrganizationPersonEntity(o.getString("id"), o.getString("organizationId"), o.getString("fullName"), o.stringOrNull("role"), o.stringOrNull("email"), o.stringOrNull("phone"), o.stringOrNull("profileUrl"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"))
+    private fun encodeOrganizationPersonAlias(row: OrganizationPersonAliasEntity) = json("id" to row.id, "personId" to row.personId, "organizationId" to row.organizationId, "aliasType" to row.aliasType, "value" to row.value, "normalizedValue" to row.normalizedValue, "sourceId" to row.sourceId, "provenanceKind" to row.provenanceKind, "note" to row.note, "createdAt" to row.createdAt)
+    private fun decodeOrganizationPersonAlias(o: JSONObject) = OrganizationPersonAliasEntity(o.getString("id"), o.getString("personId"), o.getString("organizationId"), o.getString("aliasType"), o.getString("value"), o.getString("normalizedValue"), o.stringOrNull("sourceId"), o.getString("provenanceKind"), o.stringOrNull("note"), o.getLong("createdAt"))
+    private fun encodeOrganizationPersonIdentityDecision(row: OrganizationPersonIdentityDecisionEntity) = json("id" to row.id, "organizationId" to row.organizationId, "firstPersonId" to row.firstPersonId, "secondPersonId" to row.secondPersonId, "decision" to row.decision, "rationale" to row.rationale, "sourceId" to row.sourceId, "reviewedAt" to row.reviewedAt)
+    private fun decodeOrganizationPersonIdentityDecision(o: JSONObject) = OrganizationPersonIdentityDecisionEntity(o.getString("id"), o.getString("organizationId"), o.getString("firstPersonId"), o.getString("secondPersonId"), o.getString("decision"), o.stringOrNull("rationale"), o.stringOrNull("sourceId"), o.getLong("reviewedAt"))
 
     private fun encodeSourceRun(row: SourceRunEntity) = json(
         "id" to row.id, "discoveryRunId" to row.discoveryRunId, "sourceId" to row.sourceId, "adapterId" to row.adapterId,
@@ -923,6 +949,8 @@ class TraderBackupManager(
         val organizationSources: List<OrganizationSourceEntity> = emptyList(),
         val organizationClaims: List<OrganizationClaimEntity> = emptyList(),
         val organizationPeople: List<OrganizationPersonEntity> = emptyList(),
+        val organizationPersonAliases: List<OrganizationPersonAliasEntity> = emptyList(),
+        val organizationPersonIdentityDecisions: List<OrganizationPersonIdentityDecisionEntity> = emptyList(),
         val buyerRequirements: List<BuyerRequirementEntity> = emptyList(),
         val buyerRequirementItems: List<BuyerRequirementLineItemEntity> = emptyList(),
         val buyerRequirementEvidence: List<BuyerRequirementEvidenceEntity> = emptyList(),
@@ -940,8 +968,8 @@ class TraderBackupManager(
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 12
-        private const val DATABASE_SCHEMA_VERSION = 16
+        private const val SNAPSHOT_VERSION = 13
+        private const val DATABASE_SCHEMA_VERSION = 17
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)

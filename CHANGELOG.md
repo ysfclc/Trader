@@ -12,7 +12,7 @@
 - Advanced Room schema v15→v16 with nullable computed snapshot storage and added encrypted backup snapshot v11→v12 for assessments, evidence links and reviewer history. Restore uses foreign-key-safe ordering; legacy snapshots v1–v11 remain readable.
 - Added repository, same-timestamp override, full v1→v16 migration and encrypted backup round-trip tests.
 - Final-head CI run [45892674806](https://github.com/ysfclc/Trader/actions/runs/45892674806) (#601) passed **191 Android tests, 0 failures, 0 errors, 0 skipped**, the 67-class historical coverage floor, clean build, lint, SBOM/OSV and persistent package/signature checks.
-- Draft PR [#21](https://github.com/ysfclc/Trader/pull/21) is open. The company-dossier EN/PL/TR UI and physical-device acceptance are not included. The push-triggered run did not publish an installable APK.
+- PR [#21](https://github.com/ysfclc/Trader/pull/21) was merged into main as [885e597](https://github.com/ysfclc/Trader/commit/885e5978ec658f3232c822258aaaabaf650244ff). Main CI [#609](https://github.com/ysfclc/Trader/actions/runs/45894762068) passed the full build, tests, coverage, lint, SBOM/OSV and persistent package/signature checks. Push-triggered CI did not publish an installable APK; explicit manual approval remains required.
 
 ## 2026-11-26 — T4.9 Room persistence schema and migration (CI-verified)
 
@@ -288,3 +288,12 @@ Project history is recorded as dated milestones. Detailed current status belongs
 - Included public RSS/Atom source configurations, enabled state and last-check/error health in encrypted backups; provider credentials, browser cookies and signing material are excluded.
 - Kept legacy snapshot-v1 backups readable (source list defaults to empty). Restore validates source identity/adapter/HTTPS URL and replaces the full list; preference changes are compensated if the Room restore transaction fails.
 - Added a source-settings round-trip test and wired the app's actual DiscoverySourceStore into export/restore. CI verification pending.
+
+
+## 2026-11-27 — T4.9a company-dossier fit-assessment UI candidate
+
+- Added ProofAsset selection from the saved local proof catalogue and explicit company-claim ↔ proof-claim mapping. The picker only offers source-supported company claims; proof claim verification status remains visible.
+- Mapping relationships are operator-declared as SUPPORTS, CONTRADICTS or UNKNOWN. Supporting/contradicting relationships require a written rationale. Similar wording is never treated as evidence.
+- The dossier displays deterministic per-proof-claim support, contradiction, conflict and unknown components, links findings back to their source pages, and warns when the company dossier or proof asset changed after evaluation.
+- Reviewer decisions remain separate from the computed result. The UI displays the append-only decision history and marks only the currently effective override; a later recomputation leaves prior decisions visible as historical.
+- Candidate build identity: \`com.yusufculcu.trader.debug\`, \`0.14.0-debug\`, versionCode 14. Room schema v16 and encrypted backup snapshot v12 are unchanged. CI verification is pending; no installable APK or physical-device acceptance is claimed.

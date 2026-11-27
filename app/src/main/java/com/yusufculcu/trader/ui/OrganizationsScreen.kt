@@ -52,8 +52,13 @@ import com.yusufculcu.trader.data.OrganizationClaimState
 import com.yusufculcu.trader.data.OrganizationDraft
 import com.yusufculcu.trader.data.OrganizationEntity
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.data.FitAssessmentRepository
 import com.yusufculcu.trader.data.OrganizationPersonDraft
 import com.yusufculcu.trader.data.OrganizationPersonEntity
+import com.yusufculcu.trader.data.OrganizationPersonAliasDraft
+import com.yusufculcu.trader.data.PersonAliasType
+import com.yusufculcu.trader.data.PersonIdentityDecisionKind
 import com.yusufculcu.trader.data.BuyerRequirementRepository
 import com.yusufculcu.trader.data.BuyerRequirementDraft
 import com.yusufculcu.trader.data.BuyerRequirementLineItemDraft
@@ -64,11 +69,15 @@ import com.yusufculcu.trader.data.OrganizationSourceDraft
 import com.yusufculcu.trader.data.OrganizationSourceEntity
 import com.yusufculcu.trader.data.OrganizationSourceKind
 import com.yusufculcu.trader.discovery.DiscoveryDocument
+import com.yusufculcu.trader.domain.PersonIdentityCandidates
+import com.yusufculcu.trader.domain.PersonIdentitySignal
 import kotlinx.coroutines.launch
 
 @Composable
 fun OrganizationsScreen(
     repository: OrganizationRepository,
+    strategyRepository: DiscoveryStrategyRepository,
+    fitAssessmentRepository: FitAssessmentRepository,
     incomingDocument: DiscoveryDocument? = null,
     onIncomingDocumentHandled: () -> Unit = {},
     onOpenSource: (String) -> Unit,
@@ -91,6 +100,8 @@ fun OrganizationsScreen(
         OrganizationDossierScreen(
             organizationId = selectedOrganizationId!!,
             repository = repository,
+            strategyRepository = strategyRepository,
+            fitAssessmentRepository = fitAssessmentRepository,
             onBack = { selectedOrganizationId = null },
             onOpenSource = onOpenSource,
             modifier = modifier
@@ -187,6 +198,8 @@ fun OrganizationsScreen(
 private fun OrganizationDossierScreen(
     organizationId: String,
     repository: OrganizationRepository,
+    strategyRepository: DiscoveryStrategyRepository,
+    fitAssessmentRepository: FitAssessmentRepository,
     onBack: () -> Unit,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -195,6 +208,11 @@ private fun OrganizationDossierScreen(
     val sources by repository.observeSources(organizationId).collectAsState(initial = emptyList())
     val claims by repository.observeClaims(organizationId).collectAsState(initial = emptyList())
     val people by repository.observePeople(organizationId).collectAsState(initial = emptyList())
+    val aliases by repository.observePersonAliases(organizationId).collectAsState(initial = emptyList())
+    val identityDecisions by repository.observeIdentityDecisions(organizationId).collectAsState(initial = emptyList())
+    val aliasesByPerson = remember(aliases) { aliases.groupBy { it.personId } }
+    val identityCandidates = remember(people) { PersonIdentityCandidates.find(people) }
+    val latestIdentityDecisions = remember(identityDecisions) { identityDecisions.associateBy { it.firstPersonId + "|" + it.secondPersonId } }
     val buyerRepository = remember(repository) { repository.buyerRequirementRepository() }
     val buyerRequirements by buyerRepository.observeForOrganization(organizationId).collectAsState(initial = emptyList())
     val productRepository = remember(repository) { repository.productCatalogRepository() }
@@ -209,6 +227,7 @@ private fun OrganizationDossierScreen(
     var editingRequirement by remember { mutableStateOf<BuyerRequirementEntity?>(null) }
     var editingLineItem by remember { mutableStateOf<BuyerRequirementLineItemEntity?>(null) }
     var editingPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
+    var aliasPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
     var claimSource by remember { mutableStateOf<OrganizationSourceEntity?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
@@ -284,7 +303,71 @@ private fun OrganizationDossierScreen(
                     person.phone?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                     person.profileUrl?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary) }
                     person.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    TextButton(onClick = { editingPerson = person; showPersonDialog = true }) { Text(stringResource(R.string.company_edit_contact)) }
+                    aliasesByPerson[person.id].orEmpty().forEach { alias ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("${alias.aliasType}: ${alias.value}", modifier = Modifier.weight(1f), style = MaterialTheme.typography.labelSmall)
+                            TextButton(onClick = { scope.launch { repository.deletePersonAlias(alias.id) } }) { Text(stringResource(R.string.company_alias_remove)) }
+                        }
+                    }
+                    Row {
+                        TextButton(onClick = { editingPerson = person; showPersonDialog = true }) { Text(stringResource(R.string.company_edit_contact)) }
+                        TextButton(onClick = { aliasPerson = person }) { Text(stringResource(R.string.company_add_alias)) }
+                    }
+                }
+            }
+        }
+
+        if (identityCandidates.isNotEmpty()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Text(stringResource(R.string.company_possible_duplicates), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.company_duplicate_review_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    identityCandidates.forEach { candidate ->
+                        val first = people.firstOrNull { it.id == candidate.firstPersonId }
+                        val second = people.firstOrNull { it.id == candidate.secondPersonId }
+                        if (first != null && second != null) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(stringResource(R.string.company_duplicate_pair, first.fullName, second.fullName), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                candidate.signals.forEach { signal ->
+                                    val label = when (signal) {
+                                        PersonIdentitySignal.SAME_EMAIL -> R.string.company_duplicate_same_email
+                                        PersonIdentitySignal.SAME_PROFILE -> R.string.company_duplicate_same_profile
+                                        PersonIdentitySignal.SAME_NAME_AND_ROLE -> R.string.company_duplicate_same_name_role
+                                    }
+                                    Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                                }
+                                val currentDecision = latestIdentityDecisions[candidate.firstPersonId + "|" + candidate.secondPersonId]
+                                val statusText = when (currentDecision?.decision) {
+                                    PersonIdentityDecisionKind.SAME_PERSON -> R.string.company_identity_same
+                                    PersonIdentityDecisionKind.DISTINCT_PEOPLE -> R.string.company_identity_distinct
+                                    PersonIdentityDecisionKind.REOPENED -> R.string.company_identity_reopened
+                                    else -> R.string.company_identity_unreviewed
+                                }
+                                Text(stringResource(R.string.company_identity_status, stringResource(statusText)), style = MaterialTheme.typography.labelSmall)
+                                Row {
+                                    TextButton(onClick = { scope.launch { runCatching { repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.SAME_PERSON) }.onFailure { error = it.message ?: "Identity review failed." } } }) { Text(stringResource(R.string.company_identity_mark_same)) }
+                                    TextButton(onClick = { scope.launch { runCatching { repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.DISTINCT_PEOPLE) }.onFailure { error = it.message ?: "Identity review failed." } } }) { Text(stringResource(R.string.company_identity_mark_distinct)) }
+                                    if (currentDecision != null && currentDecision.decision != PersonIdentityDecisionKind.REOPENED) TextButton(onClick = { scope.launch { runCatching { repository.reviewPersonIdentity(first.id, second.id, PersonIdentityDecisionKind.REOPENED) }.onFailure { error = it.message ?: "Identity review failed." } } }) { Text(stringResource(R.string.company_identity_reopen)) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (identityDecisions.isNotEmpty()) {
+            Text(stringResource(R.string.company_identity_history), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            identityDecisions.asReversed().forEach { decision ->
+                val first = people.firstOrNull { it.id == decision.firstPersonId }
+                val second = people.firstOrNull { it.id == decision.secondPersonId }
+                if (first != null && second != null) {
+                    val label = when (decision.decision) {
+                        PersonIdentityDecisionKind.SAME_PERSON -> R.string.company_identity_same
+                        PersonIdentityDecisionKind.DISTINCT_PEOPLE -> R.string.company_identity_distinct
+                        else -> R.string.company_identity_reopened
+                    }
+                    Text("${first.fullName} / ${second.fullName}: ${stringResource(label)}${decision.rationale?.let { " — $it" }.orEmpty()}", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -360,6 +443,16 @@ private fun OrganizationDossierScreen(
                 )
             }
         }
+        FitAssessmentSection(
+            organizationId = organizationId,
+            organizationUpdatedAt = current.updatedAt,
+            claims = claims,
+            sources = sources,
+            strategyRepository = strategyRepository,
+            fitRepository = fitAssessmentRepository,
+            onOpenSource = onOpenSource
+        )
+
         notice?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall) }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         Spacer(Modifier.height(28.dp))
@@ -374,6 +467,14 @@ private fun OrganizationDossierScreen(
                 showEditDialog = false
                 notice = "Profile saved."
             }
+        )
+    }
+    aliasPerson?.let { person ->
+        OrganizationPersonAliasDialog(
+            person = person, sources = sources,
+            onDismiss = { aliasPerson = null },
+            onSave = { draft -> repository.addPersonAlias(person.id, draft).id },
+            onSaved = { aliasPerson = null; notice = "Alias saved with its provenance." }
         )
     }
     if (showPersonDialog) {
@@ -640,6 +741,39 @@ private fun BuyerRequirementEvidenceDialog(requirementTitle:String,sources:List<
             error?.let{Text(it,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)}
         }
     },confirmButton={TextButton(onClick=onDismiss,enabled=savingId==null){Text(stringResource(R.string.company_cancel))}})
+}
+
+@Composable
+private fun OrganizationPersonAliasDialog(person: OrganizationPersonEntity, sources: List<OrganizationSourceEntity>, onDismiss: () -> Unit, onSave: suspend (OrganizationPersonAliasDraft) -> String, onSaved: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var aliasType by remember { mutableStateOf(PersonAliasType.NAME) }
+    var value by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
+    var sourceId by remember { mutableStateOf<String?>(null) }
+    var typeExpanded by remember { mutableStateOf(false) }
+    var sourceExpanded by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    AlertDialog(onDismissRequest = { if (!saving) onDismiss() }, title = { Text(stringResource(R.string.company_add_alias) + " · " + person.fullName) }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            androidx.compose.foundation.layout.Box {
+                TextButton(onClick = { typeExpanded = true }) { Text(stringResource(R.string.company_alias_type) + ": " + aliasType) }
+                DropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
+                    listOf(PersonAliasType.NAME, PersonAliasType.EMAIL, PersonAliasType.PROFILE_URL, PersonAliasType.OTHER).forEach { type -> DropdownMenuItem(text = { Text(type) }, onClick = { aliasType = type; typeExpanded = false }) }
+                }
+            }
+            OutlinedTextField(value, { value = it.take(512); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_alias_value)) }, singleLine = true)
+            androidx.compose.foundation.layout.Box {
+                TextButton(onClick = { sourceExpanded = true }) { Text(stringResource(R.string.company_alias_source) + ": " + (sources.firstOrNull { it.id == sourceId }?.title ?: stringResource(R.string.company_alias_manual))) }
+                DropdownMenu(expanded = sourceExpanded, onDismissRequest = { sourceExpanded = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.company_alias_manual)) }, onClick = { sourceId = null; sourceExpanded = false })
+                    sources.forEach { source -> DropdownMenuItem(text = { Text(source.title) }, onClick = { sourceId = source.id; sourceExpanded = false }) }
+                }
+            }
+            OutlinedTextField(note, { note = it.take(1000) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_contact_notes)) }, minLines = 1, maxLines = 3)
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        }
+    }, confirmButton = { Button(enabled = !saving && value.isNotBlank(), onClick = { scope.launch { saving = true; runCatching { onSave(OrganizationPersonAliasDraft(aliasType, value, sourceId, note)) }.onSuccess { onSaved() }.onFailure { error = it.message ?: "Could not save alias." }; saving = false } }) { Text(stringResource(R.string.company_save)) } }, dismissButton = { TextButton(enabled = !saving, onClick = onDismiss) { Text(stringResource(R.string.company_cancel)) } })
 }
 
 @Composable

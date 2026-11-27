@@ -51,6 +51,29 @@ class OrganizationMigrationTest {
         } finally { helper.close() }
     }
 
+    @Test
+    fun migration16To17CreatesAliasAndAppendOnlyIdentityTablesWithCascade() {
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context).name(null).callback(object : SupportSQLiteOpenHelper.Callback(16) { override fun onCreate(db: SupportSQLiteDatabase) = Unit; override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit }).build())
+        try {
+            val db = helper.writableDatabase; db.setForeignKeyConstraintsEnabled(true)
+            db.execSQL("CREATE TABLE organizations (id TEXT NOT NULL PRIMARY KEY, canonicalName TEXT NOT NULL, websiteUrl TEXT, domain TEXT, country TEXT, city TEXT, industry TEXT, notes TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+            db.execSQL("CREATE TABLE organization_people (id TEXT NOT NULL PRIMARY KEY, organizationId TEXT NOT NULL, fullName TEXT NOT NULL, role TEXT, email TEXT, phone TEXT, profileUrl TEXT, notes TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, FOREIGN KEY(organizationId) REFERENCES organizations(id) ON DELETE CASCADE)")
+            db.execSQL("CREATE TABLE organization_sources (id TEXT NOT NULL PRIMARY KEY, organizationId TEXT NOT NULL, sourceKind TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, excerpt TEXT NOT NULL, capturedAt INTEGER NOT NULL, FOREIGN KEY(organizationId) REFERENCES organizations(id) ON DELETE CASCADE)")
+            db.execSQL("INSERT INTO organizations VALUES ('org','Acme',NULL,NULL,NULL,NULL,NULL,NULL,1,1)")
+            db.execSQL("INSERT INTO organization_people VALUES ('p1','org','Ada',NULL,NULL,NULL,NULL,NULL,1,1)")
+            db.execSQL("INSERT INTO organization_people VALUES ('p2','org','A. Ada',NULL,NULL,NULL,NULL,NULL,1,1)")
+            db.execSQL("INSERT INTO organization_sources VALUES ('src','org','MANUAL_REFERENCE','Team','https://acme.example/team','',1)")
+            MIGRATION_16_17.migrate(db)
+            db.execSQL("INSERT INTO organization_person_aliases VALUES ('alias','p1','org','NAME','A. Ada','a. ada','src','SOURCE_LINKED',NULL,2)")
+            db.execSQL("INSERT INTO organization_person_identity_decisions VALUES ('decision','org','p1','p2','SAME_PERSON','Reviewed','src',3)")
+            assertEquals(1, scalar(db, "SELECT COUNT(*) FROM organization_person_aliases"))
+            assertEquals(1, scalar(db, "SELECT COUNT(*) FROM organization_person_identity_decisions"))
+            db.execSQL("DELETE FROM organizations WHERE id='org'")
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM organization_person_aliases"))
+            assertEquals(0, scalar(db, "SELECT COUNT(*) FROM organization_person_identity_decisions"))
+        } finally { helper.close() }
+    }
+
     private fun scalar(db: SupportSQLiteDatabase, sql: String): Int {
         val cursor = db.query(sql)
         return try {
