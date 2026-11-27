@@ -4,8 +4,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 
 ## T0 — Repository and product foundation
 
-- [x] T0.10 Consolidate the verified 324-commit integration line into canonical `main` via PR #20 (merge commit `3041b8c`); close superseded PRs #17/#18 and divergent draft #5. Main CI #582 and approved installable APK run #583 are verified.
-- [ ] T0.11 Prune obsolete branch refs only after confirming each branch is merged/contained; 27 refs currently remain. Keep branches with unreviewed unique commits. The connected GitHub tools and branch-list UI do not currently expose a safe delete-ref action.
+- [x] T0.10 Consolidate the verified product integration line into canonical `main` via PR #20 and latest T4.8/T4.9 integration via PR #22 (merge commit `94c241d`). Main CI #626 and approved installable APK `0.14.0-debug` are verified.
+- [~] T0.11 Branch consolidation is partially complete: PR #22 merged the active integration line into `main`; two historical refs (`build/proofasset-room-backup`, `build/proofasset-discovery-strategy`) were deleted after review. Twenty-four non-main refs remain; no open PRs or protected branches were found. The connected GitHub action set has no delete-ref operation, and the branch UI exposed no delete action for the remaining refs. Finish pruning only through an authorized delete-ref mechanism; retain `main` and any genuinely active future work.
 
 - [x] T0.1 Establish the fresh-start ledger and canonical source of truth in `ysfclc/Trader`.
 - [x] T0.2 Inspect relevant existing implementation files/tests and document reuse boundaries in `docs/REUSE_AUDIT.md` (initial targeted pass).
