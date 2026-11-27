@@ -974,7 +974,7 @@ private fun OrganizationClaimDialog(
                 Text(stringResource(R.string.company_claim_source, source.title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                 OutlinedTextField(field, { field = it.take(80); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_field)) }, singleLine = true)
                 OutlinedTextField(statement, { statement = it.take(2_000); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_statement)) }, minLines = 3, maxLines = 7)
-                Text(stringResource(R.string.company_unreviewed_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(if (initial == null) R.string.company_unreviewed_notice else R.string.company_claim_edit_resets_review), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
