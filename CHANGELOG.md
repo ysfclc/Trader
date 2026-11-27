@@ -1,3 +1,10 @@
+## 2026-11-27 — Trader 0.14.0 installable release and roadmap reset
+
+- Merged [PR #22](https://github.com/ysfclc/Trader/pull/22) into canonical `main` as [94c241d](https://github.com/ysfclc/Trader/commit/94c241d8971d624857295069635baee12c2ea436), consolidating the 13-commit fit-assessment UI, contact aliases, reversible identity review, Room v16→v17 migration and encrypted backup snapshot v13 line.
+- Explicitly approved Android CI run [#626](https://github.com/ysfclc/Trader/actions/runs/46041691925) on `main` published installable APK artifact [15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610): `com.yusufculcu.trader.debug`, `0.14.0-debug`, versionCode 14. The run passed 201 Android tests (0 failures, 0 errors, 0 skipped), coverage floor, build, lint, SBOM/OSV and persistent signing-certificate checks. APK SHA-256: `5520b29a438f0b8d5538b0546d006a2d3357807187ca05fa6d4cd40c669d395c`.
+- Branch cleanup removed two confirmed historical refs: `build/proofasset-room-backup` and `build/proofasset-discovery-strategy`. Current branch search shows 24 refs total (main plus 23 non-main historical refs); no open PRs or protected branches. Remaining refs could not be deleted because the connected GitHub action set and visible branch menus exposed no delete-ref action. Cleanup remains incomplete and is recorded as such.
+- Reconciled README, STATE, TASKS and ROADMAP. The active product gate is now physical Redmi acceptance: install over existing data, Room v16→v17, encrypted backup v13 restore, and one complete Industrial Sourcing Desk buyer→supplier journey. CI success is explicitly not represented as device/product acceptance.
+
 ## 2026-11-26 — Trader branch consolidation
 
 - Merged the complete verified integration line from `feature/discovery-run-persistence` into canonical `main` via [PR #20](https://github.com/ysfclc/Trader/pull/20), merge commit [3041b8c](https://github.com/ysfclc/Trader/commit/3041b8cd8046c26a7c4cce27832911f92d5d309a).
