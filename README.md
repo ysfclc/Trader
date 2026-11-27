@@ -12,7 +12,7 @@ Every workflow uses the same connected records and lifecycle:
 
 A record is created once and reused across the relevant views. Source facts, user statements, model suggestions, assumptions and unknowns remain distinguishable. AI may help extract, translate, classify and draft; deterministic rules and the operator own decisions. External communication or commitments always require explicit user action.
 
-## First complete workflow: Industrial Sourcing Desk
+## First commercial workflow (device acceptance in progress): Industrial Sourcing Desk
 
 The first commercial workflow is a focused operator-controlled sourcing desk for Türkiye ↔ Poland/EU industrial tooling and machining.
 
@@ -58,7 +58,7 @@ See [the state ledger](docs/STATE.md) for the authoritative current build and ta
 
 This is the active release gate: no feature is considered usable merely because its screen or repository test exists. The 0.14.0 APK is the candidate for this acceptance, not proof that acceptance has passed.
 
-Do not start Product/SKU, Match, Quote, Deal, social connectors, autonomous outreach or another product specialization in parallel with this acceptance work.
+Do not expand the Product/SKU catalogue or start Match, Quote, Deal, social connectors, autonomous outreach or another product specialization in parallel with this acceptance work.
 
 ## Product and engineering laws
 
