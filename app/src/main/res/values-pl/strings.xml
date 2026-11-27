@@ -568,4 +568,10 @@
     <string name="fit_claim_not_supported">Obecnie niepoparte</string>
     <string name="fit_cancel">Anuluj</string>
 
+    <string name="company_possible_duplicates">Możliwe duplikaty kontaktów</string>
+    <string name="company_duplicate_review_notice">To wyłącznie sugestie do sprawdzenia. Trader nie łączy kontaktów ani nie ustala automatycznie tożsamości.</string>
+    <string name="company_duplicate_pair">%1$s i %2$s</string>
+    <string name="company_duplicate_same_email">Ten sam znormalizowany adres e-mail</string>
+    <string name="company_duplicate_same_profile">Ten sam adres profilu LinkedIn</string>
+    <string name="company_duplicate_same_name_role">To samo imię i nazwisko oraz rola (słaby sygnał)</string>
 </resources>

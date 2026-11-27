@@ -66,6 +66,8 @@ import com.yusufculcu.trader.data.OrganizationSourceDraft
 import com.yusufculcu.trader.data.OrganizationSourceEntity
 import com.yusufculcu.trader.data.OrganizationSourceKind
 import com.yusufculcu.trader.discovery.DiscoveryDocument
+import com.yusufculcu.trader.domain.PersonIdentityCandidates
+import com.yusufculcu.trader.domain.PersonIdentitySignal
 import kotlinx.coroutines.launch
 
 @Composable
@@ -203,6 +205,7 @@ private fun OrganizationDossierScreen(
     val sources by repository.observeSources(organizationId).collectAsState(initial = emptyList())
     val claims by repository.observeClaims(organizationId).collectAsState(initial = emptyList())
     val people by repository.observePeople(organizationId).collectAsState(initial = emptyList())
+    val identityCandidates = remember(people) { PersonIdentityCandidates.find(people) }
     val buyerRepository = remember(repository) { repository.buyerRequirementRepository() }
     val buyerRequirements by buyerRepository.observeForOrganization(organizationId).collectAsState(initial = emptyList())
     val productRepository = remember(repository) { repository.productCatalogRepository() }
@@ -293,6 +296,32 @@ private fun OrganizationDossierScreen(
                     person.profileUrl?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary) }
                     person.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     TextButton(onClick = { editingPerson = person; showPersonDialog = true }) { Text(stringResource(R.string.company_edit_contact)) }
+                }
+            }
+        }
+
+        if (identityCandidates.isNotEmpty()) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Text(stringResource(R.string.company_possible_duplicates), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.company_duplicate_review_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    identityCandidates.forEach { candidate ->
+                        val first = people.firstOrNull { it.id == candidate.firstPersonId }
+                        val second = people.firstOrNull { it.id == candidate.secondPersonId }
+                        if (first != null && second != null) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(stringResource(R.string.company_duplicate_pair, first.fullName, second.fullName), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                candidate.signals.forEach { signal ->
+                                    val label = when (signal) {
+                                        PersonIdentitySignal.SAME_EMAIL -> R.string.company_duplicate_same_email
+                                        PersonIdentitySignal.SAME_PROFILE -> R.string.company_duplicate_same_profile
+                                        PersonIdentitySignal.SAME_NAME_AND_ROLE -> R.string.company_duplicate_same_name_role
+                                    }
+                                    Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
