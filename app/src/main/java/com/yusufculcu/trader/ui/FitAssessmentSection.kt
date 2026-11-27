@@ -1,6 +1,6 @@
 package com.yusufculcu.trader.ui
 
-import android.text.format.DateFormat
+import java.text.DateFormat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
