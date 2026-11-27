@@ -956,7 +956,7 @@ private fun OrganizationSourceDialog(
 }
 
 @Composable
-private fun OrganizationClaimDialog(
+internal fun OrganizationClaimDialog(
     source: OrganizationSourceEntity,
     sources: List<OrganizationSourceEntity>,
     initial: OrganizationClaimEntity? = null,
