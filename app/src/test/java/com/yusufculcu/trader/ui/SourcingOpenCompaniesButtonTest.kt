@@ -2,7 +2,7 @@ package com.yusufculcu.trader.ui
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -27,7 +27,7 @@ class SourcingOpenCompaniesButtonTest {
             }
         }
 
-        composeRule.onNodeWithText("Open Companies").performClick()
+        composeRule.onNodeWithTag("sourcing-open-companies").performClick()
         composeRule.runOnIdle { assertTrue(clicked) }
     }
 
