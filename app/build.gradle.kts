@@ -102,7 +102,10 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.0")
-    testImplementation(composeBom)\n    testImplementation("androidx.compose.ui:ui-test-junit4")\n    debugImplementation("androidx.compose.ui:ui-test-manifest")\n    testImplementation("junit:junit:4.13.2")
+    testImplementation(composeBom)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    testImplementation("junit:junit:4.13.2")
     // Supply a real JVM org.json implementation; Android's mockable android.jar stubs throw from JSONObject.keys() in local unit tests.
     testImplementation("org.json:json:20260814")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
