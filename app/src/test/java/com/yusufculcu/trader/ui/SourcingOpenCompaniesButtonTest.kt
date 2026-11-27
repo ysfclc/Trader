@@ -1,7 +1,6 @@
 package com.yusufculcu.trader.ui
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -28,7 +27,7 @@ class SourcingOpenCompaniesButtonTest {
             }
         }
 
-        composeRule.onNodeWithText("Open Companies").assertExists().performClick()
+        composeRule.onNodeWithText("Open Companies").performClick()
         composeRule.runOnIdle { assertTrue(clicked) }
     }
 
@@ -41,7 +40,7 @@ class SourcingOpenCompaniesButtonTest {
             }
         }
 
-        composeRule.onNodeWithText("Open Companies").assertExists().performClick()
+        composeRule.onNodeWithText("Open Companies").performClick()
         composeRule.runOnIdle { assertTrue(clicked) }
     }
 }
