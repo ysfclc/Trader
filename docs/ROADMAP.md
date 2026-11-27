@@ -29,7 +29,7 @@ Current Inbox, Pipeline, Sourcing, Activity, Browser and AI surfaces are capabil
 
 ## 3. Current release baseline
 
-<badge>Installable candidate — not device-accepted</badge>
+**Release status:** installable candidate; physical-device acceptance still open.
 
 - **Build:** `0.14.0-debug`, versionCode 14
 - **Package:** `com.yusufculcu.trader.debug`
