@@ -206,4 +206,5 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] P1.4 Provide EN/PL/TR sourcing workflow and explicit shareable shortlist handoff.
 - [x] P1.5 CI run 45574277490 passed clean build, tests, lint and persistent APK identity/signature checks.
 - [ ] P1.6 Complete physical-device install-over-existing, migration/restore and real buyer-to-shortlist acceptance.
-- [ ] P1.7 Finish the product's edit/correction lifecycle before starting a second product.
+- [~] P1.7 Finish the product's edit/correction lifecycle before starting a second product; claim correction is the first uncovered gap.
+- [~] P1.7a Add source-backed company claim correction: preserve claim identity/creation time, reset any prior human review to UNREVIEWED, and append an immutable Activity event. Repository/UI and EN/PL/TR resources are implemented; CI [#671](https://github.com/ysfclc/Trader/actions/runs/46074724181) passed build, tests, coverage, lint, SBOM/OSV and persistent package/signature gates. PR #25 and merge are pending.

@@ -298,6 +298,9 @@
     <string name="company_source_excerpt">Excerpt / relevant context</string>
     <string name="company_open_source">Open source</string>
     <string name="company_add_claim">Add claim</string>
+    <string name="company_edit_claim">Edit claim</string>
+    <string name="company_claim_corrected">Claim corrected. Review reset to unreviewed.</string>
+    <string name="company_claim_edit_resets_review">Saving a correction clears the previous review. The claim must be reviewed again.</string>
     <string name="company_claims">Source-linked claims</string>
     <string name="company_no_claims">No claims yet. Add a claim from one of the saved sources.</string>
     <string name="company_claim_field">Field / topic (e.g. buyer requirement)</string>

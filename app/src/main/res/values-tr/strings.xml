@@ -298,6 +298,9 @@
     <string name="company_source_excerpt">Alıntı / ilgili bağlam</string>
     <string name="company_open_source">Kaynağı aç</string>
     <string name="company_add_claim">İddia ekle</string>
+    <string name="company_edit_claim">İddiayı düzenle</string>
+    <string name="company_claim_corrected">İddia düzeltildi. İnceleme sıfırlandı.</string>
+    <string name="company_claim_edit_resets_review">Düzeltmeyi kaydetmek önceki incelemeyi temizler. İddia yeniden incelenmelidir.</string>
     <string name="company_claims">Kaynağa bağlı iddialar</string>
     <string name="company_no_claims">Henüz iddia yok. Kaydedilmiş kaynaklardan birine bağlı iddia ekle.</string>
     <string name="company_claim_field">Alan / konu (ör. alıcı ihtiyacı)</string>

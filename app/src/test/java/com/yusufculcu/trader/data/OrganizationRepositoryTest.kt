@@ -62,6 +62,70 @@ class OrganizationRepositoryTest {
     }
 
     @Test
+    fun correctingReviewedClaimPreservesIdentityInvalidatesReviewAndAppendsActivity() = runBlocking {
+        val company = repository.createOrganization(OrganizationDraft("Claim Correction Works"))
+        val source = repository.addSource(
+            company.id,
+            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Original source", "https://claims.example/original", "Original excerpt", 10)
+        )
+        val correctedSource = repository.addSource(
+            company.id,
+            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Corrected source", "https://claims.example/corrected", "Corrected excerpt", 11)
+        )
+        val claim = repository.addClaim(
+            company.id,
+            OrganizationClaimDraft(source.id, "Material", "The company uses aluminium.")
+        )
+        assertTrue(repository.reviewClaim(claim.id, OrganizationClaimState.SUPPORTED, "Confirmed from source."))
+        val reviewed = repository.observeClaims(company.id).first().single()
+        val activityBefore = database.businessActivityDao().getAll().count { it.entityType == BusinessActivityEntityType.CLAIM && it.entityId == claim.id }
+
+        val corrected = repository.updateClaim(
+            claim.id,
+            OrganizationClaimDraft(correctedSource.id, "Material specification", "The company uses certified 6061 aluminium.")
+        )
+
+        assertEquals(claim.id, corrected.id)
+        assertEquals(claim.createdAt, corrected.createdAt)
+        assertEquals(correctedSource.id, corrected.sourceId)
+        assertEquals("Material specification", corrected.field)
+        assertEquals("The company uses certified 6061 aluminium.", corrected.statement)
+        assertEquals(OrganizationClaimState.UNREVIEWED, corrected.reviewState)
+        assertEquals(null, corrected.reviewNote)
+        assertEquals(null, corrected.reviewedAt)
+        assertTrue(corrected.updatedAt >= reviewed.updatedAt)
+
+        val events = database.businessActivityDao().getAll()
+            .filter { it.entityType == BusinessActivityEntityType.CLAIM && it.entityId == claim.id }
+        assertEquals(activityBefore + 1, events.size)
+        val correctionEvent = events.last()
+        assertEquals(BusinessActivityAction.UPDATED, correctionEvent.eventType)
+        assertEquals(OrganizationClaimState.SUPPORTED, correctionEvent.fromStatus)
+        assertEquals(OrganizationClaimState.UNREVIEWED, correctionEvent.toStatus)
+
+        val noOp = repository.updateClaim(
+            claim.id,
+            OrganizationClaimDraft(correctedSource.id, corrected.field, corrected.statement)
+        )
+        assertEquals(corrected, noOp)
+        assertEquals(activityBefore + 1, database.businessActivityDao().getAll().count { it.entityType == BusinessActivityEntityType.CLAIM && it.entityId == claim.id })
+
+        val otherCompany = repository.createOrganization(OrganizationDraft("Other Claim Company"))
+        val otherSource = repository.addSource(
+            otherCompany.id,
+            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Other source", "https://other-claims.example", "", 12)
+        )
+        var crossCompanySourceRejected = false
+        try {
+            repository.updateClaim(claim.id, OrganizationClaimDraft(otherSource.id, "Wrong", "Wrong company source."))
+        } catch (_: IllegalArgumentException) {
+            crossCompanySourceRejected = true
+        }
+        assertTrue(crossCompanySourceRejected)
+        assertEquals(corrected, repository.observeClaims(company.id).first().single())
+    }
+
+    @Test
     fun duplicateSourceUrlIsIdempotentAndDeletingOrganizationCascades() = runBlocking {
         val organization = repository.createOrganization(OrganizationDraft("Example Works"))
         val first = repository.addSource(

@@ -298,6 +298,9 @@
     <string name="company_source_excerpt">Fragment / istotny kontekst</string>
     <string name="company_open_source">Otwórz źródło</string>
     <string name="company_add_claim">Dodaj twierdzenie</string>
+    <string name="company_edit_claim">Edytuj twierdzenie</string>
+    <string name="company_claim_corrected">Twierdzenie poprawiono. Weryfikacja została zresetowana.</string>
+    <string name="company_claim_edit_resets_review">Zapisanie poprawki usuwa poprzedni wynik weryfikacji. Twierdzenie trzeba sprawdzić ponownie.</string>
     <string name="company_claims">Twierdzenia powiązane ze źródłami</string>
     <string name="company_no_claims">Brak twierdzeń. Dodaj je na podstawie jednego z zapisanych źródeł.</string>
     <string name="company_claim_field">Pole / temat (np. potrzeba kupującego)</string>

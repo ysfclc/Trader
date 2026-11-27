@@ -229,6 +229,9 @@ private fun OrganizationDossierScreen(
     var editingPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
     var aliasPerson by remember { mutableStateOf<OrganizationPersonEntity?>(null) }
     var claimSource by remember { mutableStateOf<OrganizationSourceEntity?>(null) }
+    var editingClaim by remember { mutableStateOf<OrganizationClaimEntity?>(null) }
+    val sourceById = remember(sources) { sources.associateBy { it.id } }
+    val claimCorrectedText = stringResource(R.string.company_claim_corrected)
     var error by remember { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf<String?>(null) }
 
@@ -429,11 +432,11 @@ private fun OrganizationDossierScreen(
         if (claims.isEmpty()) {
             Text(stringResource(R.string.company_no_claims), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val sourceById = remember(sources) { sources.associateBy { it.id } }
             claims.forEach { claim ->
                 OrganizationClaimCard(
                     claim = claim,
                     source = sourceById[claim.sourceId],
+                    onEdit = { editingClaim = claim },
                     onReview = { state ->
                         scope.launch {
                             runCatching { repository.reviewClaim(claim.id, state) }
@@ -550,6 +553,22 @@ private fun OrganizationDossierScreen(
                 notice = "Claim added as unreviewed."
             }
         )
+    }
+    editingClaim?.let { claim ->
+        sourceById[claim.sourceId]?.let { source ->
+            OrganizationClaimDialog(
+                initial = claim,
+                source = source,
+                onDismiss = { editingClaim = null },
+                onSave = { field, statement ->
+                    repository.updateClaim(claim.id, OrganizationClaimDraft(source.id, field, statement)).id
+                },
+                onSaved = {
+                    editingClaim = null
+                    notice = claimCorrectedText
+                }
+            )
+        }
     }
 }
 
@@ -808,6 +827,7 @@ private fun OrganizationPersonDialog(initial: OrganizationPersonEntity?, onDismi
 private fun OrganizationClaimCard(
     claim: OrganizationClaimEntity,
     source: OrganizationSourceEntity?,
+    onEdit: () -> Unit,
     onReview: (String) -> Unit
 ) {
     val stateLabel = when (claim.reviewState) {
@@ -820,6 +840,7 @@ private fun OrganizationClaimCard(
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(claim.field, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = onEdit) { Text(stringResource(R.string.company_edit_claim)) }
                 AssistChip(onClick = {}, enabled = false, label = { Text(stringResource(stateLabel)) })
             }
             Text(claim.statement, style = MaterialTheme.typography.bodyMedium)
@@ -935,24 +956,25 @@ private fun OrganizationSourceDialog(
 @Composable
 private fun OrganizationClaimDialog(
     source: OrganizationSourceEntity,
+    initial: OrganizationClaimEntity? = null,
     onDismiss: () -> Unit,
     onSave: suspend (String, String) -> String,
     onSaved: (String) -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    var field by remember { mutableStateOf("") }
-    var statement by remember { mutableStateOf("") }
+    var field by remember(initial) { mutableStateOf(initial?.field.orEmpty()) }
+    var statement by remember(initial) { mutableStateOf(initial?.statement.orEmpty()) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     AlertDialog(
         onDismissRequest = { if (!saving) onDismiss() },
-        title = { Text(stringResource(R.string.company_add_claim)) },
+        title = { Text(stringResource(if (initial == null) R.string.company_add_claim else R.string.company_edit_claim)) },
         text = {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.company_claim_source, source.title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                 OutlinedTextField(field, { field = it.take(80); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_field)) }, singleLine = true)
                 OutlinedTextField(statement, { statement = it.take(2_000); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_statement)) }, minLines = 3, maxLines = 7)
-                Text(stringResource(R.string.company_unreviewed_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(if (initial == null) R.string.company_unreviewed_notice else R.string.company_claim_edit_resets_review), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
@@ -962,7 +984,7 @@ private fun OrganizationClaimDialog(
                     saving = true
                     val result = runCatching { onSave(field, statement) }
                     saving = false
-                    result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not add claim." }
+                    result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save claim." }
                 }
             }, enabled = !saving && field.isNotBlank() && statement.isNotBlank()) { Text(stringResource(R.string.company_save)) }
         },
