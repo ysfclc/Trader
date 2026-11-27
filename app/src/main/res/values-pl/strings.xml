@@ -574,4 +574,19 @@
     <string name="company_duplicate_same_email">Ten sam znormalizowany adres e-mail</string>
     <string name="company_duplicate_same_profile">Ten sam adres profilu LinkedIn</string>
     <string name="company_duplicate_same_name_role">To samo imię i nazwisko oraz rola (słaby sygnał)</string>
+    <string name="company_add_alias">Dodaj alias</string>
+    <string name="company_alias_type">Typ aliasu</string>
+    <string name="company_alias_value">Wartość aliasu</string>
+    <string name="company_alias_source">Źródło pochodzenia</string>
+    <string name="company_alias_manual">Wprowadzony ręcznie (bez źródła)</string>
+    <string name="company_alias_remove">Usuń</string>
+    <string name="company_identity_unreviewed">Niezweryfikowane</string>
+    <string name="company_identity_same">Potwierdzono tę samą osobę</string>
+    <string name="company_identity_distinct">Potwierdzono różne osoby</string>
+    <string name="company_identity_reopened">Ponownie otwarto weryfikację</string>
+    <string name="company_identity_status">Decyzja: %1$s</string>
+    <string name="company_identity_mark_same">Ta sama osoba</string>
+    <string name="company_identity_mark_distinct">Różne osoby</string>
+    <string name="company_identity_reopen">Otwórz ponownie</string>
+    <string name="company_identity_history">Historia weryfikacji tożsamości</string>
 </resources>

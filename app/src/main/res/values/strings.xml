@@ -574,4 +574,19 @@
     <string name="company_duplicate_same_email">Same normalized email address</string>
     <string name="company_duplicate_same_profile">Same LinkedIn profile URL</string>
     <string name="company_duplicate_same_name_role">Same name and role (weak signal)</string>
+    <string name="company_add_alias">Add alias</string>
+    <string name="company_alias_type">Alias type</string>
+    <string name="company_alias_value">Alias value</string>
+    <string name="company_alias_source">Provenance source</string>
+    <string name="company_alias_manual">Operator-entered (no source)</string>
+    <string name="company_alias_remove">Remove</string>
+    <string name="company_identity_unreviewed">Not reviewed</string>
+    <string name="company_identity_same">Reviewed as same person</string>
+    <string name="company_identity_distinct">Reviewed as distinct people</string>
+    <string name="company_identity_reopened">Review reopened</string>
+    <string name="company_identity_status">Decision: %1$s</string>
+    <string name="company_identity_mark_same">Same person</string>
+    <string name="company_identity_mark_distinct">Different people</string>
+    <string name="company_identity_reopen">Reopen</string>
+    <string name="company_identity_history">Identity review history</string>
 </resources>
