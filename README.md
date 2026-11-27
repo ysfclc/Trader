@@ -42,8 +42,8 @@ The intended longer-term navigation is Discover / Work / Live / Studio. That is 
 See [the state ledger](docs/STATE.md) for the authoritative current build and task status.
 
 - Android package: `com.yusufculcu.trader.debug`; persistent Trader development signing is configured. Keep the package and signing certificate unchanged and increment versionCode for every installable update.
-- Latest verified installable build: `0.11.0-debug`, versionCode 11, CI run [45598311208](https://github.com/ysfclc/Trader/actions/runs/45598311208), artifact [15014108093](https://github.com/ysfclc/Trader/actions/runs/45598311208/artifacts/15014108093). The run passed 157 unit tests, lint, APK assembly, exact package/version checks and persistent-certificate equality. Supplier-offer editing and evidence-link reconciliation are included.
-- Room schema v12 and encrypted backup snapshot v9 are implemented. Physical-device migration, export/restore and install-over-existing acceptance remain open.
+- Latest installable build: `0.14.0-debug`, versionCode 14, from canonical `main` commit `94c241d8971d624857295069635baee12c2ea436`; approved Android CI run [#626](https://github.com/ysfclc/Trader/actions/runs/46041691925), artifact [15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610). The run passed 201 Android unit tests (0 failures/errors/skips), the historical coverage floor, clean build, lint, SBOM/OSV scan, package/version checks and persistent signing-certificate verification. It includes the fit-assessment dossier UI plus persistent contact aliases and reversible identity-review history.
+- Room schema v17 and encrypted backup snapshot v13 are implemented and CI-verified. Physical-device install-over-existing, migration, encrypted export/restore and the end-to-end sourcing workflow remain unverified; this APK is installable but is not yet a device-accepted product.
 - Discover is a bounded, user-triggered search/feed workflow, not continuous monitoring. Live-source and device acceptance remain open.
 - Workflow state and approvals are persisted, but execution is still manually driven. There is no durable WorkManager capability executor.
 - The model catalogue/download foundation exists, but verified on-device inference and real-device performance acceptance are not complete. Core sourcing must remain usable without an installed model.
@@ -51,10 +51,12 @@ See [the state ledger](docs/STATE.md) for the authoritative current build and ta
 
 ## The only active delivery sequence
 
-1. On the Redmi Note 12 Pro 5G, export a fresh encrypted workspace backup before installation, then install `0.11.0-debug` over the existing app and verify the Room migration without uninstalling or clearing storage. If the installed APK predates the persistent-signing transition, stop rather than force an update; export and recover data before any uninstall.
-2. Complete the real sourcing journey: buyer dossier and requirement; supplier dossier, offer and source evidence; multiple-offer comparison; decision and revision; shortlist share; edit headers, line items and evidence links; inspect Activity; close/reopen; encrypted export and restore.
-3. Fix every observed regression and repeat the affected acceptance checks. Add recoverable deletion for important sourcing records before expanding the commercial data model.
-4. Only after this gate passes, integrate discovery and optional local AI into the same sourcing journey. AI may propose extracted fields and questions; it must not replace evidence review or deterministic comparison.
+1. On the Redmi Note 12 Pro 5G, first export a fresh encrypted workspace backup. Install `0.14.0-debug` over the existing Trader installation without uninstalling or clearing storage. Confirm package `com.yusufculcu.trader.debug`, then verify Room v16→v17 migration and that existing records, preferences and browser session survive. If Android rejects the update or the signature does not match, stop; do not uninstall or clear data.
+2. Verify encrypted backup v13 on-device: export, close/reopen, restore into a controlled test workspace, and confirm companies, contacts, aliases, fit assessments, sourcing records, evidence and review history survive. Never overwrite the only copy of real data during the test.
+3. Complete one real sourcing journey: buyer dossier and requirement; supplier dossier, offer and source evidence; multiple-offer comparison; record and revise the shortlist decision; share the brief; inspect Activity; close/reopen; verify the data remains intact. Record every broken control, crash, misleading status and missing step.
+4. Fix observed regressions and repeat the affected acceptance checks. Only after this device gate passes should implementation expand into alias-aware discovery/profile enrichment and deeper source-backed qualification. Keep outreach and external actions user-approved.
+
+This is the active release gate: no feature is considered usable merely because its screen or repository test exists. The 0.14.0 APK is the candidate for this acceptance, not proof that acceptance has passed.
 
 Do not start Product/SKU, Match, Quote, Deal, social connectors, autonomous outreach or another product specialization in parallel with this acceptance work.
 
