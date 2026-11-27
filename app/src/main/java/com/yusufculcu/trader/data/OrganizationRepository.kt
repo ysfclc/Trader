@@ -97,7 +97,8 @@ class OrganizationRepository(private val database: TraderDatabase) {
         require(first.organizationId == second.organizationId) { "Contacts must belong to the same company." }
         val source = sourceId?.let { database.organizationSourceDao().getById(it) ?: throw IllegalArgumentException("Review source does not exist.") }
         require(source == null || source.organizationId == first.organizationId) { "Identity review evidence must belong to the same company." }
-        val now = System.currentTimeMillis()
+        val latestReviewedAt = database.organizationPersonIdentityDecisionDao().getAll().asSequence().filter { it.organizationId == first.organizationId }.maxOfOrNull { it.reviewedAt } ?: -1L
+        val now = maxOf(System.currentTimeMillis(), latestReviewedAt + 1L)
         val row = OrganizationPersonIdentityDecisionEntity(UUID.randomUUID().toString(), first.organizationId, minOf(first.id, second.id), maxOf(first.id, second.id), decision, rationale.trim().ifBlank { null }, source?.id, now)
         database.organizationPersonIdentityDecisionDao().append(row)
         database.organizationDao().touch(first.organizationId, now)
