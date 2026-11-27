@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -830,12 +831,14 @@ private fun SourcingReviewDialog(
 @Composable
 internal fun SourcingOpenCompaniesButton(
     onClick: () -> Unit,
-    primary: Boolean
+    primary: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val label = stringResource(R.string.sourcing_open_companies)
+    val taggedModifier = modifier.testTag("sourcing-open-companies")
     if (primary) {
-        Button(onClick = onClick) { Text(label) }
+        Button(onClick = onClick, modifier = taggedModifier) { Text(label) }
     } else {
-        TextButton(onClick = onClick) { Text(label) }
+        TextButton(onClick = onClick, modifier = taggedModifier) { Text(label) }
     }
 }
