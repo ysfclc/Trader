@@ -572,6 +572,6 @@
     <string name="company_duplicate_review_notice">Bunlar yalnızca inceleme önerileridir. Trader kişileri otomatik olarak birleştirmez veya kimlik çıkarımı yapmaz.</string>
     <string name="company_duplicate_pair">%1$s ve %2$s</string>
     <string name="company_duplicate_same_email">Aynı normalize edilmiş e-posta adresi</string>
-    <string name="company_duplicate_same_profile">Aynı LinkedIn profil URL'si</string>
+    <string name="company_duplicate_same_profile">Aynı LinkedIn profil bağlantısı</string>
     <string name="company_duplicate_same_name_role">Aynı ad ve rol (zayıf sinyal)</string>
 </resources>
