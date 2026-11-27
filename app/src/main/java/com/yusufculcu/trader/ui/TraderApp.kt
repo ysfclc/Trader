@@ -59,6 +59,8 @@ import com.yusufculcu.trader.data.OpportunityListItem
 import com.yusufculcu.trader.data.PlanStepEntity
 import com.yusufculcu.trader.data.ProblemEntity
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.data.FitAssessmentRepository
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import com.yusufculcu.trader.domain.ContextPacketBuilder
 import com.yusufculcu.trader.domain.SharedBrowserCapture
@@ -221,6 +223,8 @@ fun TraderApp(
                 opportunities = opportunities,
                 onOpenOpportunity = { selectedId = it.id },
                 organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
+                strategyRepository = (context.applicationContext as TraderApplication).discoveryStrategyRepository,
+                fitAssessmentRepository = (context.applicationContext as TraderApplication).fitAssessmentRepository,
                 incomingDocument = pendingDiscoveryDocument,
                 onIncomingDocumentHandled = { pendingDiscoveryDocument = null },
                 onOpenSource = { url -> requestedBrowserUrl = url; tab = AppTab.BROWSER },
@@ -550,6 +554,8 @@ private fun PipelineWorkspaceContent(
     opportunities: List<OpportunityListItem>,
     onOpenOpportunity: (ProblemEntity) -> Unit,
     organizationRepository: OrganizationRepository,
+    strategyRepository: DiscoveryStrategyRepository,
+    fitAssessmentRepository: FitAssessmentRepository,
     incomingDocument: DiscoveryDocument?,
     onIncomingDocumentHandled: () -> Unit,
     onOpenSource: (String) -> Unit,
@@ -578,6 +584,8 @@ private fun PipelineWorkspaceContent(
         if (showCompanies) {
             OrganizationsScreen(
                 repository = organizationRepository,
+                strategyRepository = strategyRepository,
+                fitAssessmentRepository = fitAssessmentRepository,
                 incomingDocument = incomingDocument,
                 onIncomingDocumentHandled = onIncomingDocumentHandled,
                 onOpenSource = onOpenSource,

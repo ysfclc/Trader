@@ -52,6 +52,8 @@ import com.yusufculcu.trader.data.OrganizationClaimState
 import com.yusufculcu.trader.data.OrganizationDraft
 import com.yusufculcu.trader.data.OrganizationEntity
 import com.yusufculcu.trader.data.OrganizationRepository
+import com.yusufculcu.trader.data.DiscoveryStrategyRepository
+import com.yusufculcu.trader.data.FitAssessmentRepository
 import com.yusufculcu.trader.data.OrganizationPersonDraft
 import com.yusufculcu.trader.data.OrganizationPersonEntity
 import com.yusufculcu.trader.data.BuyerRequirementRepository
@@ -69,6 +71,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun OrganizationsScreen(
     repository: OrganizationRepository,
+    strategyRepository: DiscoveryStrategyRepository,
+    fitAssessmentRepository: FitAssessmentRepository,
     incomingDocument: DiscoveryDocument? = null,
     onIncomingDocumentHandled: () -> Unit = {},
     onOpenSource: (String) -> Unit,
@@ -91,6 +95,8 @@ fun OrganizationsScreen(
         OrganizationDossierScreen(
             organizationId = selectedOrganizationId!!,
             repository = repository,
+            strategyRepository = strategyRepository,
+            fitAssessmentRepository = fitAssessmentRepository,
             onBack = { selectedOrganizationId = null },
             onOpenSource = onOpenSource,
             modifier = modifier
@@ -187,6 +193,8 @@ fun OrganizationsScreen(
 private fun OrganizationDossierScreen(
     organizationId: String,
     repository: OrganizationRepository,
+    strategyRepository: DiscoveryStrategyRepository,
+    fitAssessmentRepository: FitAssessmentRepository,
     onBack: () -> Unit,
     onOpenSource: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -360,6 +368,16 @@ private fun OrganizationDossierScreen(
                 )
             }
         }
+        FitAssessmentSection(
+            organizationId = organizationId,
+            organizationUpdatedAt = current.updatedAt,
+            claims = claims,
+            sources = sources,
+            strategyRepository = strategyRepository,
+            fitRepository = fitAssessmentRepository,
+            onOpenSource = onOpenSource
+        )
+
         notice?.let { Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall) }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         Spacer(Modifier.height(28.dp))

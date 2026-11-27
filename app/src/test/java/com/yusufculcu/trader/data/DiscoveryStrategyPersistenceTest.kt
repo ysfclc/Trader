@@ -12,6 +12,7 @@ import com.yusufculcu.trader.domain.ProofAssetKind
 import com.yusufculcu.trader.domain.ProofClaim
 import com.yusufculcu.trader.domain.ProofClaimStatus
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import org.junit.After
@@ -69,6 +70,22 @@ class DiscoveryStrategyPersistenceTest {
         assertEquals(asset, repository.getProofAsset(asset.id))
         assertEquals(strategy, repository.getStrategy(strategy.id))
         assertEquals(asset.id, database.discoveryStrategyDao().getById(strategy.id)?.proofAssetId)
+    }
+
+    @Test
+    fun observesDecodedProofAssetsForDossierFitAssessmentPicker() = runBlocking {
+        val asset = ProofAsset(
+            id = "fit-picker-asset",
+            kind = ProofAssetKind.DOCUMENTED_RESULT,
+            name = "Verified machining capability",
+            description = "Evidence-backed proof used by a company dossier.",
+            capabilities = listOf("precision machining"),
+            claims = listOf(ProofClaim("fit-picker-claim", "Can machine parts to a 0.1 mm tolerance.")),
+            createdAt = 100,
+            updatedAt = 210
+        )
+        assertTrue(repository.saveProofAsset(asset).isEmpty())
+        assertEquals(listOf(asset), repository.observeProofAssetModels().first())
     }
 
     @Test

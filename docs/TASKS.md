@@ -106,8 +106,8 @@ This is the active ordered backlog. Preserve completed items and evidence; do no
 - [ ] T4.6 Implement explainable buyer-to-supplier matching and mandatory-constraint contradiction checks.
 - [ ] T4.7 Add human review for uncertain or high-impact claims.
 - [~] T4.8 Organization dossier foundation is implemented with source-linked claims and human review states. Person records, aliases, identity-resolution state and reversible duplicate review remain open.
-- [~] T4.9 **Domain, Room, repository and backup CI-verified** — deterministic supporting/contradicting/unknown components; transactional company/proof ownership validation; full computed-result snapshot separate from append-only reviewer overrides; Room v16 migration; encrypted backup snapshot v12 with strict validation and legacy compatibility. Draft PR [#21](https://github.com/ysfclc/Trader/pull/21), head `20b36dc`; CI run [#601](https://github.com/ysfclc/Trader/actions/runs/45892674806) passed 191 tests (0 failures/errors/skipped), coverage floor, build, lint, SBOM/OSV and persistent package/signature checks. EN/PL/TR dossier UI and physical-device acceptance remain open.
-- [ ] T4.9a Add the EN/PL/TR dossier UI for ProofAsset selection, explicit claim-to-proof evidence mapping, computed result components and append-only reviewer override history.
+- [x] T4.9 **Verified** — deterministic supporting/contradicting/unknown components; transactional company/proof ownership validation; full computed-result snapshots separate from append-only reviewer overrides; Room v16 migration; encrypted backup snapshot v12 with strict validation and legacy compatibility. PR [#21](https://github.com/ysfclc/Trader/pull/21) merged into main as [885e597](https://github.com/ysfclc/Trader/commit/885e5978ec658f3232c822258aaaabaf650244ff). CI run [#601](https://github.com/ysfclc/Trader/actions/runs/45892674806) passed 191 tests; consolidated main CI [#609](https://github.com/ysfclc/Trader/actions/runs/45894762068) also passed the full test, coverage, build, lint, SBOM/OSV and persistent package/signature gates. No installable APK was published by the push-triggered run.
+- [x] T4.9a **Implemented; CI pending** — EN/PL/TR dossier UI for ProofAsset selection, explicit source-supported company-claim to proof-claim mapping, deterministic result components, stale-input warning/recalculation, source-opening and append-only reviewer override history. Candidate build `0.14.0-debug` / versionCode 14; this commit awaits CI.
 
 ## T5 — Outreach and deal execution
 
@@ -180,7 +180,7 @@ Do not start broad scraping, bulk outreach, cloud sync or large AI integrations 
 - [x] Repair legacy migration test to include Room migration 6→7; commit a4950eb; CI run 45345752081 passed.
 - [ ] On Redmi, prove the next APK updates the currently installed stable-signed app in place (adb install -r) without uninstalling or losing app data.
 - [ ] Do not call a phase complete based only on tests or schema work: ship a visible app capability and provide a concise before/after summary with every APK.
-- [ ] Next visible vertical slice: explainable ProofAsset-to-Organization fit assessments with deterministic supporting, contradicting and unknown components, evidence provenance and an explicit reviewer override; do not infer fit from unreviewed claims.
+- [ ] Next visible vertical slice after T4.9a verification: complete device acceptance for the fit-assessment UI, then continue reversible person identity/alias review and persistent Match/Quote/Deal records without automatic entity merging.
 
 ## T2 — Buyer requirements
 
