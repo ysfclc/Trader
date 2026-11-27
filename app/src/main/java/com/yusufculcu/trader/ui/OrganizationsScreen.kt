@@ -401,7 +401,7 @@ private fun OrganizationDossierScreen(
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(stringResource(R.string.company_claims), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.company_claim_counts, supported, contradicted, unreviewed), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(stringResource(if (initial == null) R.string.company_unreviewed_notice else R.string.company_claim_edit_resets_review), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.company_unreviewed_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
