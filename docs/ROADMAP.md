@@ -32,10 +32,11 @@ Current Inbox, Pipeline, Sourcing, Activity, Browser and AI surfaces are capabil
 **Release status:** installable candidate; physical-device acceptance still open.
 
 - **Latest released build:** `0.14.0-debug`, versionCode 14
-- **Next candidate (pending PR #23 CI/merge):** `0.14.1-debug`, versionCode 15; deliberately increments versionCode so it can update the existing install without uninstalling
+- **Next candidate (merged and CI-verified):** `0.14.1-debug`, versionCode 15; PR #23 merged as [b34a863](https://github.com/ysfclc/Trader/commit/b34a8635c47a70ed8e52d41f2a0ab4255969daca), final main CI [#657](https://github.com/ysfclc/Trader/actions/runs/46051113140) passed. This increments versionCode so it can update the existing install without uninstalling. Installable artifact upload still requires explicit workflow-dispatch approval.
 - **Package:** `com.yusufculcu.trader.debug`
-- **Canonical main commit:** `94c241d8971d624857295069635baee12c2ea436`
-- **Approved main CI:** [run #626](https://github.com/ysfclc/Trader/actions/runs/46041691925)
+- **Canonical main commit:** `b34a8635c47a70ed8e52d41f2a0ab4255969daca`
+- **Latest main CI:** [run #657](https://github.com/ysfclc/Trader/actions/runs/46051113140) — build, tests, coverage, lint, SBOM/OSV and persistent package/signature checks passed
+- **Latest published installable APK:** [0.14.0-debug artifact 15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610); it predates the Sourcing route fix. Main CI #657 skipped artifact upload because it was not a manually approved workflow dispatch.
 - **Installable APK:** [artifact 15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610)
 - **Verification:** 201 Android unit tests, 0 failures/errors/skips; coverage floor, clean build, lint, SBOM/OSV and persistent package/signature checks passed.
 - **Room / backup:** schema v17; encrypted backup snapshot v13.
@@ -65,7 +66,7 @@ Target device: Redmi Note 12 Pro 5G, Android 14.
 6. Export and restore encrypted snapshot v13 in a controlled test workspace. Never overwrite the only copy of real data. Confirm companies, people, source claims, products, requirements, offers, fit assessments, aliases and reviewer history survive.
 7. Record every crash, broken control, data loss, incorrect status, confusing screen and manual workaround. Fix the actual defects and repeat the affected tests before adding features.
 
-**Known navigation defect and current fix:** the released `0.14.0-debug` main baseline sends Sourcing's `Open Companies` action to Pipeline → Opportunities. A fix is now implemented on `fix/sourcing-open-companies-route`: the Pipeline section is owned by the parent workspace, and Sourcing plus discovery entry use one explicit destination reducer. Reducer tests are added; full CI, merge and a new installable APK are still pending. The 0.14.0 artifact remains affected.
+**Sourcing navigation fix merged:** PR #23 makes Pipeline section state parent-owned and routes Sourcing's `Open Companies` actions and discovery-created organizations to Companies through one explicit reducer. Reducer tests passed PR CI #656 and final main CI #657 passed after merge. The already-published `0.14.0-debug` APK still contains the defect; the merged `0.14.1-debug` candidate contains the fix but awaits manual installable-artifact publication and physical-device validation. Full Compose UI smoke coverage remains open under T6.0e.
 
 **Exit gate:** the operator can complete and repeat that journey on the target phone without crashes, data loss, misleading status or workarounds, and can recover the workspace from the encrypted backup. Until then, this phase remains open.
 

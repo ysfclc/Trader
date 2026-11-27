@@ -1,3 +1,10 @@
+## 2026-11-27 — Trader 0.14.1 candidate and Sourcing navigation fix
+
+- Merged [PR #23](https://github.com/ysfclc/Trader/pull/23) into canonical `main` as [b34a863](https://github.com/ysfclc/Trader/commit/b34a8635c47a70ed8e52d41f2a0ab4255969daca). Pipeline workspace selection is now parent-owned; Sourcing's `Open Companies` entry and discovery-created organization entry both select Companies through one explicit destination reducer.
+- Added reducer tests for Companies and Opportunities destination selection. PR CI [#656](https://github.com/ysfclc/Trader/actions/runs/46050605230) and final main CI [#657](https://github.com/ysfclc/Trader/actions/runs/46051113140) passed build, unit tests, coverage floor, lint, SBOM/OSV and persistent package/signature verification.
+- Advanced Android identity from `0.14.0-debug` / versionCode 14 to candidate `0.14.1-debug` / versionCode 15. Main CI #657 was push-triggered and skipped the installable APK upload, which remains gated by explicit `workflow_dispatch` approval. The published 0.14.0 APK is still the latest downloadable artifact and contains the old navigation defect.
+- Physical-device install-over-existing, Room v16→v17 migration, encrypted backup v13 restore, complete sourcing journey and Compose UI smoke coverage remain open. CI success is not device or product acceptance.
+
 ## 2026-11-27 — Trader 0.14.0 installable release and roadmap reset
 
 - Merged [PR #22](https://github.com/ysfclc/Trader/pull/22) into canonical `main` as [94c241d](https://github.com/ysfclc/Trader/commit/94c241d8971d624857295069635baee12c2ea436), consolidating the 13-commit fit-assessment UI, contact aliases, reversible identity review, Room v16→v17 migration and encrypted backup snapshot v13 line.
