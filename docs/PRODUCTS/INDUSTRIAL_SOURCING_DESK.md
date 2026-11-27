@@ -1,7 +1,7 @@
 # Industrial Sourcing Desk
 
-**Product status:** first end-to-end product; 0.12.0 CI-verified, physical-device acceptance open  
-**Build candidate:** Trader 0.12.0-debug / versionCode 12; installable artifact withheld by release gate  
+**Product status:** first commercial workflow; latest implementation CI-verified in 0.14.0-debug, physical-device acceptance open  
+**Latest installable build:** Trader 0.14.0-debug / versionCode 14; main CI #626, artifact [15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610)  
 **Pilot:** Türkiye ↔ Poland/EU industrial tooling and machining
 
 ## Job to be done
