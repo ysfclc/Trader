@@ -1,5 +1,15 @@
 # Trader Roadmap
 
+## Current delivery gate — Trader 0.14.0-debug (2026-11-27)
+
+The current installable candidate is `0.14.0-debug` / versionCode 14 on canonical `main` commit `94c241d`. Approved CI run [#626](https://github.com/ysfclc/Trader/actions/runs/46041691925) published artifact [15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610) after 201 tests passed with no failures, errors or skips, plus coverage, lint, SBOM/OSV and persistent package/signature checks.
+
+This is **not** device acceptance. The next delivery is not another feature branch or another screen: it is proving the existing app is useful and safe on the Redmi Note 12 Pro 5G. Export a fresh encrypted backup, install over the existing package without uninstall/clear-data, verify Room v16→v17 and browser/session/data continuity, test encrypted snapshot v13 restore, and complete one real buyer→supplier sourcing journey through comparison, human decision, share handoff, Activity and close/reopen. Capture actual failures and fix them before widening scope.
+
+The full product brainstorm remains governed by [`docs/PROJECT_LOCK.md`](PROJECT_LOCK.md) and [`docs/PRODUCT_EXPERIENCE.md`](PRODUCT_EXPERIENCE.md): universal problem solving; proof-asset-led discovery; source-backed organization/person dossiers; explainable fit; visible browser/research; durable approved workflows; outcome verification; local-first AI as an assistant; user-controlled communication. Industrial Sourcing Desk is the first commercial pilot, not the entire product. No generic bulk outreach, autonomous commitments, fake match scores, or paid-service dependency.
+
+Exit gate: the user can complete and repeat the above journey on the target device without crashes, lost data, misleading status or manual workarounds, and can restore the encrypted workspace. Until then, these capabilities remain CI-verified or partially implemented, not product-accepted.
+
 This roadmap is ordered by real problem outcomes, evidence and execution reliability, not feature count. Commercial proof is one important outcome, not the only acceptance target. Each phase must leave a usable, testable result.
 
 ## Phase 0 — Product lock
