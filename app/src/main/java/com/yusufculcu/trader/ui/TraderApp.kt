@@ -217,7 +217,7 @@ fun TraderApp(
                 buyerRepository = (context.applicationContext as TraderApplication).buyerRequirementRepository,
                 supplierRepository = (context.applicationContext as TraderApplication).supplierOfferRepository,
                 organizationRepository = (context.applicationContext as TraderApplication).organizationRepository,
-                onOpenCompanies = { pipelineSection = PipelineWorkspaceSection.COMPANIES; tab = AppTab.PIPELINE },
+                onOpenCompanies = { pipelineSection = reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES); tab = AppTab.PIPELINE },
                 modifier = Modifier.padding(padding)
             )
             tab == AppTab.PIPELINE -> PipelineWorkspaceContent(
@@ -567,7 +567,7 @@ private fun PipelineWorkspaceContent(
     modifier: Modifier = Modifier
 ) {
     LaunchedEffect(incomingDocument?.id, incomingDocument?.url) {
-        if (incomingDocument != null) onSectionChange(reducePipelineWorkspaceSection(section, PipelineWorkspaceAction.OPEN_COMPANIES))
+        if (incomingDocument != null) onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES))
     }
     Column(modifier.fillMaxSize()) {
         Row(
@@ -576,12 +576,12 @@ private fun PipelineWorkspaceContent(
         ) {
             FilterChip(
                 selected = section == PipelineWorkspaceSection.OPPORTUNITIES,
-                onClick = { onSectionChange(reducePipelineWorkspaceSection(section, PipelineWorkspaceAction.OPEN_OPPORTUNITIES)) },
+                onClick = { onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_OPPORTUNITIES)) },
                 label = { Text(stringResource(R.string.pipeline_opportunities)) }
             )
             FilterChip(
                 selected = section == PipelineWorkspaceSection.COMPANIES,
-                onClick = { onSectionChange(PipelineWorkspaceSection.COMPANIES) },
+                onClick = { onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)) },
                 label = { Text(stringResource(R.string.companies_nav)) }
             )
         }
