@@ -544,9 +544,10 @@ private fun OrganizationDossierScreen(
     claimSource?.let { source ->
         OrganizationClaimDialog(
             source = source,
+            sources = sources,
             onDismiss = { claimSource = null },
-            onSave = { field, statement ->
-                repository.addClaim(organizationId, OrganizationClaimDraft(source.id, field, statement)).id
+            onSave = { sourceId, field, statement ->
+                repository.addClaim(organizationId, OrganizationClaimDraft(sourceId, field, statement)).id
             },
             onSaved = {
                 claimSource = null
@@ -559,9 +560,10 @@ private fun OrganizationDossierScreen(
             OrganizationClaimDialog(
                 initial = claim,
                 source = source,
+                sources = sources,
                 onDismiss = { editingClaim = null },
-                onSave = { field, statement ->
-                    repository.updateClaim(claim.id, OrganizationClaimDraft(source.id, field, statement)).id
+                onSave = { sourceId, field, statement ->
+                    repository.updateClaim(claim.id, OrganizationClaimDraft(sourceId, field, statement)).id
                 },
                 onSaved = {
                     editingClaim = null
@@ -956,14 +958,18 @@ private fun OrganizationSourceDialog(
 @Composable
 private fun OrganizationClaimDialog(
     source: OrganizationSourceEntity,
+    sources: List<OrganizationSourceEntity>,
     initial: OrganizationClaimEntity? = null,
     onDismiss: () -> Unit,
-    onSave: suspend (String, String) -> String,
+    onSave: suspend (String, String, String) -> String,
     onSaved: (String) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var field by remember(initial) { mutableStateOf(initial?.field.orEmpty()) }
     var statement by remember(initial) { mutableStateOf(initial?.statement.orEmpty()) }
+    var selectedSourceId by remember(initial, source) { mutableStateOf(initial?.sourceId ?: source.id) }
+    var sourceMenuExpanded by remember { mutableStateOf(false) }
+    val selectedSource = sources.firstOrNull { it.id == selectedSourceId } ?: source
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     AlertDialog(
@@ -971,7 +977,22 @@ private fun OrganizationClaimDialog(
         title = { Text(stringResource(if (initial == null) R.string.company_add_claim else R.string.company_edit_claim)) },
         text = {
             Column(Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.company_claim_source, source.title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                Box {
+                    TextButton(onClick = { sourceMenuExpanded = true }, enabled = !saving) {
+                        Text(stringResource(R.string.company_claim_source, selectedSource.title))
+                    }
+                    DropdownMenu(expanded = sourceMenuExpanded, onDismissRequest = { sourceMenuExpanded = false }) {
+                        sources.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.title) },
+                                onClick = {
+                                    selectedSourceId = option.id
+                                    sourceMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 OutlinedTextField(field, { field = it.take(80); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_field)) }, singleLine = true)
                 OutlinedTextField(statement, { statement = it.take(2_000); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_statement)) }, minLines = 3, maxLines = 7)
                 Text(stringResource(if (initial == null) R.string.company_unreviewed_notice else R.string.company_claim_edit_resets_review), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -982,7 +1003,7 @@ private fun OrganizationClaimDialog(
             Button(onClick = {
                 scope.launch {
                     saving = true
-                    val result = runCatching { onSave(field, statement) }
+                    val result = runCatching { onSave(selectedSourceId, field, statement) }
                     saving = false
                     result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save claim." }
                 }
