@@ -545,7 +545,7 @@ private fun SupplierOfferCreateDialog(
         title = { Text(stringResource(R.string.sourcing_add_offer)) },
         text = {
             Column(Modifier.fillMaxWidth().heightIn(max = 580.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                TextButton(onClick = { organizationMenu = true }) { Text(selectedOrganization?.canonicalName ?: stringResource(R.string.sourcing_choose_supplier)) }
+                TextButton(onClick = { organizationMenu = true }, modifier = Modifier.testTag("supplier-offer-company-picker")) { Text(selectedOrganization?.canonicalName ?: stringResource(R.string.sourcing_choose_supplier)) }
                 DropdownMenu(expanded = organizationMenu, onDismissRequest = { organizationMenu = false }) {
                     organizations.forEach { org ->
                         DropdownMenuItem(text = { Text(org.canonicalName) }, onClick = { selectedOrganizationId = org.id; selectedSources = emptySet(); organizationMenu = false })
