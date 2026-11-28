@@ -18,6 +18,7 @@ import com.yusufculcu.trader.viewmodel.TraderViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -33,6 +34,12 @@ class SourcingVerticalSliceUiSmokeTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+
+    @After
+    fun clearSharedTestDatabase() {
+        val application = RuntimeEnvironment.getApplication() as TraderApplication
+        runBlocking(Dispatchers.IO) { application.database.clearAllTables() }
+    }
 
     @Test
     fun operatorCanCreateRequirementOfferAndReachShortlistThroughRealAppNavigation() {
