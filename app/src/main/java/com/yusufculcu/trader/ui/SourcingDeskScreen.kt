@@ -814,7 +814,7 @@ private fun SourcingReviewDialog(
                     SourcingReviewStatus.NOT_SUITABLE to R.string.sourcing_not_suitable_state
                 ).forEach { (value, label) ->
                     Row(modifier = Modifier.testTag("sourcing-review-$value"), verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.RadioButton(selected = status == value, onClick = { status = value })
+                        androidx.compose.material3.RadioButton(selected = status == value, onClick = { status = value }, modifier = Modifier.testTag("sourcing-review-$value"))
                         Text(stringResource(label))
                     }
                 }
