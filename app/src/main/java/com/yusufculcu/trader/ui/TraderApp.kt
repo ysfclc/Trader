@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import com.yusufculcu.trader.R
 import androidx.compose.ui.unit.dp
@@ -165,8 +166,8 @@ fun TraderApp(
             if (selected == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(tab == AppTab.INBOX, { tab = AppTab.INBOX }, icon = { Icon(Icons.Rounded.Inbox, null) }, label = { Text(stringResource(R.string.inbox)) })
                 NavigationBarItem(tab == AppTab.DISCOVER, { tab = AppTab.DISCOVER }, icon = { Icon(Icons.Rounded.Search, null) }, label = { Text(stringResource(R.string.discover_nav)) })
-                NavigationBarItem(tab == AppTab.SOURCING, { tab = AppTab.SOURCING }, icon = { Icon(Icons.Rounded.Inventory2, null) }, label = { Text(stringResource(R.string.sourcing_nav)) })
-                NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
+                NavigationBarItem(tab == AppTab.SOURCING, { tab = AppTab.SOURCING }, modifier = Modifier.testTag("tab-sourcing"), icon = { Icon(Icons.Rounded.Inventory2, null) }, label = { Text(stringResource(R.string.sourcing_nav)) })
+                NavigationBarItem(tab == AppTab.PIPELINE, { tab = AppTab.PIPELINE }, modifier = Modifier.testTag("tab-pipeline"), icon = { Icon(Icons.Rounded.BusinessCenter, null) }, label = { Text(stringResource(R.string.pipeline)) })
                 NavigationBarItem(tab == AppTab.ACTIVITY, { tab = AppTab.ACTIVITY }, icon = { Icon(Icons.Rounded.Timeline, null) }, label = { Text(stringResource(R.string.activity)) })
                 NavigationBarItem(tab == AppTab.BROWSER, { tab = AppTab.BROWSER }, icon = { Icon(Icons.Rounded.Public, null) }, label = { Text("Browser") })
                 NavigationBarItem(tab == AppTab.AI, { tab = AppTab.AI }, icon = { Text("AI") }, label = { Text("Models") })
@@ -582,6 +583,7 @@ private fun PipelineWorkspaceContent(
             FilterChip(
                 selected = section == PipelineWorkspaceSection.COMPANIES,
                 onClick = { onSectionChange(reducePipelineWorkspaceSection(PipelineWorkspaceAction.OPEN_COMPANIES)) },
+                modifier = Modifier.testTag("pipeline-companies"),
                 label = { Text(stringResource(R.string.companies_nav)) }
             )
         }

@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -150,7 +151,7 @@ fun OrganizationsScreen(
                     items(visible, key = { it.id }) { organization ->
                         Card(
                             onClick = { selectedOrganizationId = organization.id },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().testTag("company-card-${organization.id}"),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                         ) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -384,7 +385,7 @@ private fun OrganizationDossierScreen(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.buyer_requirements), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-            TextButton(onClick = { editingRequirement = null; showBuyerRequirementDialog = true }) { Text(stringResource(R.string.buyer_add_requirement)) }
+            TextButton(onClick = { editingRequirement = null; showBuyerRequirementDialog = true }, modifier = Modifier.testTag("buyer-add-requirement")) { Text(stringResource(R.string.buyer_add_requirement)) }
         }
         if (buyerRequirements.isEmpty()) Text(stringResource(R.string.buyer_no_requirements), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         else buyerRequirements.forEach { requirement ->
@@ -647,7 +648,7 @@ private fun BuyerRequirementCard(
                 evidence.forEach { link -> sourceById[link.sourceId]?.let { Text(it.title, style = MaterialTheme.typography.bodySmall) } }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onAddItem) { Text(stringResource(R.string.buyer_add_line_item)) }
+                TextButton(onClick = onAddItem, modifier = Modifier.testTag("buyer-add-line-item")) { Text(stringResource(R.string.buyer_add_line_item)) }
                 TextButton(onClick = onLinkEvidence) { Text(stringResource(R.string.buyer_link_evidence)) }
                 TextButton(onClick = onDelete) { Text(stringResource(R.string.buyer_delete)) }
             }

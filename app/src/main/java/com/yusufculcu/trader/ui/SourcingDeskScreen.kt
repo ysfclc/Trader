@@ -200,7 +200,7 @@ fun SourcingDeskScreen(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.sourcing_supplier_offers), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButton(onClick = { showOfferDialog = true }) { Text(stringResource(R.string.sourcing_add_offer)) }
+                TextButton(onClick = { showOfferDialog = true }, modifier = Modifier.testTag("sourcing-add-offer")) { Text(stringResource(R.string.sourcing_add_offer)) }
             }
             if (offers.isEmpty()) {
                 Text(stringResource(R.string.sourcing_no_offers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -503,7 +503,7 @@ private fun SupplierOfferComparisonCard(
                 )
                 it.rationale?.let { note -> Text(note, style = MaterialTheme.typography.bodySmall) }
             }
-            TextButton(onClick = onReview) { Text(stringResource(R.string.sourcing_review_decision)) }
+            TextButton(onClick = onReview, modifier = Modifier.testTag("sourcing-review-decision")) { Text(stringResource(R.string.sourcing_review_decision)) }
         }
     }
 }
@@ -545,7 +545,7 @@ private fun SupplierOfferCreateDialog(
         title = { Text(stringResource(R.string.sourcing_add_offer)) },
         text = {
             Column(Modifier.fillMaxWidth().heightIn(max = 580.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                TextButton(onClick = { organizationMenu = true }) { Text(selectedOrganization?.canonicalName ?: stringResource(R.string.sourcing_choose_supplier)) }
+                TextButton(onClick = { organizationMenu = true }, modifier = Modifier.testTag("supplier-offer-company-picker")) { Text(selectedOrganization?.canonicalName ?: stringResource(R.string.sourcing_choose_supplier)) }
                 DropdownMenu(expanded = organizationMenu, onDismissRequest = { organizationMenu = false }) {
                     organizations.forEach { org ->
                         DropdownMenuItem(text = { Text(org.canonicalName) }, onClick = { selectedOrganizationId = org.id; selectedSources = emptySet(); organizationMenu = false })
@@ -569,7 +569,7 @@ private fun SupplierOfferCreateDialog(
                     Text(stringResource(R.string.sourcing_attach_evidence), style = MaterialTheme.typography.titleSmall)
                     sources.forEach { source ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = source.id in selectedSources, onCheckedChange = { checked -> selectedSources = if (checked) selectedSources + source.id else selectedSources - source.id })
+                            Checkbox(checked = source.id in selectedSources, onCheckedChange = { checked -> selectedSources = if (checked) selectedSources + source.id else selectedSources - source.id }, modifier = Modifier.testTag("offer-evidence-${source.id}"))
                             Column(Modifier.weight(1f)) {
                                 Text(source.title, style = MaterialTheme.typography.bodySmall)
                                 Text(source.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -814,7 +814,7 @@ private fun SourcingReviewDialog(
                     SourcingReviewStatus.NOT_SUITABLE to R.string.sourcing_not_suitable_state
                 ).forEach { (value, label) ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        androidx.compose.material3.RadioButton(selected = status == value, onClick = { status = value })
+                        androidx.compose.material3.RadioButton(selected = status == value, onClick = { status = value }, modifier = Modifier.testTag("sourcing-review-$value"))
                         Text(stringResource(label))
                     }
                 }
