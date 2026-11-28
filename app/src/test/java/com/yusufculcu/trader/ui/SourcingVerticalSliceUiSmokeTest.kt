@@ -102,11 +102,11 @@ class SourcingVerticalSliceUiSmokeTest {
         composeRule.onNodeWithText("All companies").performScrollTo().performClick()
         composeRule.onNodeWithTag("tab-sourcing").performClick()
         composeRule.onNodeWithTag("sourcing-add-offer").performClick()
-        composeRule.onNodeWithText("Buyer Co").performClick()
+        composeRule.onNodeWithTag("supplier-offer-company-picker").performClick()
         composeRule.onNodeWithText("Supplier Co").performClick()
         composeRule.onNodeWithText("Offer title").performTextInput("Steel plate supply")
         composeRule.onNodeWithText("Product or service").performTextInput("Steel plate")
-        composeRule.onNodeWithTag("offer-evidence-${supplierSource.id}").performClick()
+        composeRule.onNodeWithTag("offer-evidence-${supplierSource.id}").performScrollTo().performClick()
         composeRule.onNodeWithText("Save supplier offer").performScrollTo().performClick()
         composeRule.waitForIdle()
 
