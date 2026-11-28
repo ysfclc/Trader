@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -200,7 +201,7 @@ fun SourcingDeskScreen(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.sourcing_supplier_offers), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                TextButton(onClick = { showOfferDialog = true }) { Text(stringResource(R.string.sourcing_add_offer)) }
+                TextButton(onClick = { showOfferDialog = true }, modifier = Modifier.testTag("sourcing-add-offer")) { Text(stringResource(R.string.sourcing_add_offer)) }
             }
             if (offers.isEmpty()) {
                 Text(stringResource(R.string.sourcing_no_offers), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -503,7 +504,7 @@ private fun SupplierOfferComparisonCard(
                 )
                 it.rationale?.let { note -> Text(note, style = MaterialTheme.typography.bodySmall) }
             }
-            TextButton(onClick = onReview) { Text(stringResource(R.string.sourcing_review_decision)) }
+            TextButton(onClick = onReview, modifier = Modifier.testTag("sourcing-review-decision")) { Text(stringResource(R.string.sourcing_review_decision)) }
         }
     }
 }
@@ -813,7 +814,7 @@ private fun SourcingReviewDialog(
                     SourcingReviewStatus.NEEDS_INFORMATION to R.string.sourcing_needs_information_state,
                     SourcingReviewStatus.NOT_SUITABLE to R.string.sourcing_not_suitable_state
                 ).forEach { (value, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.testTag("sourcing-review-$value"), verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.RadioButton(selected = status == value, onClick = { status = value })
                         Text(stringResource(label))
                     }
