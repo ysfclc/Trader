@@ -577,6 +577,9 @@
     <string name="company_duplicate_same_email">Ten sam znormalizowany adres e-mail</string>
     <string name="company_duplicate_same_profile">Ten sam adres profilu LinkedIn</string>
     <string name="company_duplicate_same_name_role">To samo imię i nazwisko oraz rola (słaby sygnał)</string>
+    <string name="company_duplicate_same_email_alias">Zgodny zapisany alias e-mail</string>
+    <string name="company_duplicate_same_profile_alias">Zgodny zapisany alias profilu LinkedIn</string>
+    <string name="company_duplicate_same_name_alias">Zgodny zapisany alias imienia i nazwiska (słaby sygnał)</string>
     <string name="company_add_alias">Dodaj alias</string>
     <string name="company_alias_type">Typ aliasu</string>
     <string name="company_alias_value">Wartość aliasu</string>

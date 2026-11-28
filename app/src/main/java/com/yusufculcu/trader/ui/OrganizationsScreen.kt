@@ -212,7 +212,7 @@ private fun OrganizationDossierScreen(
     val aliases by repository.observePersonAliases(organizationId).collectAsState(initial = emptyList())
     val identityDecisions by repository.observeIdentityDecisions(organizationId).collectAsState(initial = emptyList())
     val aliasesByPerson = remember(aliases) { aliases.groupBy { it.personId } }
-    val identityCandidates = remember(people) { PersonIdentityCandidates.find(people) }
+    val identityCandidates = remember(people, aliases) { PersonIdentityCandidates.find(people, aliases) }
     val latestIdentityDecisions = remember(identityDecisions) { identityDecisions.associateBy { it.firstPersonId + "|" + it.secondPersonId } }
     val buyerRepository = remember(repository) { repository.buyerRequirementRepository() }
     val buyerRequirements by buyerRepository.observeForOrganization(organizationId).collectAsState(initial = emptyList())
@@ -337,6 +337,9 @@ private fun OrganizationDossierScreen(
                                         PersonIdentitySignal.SAME_EMAIL -> R.string.company_duplicate_same_email
                                         PersonIdentitySignal.SAME_PROFILE -> R.string.company_duplicate_same_profile
                                         PersonIdentitySignal.SAME_NAME_AND_ROLE -> R.string.company_duplicate_same_name_role
+                                        PersonIdentitySignal.SAME_EMAIL_ALIAS -> R.string.company_duplicate_same_email_alias
+                                        PersonIdentitySignal.SAME_PROFILE_ALIAS -> R.string.company_duplicate_same_profile_alias
+                                        PersonIdentitySignal.SAME_NAME_ALIAS -> R.string.company_duplicate_same_name_alias
                                     }
                                     Text(stringResource(label), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                                 }

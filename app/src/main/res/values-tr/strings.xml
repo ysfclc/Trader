@@ -577,6 +577,9 @@
     <string name="company_duplicate_same_email">Aynı normalize edilmiş e-posta adresi</string>
     <string name="company_duplicate_same_profile">Aynı LinkedIn profil bağlantısı</string>
     <string name="company_duplicate_same_name_role">Aynı ad ve rol (zayıf sinyal)</string>
+    <string name="company_duplicate_same_email_alias">Eşleşen kayıtlı e-posta takma adı</string>
+    <string name="company_duplicate_same_profile_alias">Eşleşen kayıtlı LinkedIn profil takma adı</string>
+    <string name="company_duplicate_same_name_alias">Eşleşen kayıtlı ad takma adı (zayıf sinyal)</string>
     <string name="company_add_alias">Takma ad ekle</string>
     <string name="company_alias_type">Takma ad türü</string>
     <string name="company_alias_value">Takma ad değeri</string>

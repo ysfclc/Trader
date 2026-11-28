@@ -577,6 +577,9 @@
     <string name="company_duplicate_same_email">Same normalized email address</string>
     <string name="company_duplicate_same_profile">Same LinkedIn profile URL</string>
     <string name="company_duplicate_same_name_role">Same name and role (weak signal)</string>
+    <string name="company_duplicate_same_email_alias">Matching saved email alias</string>
+    <string name="company_duplicate_same_profile_alias">Matching saved LinkedIn alias</string>
+    <string name="company_duplicate_same_name_alias">Matching saved name alias (weak signal)</string>
     <string name="company_add_alias">Add alias</string>
     <string name="company_alias_type">Alias type</string>
     <string name="company_alias_value">Alias value</string>

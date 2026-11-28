@@ -1,3 +1,10 @@
+## 2026-11-28 — Alias-aware contact identity review (CI pending)
+
+- Saved NAME, EMAIL and LinkedIn profile aliases now participate in same-company duplicate suggestions against canonical contact values and other saved aliases.
+- Alias matches are separate, explicitly labelled review signals; OTHER aliases and aliases whose owner/company relationship is inconsistent are ignored.
+- No contact is merged, renamed or mutated by candidate detection. Existing append-only operator decisions remain the only identity-review record.
+- Added focused tests for alias-to-canonical, alias-to-alias, normalization and ownership boundaries. Feature CI is pending.
+
 ## 2026-11-27 — Trader 0.14.1 candidate and Sourcing navigation fix
 
 - Merged [PR #23](https://github.com/ysfclc/Trader/pull/23) into canonical `main` as [b34a863](https://github.com/ysfclc/Trader/commit/b34a8635c47a70ed8e52d41f2a0ab4255969daca). Pipeline workspace selection is now parent-owned; Sourcing's `Open Companies` entry and discovery-created organization entry both select Companies through one explicit destination reducer.
