@@ -1,6 +1,6 @@
 # Trader Product Roadmap
 
-_Last reconciled: 2026-11-28 — canonical main at `12bac6b`; 0.14.1-debug CI-verified, installable artifact publication and physical-device acceptance open._
+_Last reconciled: 2026-11-28 — canonical main at `9e9ac34`; feature branch `feature/discovery-run-persistence` carries the alias-aware identity increment and the next company-claim provenance candidate. Physical-device acceptance remains open._
 
 ## 1. Product north star
 
@@ -46,13 +46,13 @@ This is a signed installable development APK. It is **not** proof that the app h
 
 ## 4. Active delivery gate — prove the current product on the Redmi
 
-**This is the only active implementation priority. Do not start another feature lane until this gate passes.**
+**Physical-device acceptance remains the active release gate. The explicitly requested company-profile provenance increment may proceed in parallel; it does not close or replace this device gate. Do not start unrelated feature lanes.**
 
 Target device: Redmi Note 12 Pro 5G, Android 14.
 
 1. Export a fresh encrypted workspace backup and retain its passphrase independently.
-2. Install `0.14.1-debug` over the existing `0.14.0-debug` Trader installation. Do not uninstall, clear storage or reset app data as an update strategy. Confirm package identity and that Android accepts the existing signing certificate.
-3. Verify Room v16→v17 migration and preservation of existing companies, contacts, cases, evidence, sourcing records, fit assessments, aliases and review history. Verify preferences and browser login/session behavior separately; they are not all part of the encrypted workspace backup.
+2. Install `0.15.0-debug` over the existing Trader package only after exporting a fresh encrypted backup. Do not uninstall, clear storage or reset app data as an update strategy.
+3. Verify the full Room v16→v17→v18 migration path and preservation of existing companies, contacts, cases, evidence, sourcing records, fit assessments, aliases and review history. Verify preferences and browser login/session behavior separately; they are not all part of the encrypted workspace backup.
 4. Exercise navigation and the real screens. Every visible control must respond without crashes, dead ends, stale state or misleading success messages.
 5. Complete one real Industrial Sourcing Desk journey:
    - create/select a buyer company dossier;
@@ -110,11 +110,11 @@ The first prospecting method starts with something the operator can genuinely de
 - browser handoff and source provenance;
 - deterministic contact duplicate candidates, saved aliases and reversible operator review.
 
-**Next after the device gate:**
-1. Make saved aliases additional review-only signals in candidate detection; never auto-merge contacts.
-2. Build source-backed company/person profile extraction with claim-level source, timestamp, excerpt and extraction provenance.
-3. Validate extracted claims deterministically and require operator review before they become supported facts.
-4. Explain fit against the selected ProofAsset using verified facts, contradictions and explicit unknowns.
+**Next after the device gate (and only where explicitly directed):**
+1. [x] Saved aliases are review-only same-company candidate signals; contacts are never auto-merged (CI #708).
+2. [~] Company profile claims now carry an exact source excerpt, source-capture time and operator-entry extraction provenance; a grounded excerpt is required before SUPPORT or fit eligibility.
+3. Build source-backed person profile claims with the same immutable-source and review boundaries.
+4. Add deterministic field extraction only when its input contract and source provenance are testable; local-model extraction remains gated on actual device inference.
 5. Validate live-source reliability, access mode, terms, rate limits and failure behavior before enabling any new adapter.
 
 Discover is user-triggered, not continuous monitoring. No scraping behind login walls, credential bypass or unapproved community/group access.

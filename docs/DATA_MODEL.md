@@ -41,8 +41,12 @@ A company, manufacturer, supplier, buyer, importer, distributor, service provide
 
 One organization can have multiple roles. A company can be both a supplier and a buyer. Role is a relationship, not a separate duplicate company.
 
+### Organization profile claim
+
+A claim is a separate, reviewable statement about one organization field. It references one saved source snapshot and stores the exact excerpt used to formulate the statement, the source-capture timestamp, the extraction timestamp, extraction method, extractor identifier and extractor version. The first supported method is explicit operator entry (`OPERATOR_ENTERED`, `operator-entry`, `manual-v1`); this is not an AI extraction claim. The excerpt must be a normalized match within the immutable saved source excerpt. Every new or corrected claim starts UNREVIEWED. It can become SUPPORTED only when a grounded excerpt exists and the operator explicitly reviews it. Fit assessment rechecks the source timestamp and excerpt; missing or stale provenance remains UNKNOWN. Legacy rows/backups retain their previous review history but are labelled as legacy imports.
+
 ### Person
-A person connected to an organization, with name, role, publicly available professional contact routes, language, source, contact basis/permission state and do-not-contact status. Do not infer a private address or personal details.
+A person connected to an organization, with name, role, publicly available professional contact routes, language, source, contact basis/permission state and do-not-contact status. Do not infer a private address or personal details. Contact aliases and identity review remain review-only; source-backed person fact claims are a separate follow-up.
 
 ### Product
 A product family or specific SKU. Store original names, normalized category, manufacturer, model/SKU, materials/grades, dimensions, application, technical standards, certifications and catalogue/datasheet references. Keep original manufacturer text.

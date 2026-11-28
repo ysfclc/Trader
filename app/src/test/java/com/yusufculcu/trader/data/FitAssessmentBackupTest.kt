@@ -102,7 +102,13 @@ class FitAssessmentBackupTest {
         database.organizationClaimDao().insert(
             OrganizationClaimEntity(
                 "company-claim", "organization-1", "company-source", "Operational need",
-                "The company is seeking workflow automation.", OrganizationClaimState.SUPPORTED, null, 3, 2, 3
+                "The company is seeking workflow automation.", OrganizationClaimState.SUPPORTED, null, 3, 2, 3,
+                evidenceExcerpt = "Company source excerpt",
+                sourceCapturedAt = 2,
+                extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+                extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+                extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+                extractedAt = 3
             )
         )
         val asset = ProofAsset(

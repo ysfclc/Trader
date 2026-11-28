@@ -66,19 +66,29 @@ class FitAssessmentRepository(private val database: TraderDatabase) {
 
         val claimRows = database.organizationClaimDao().getAll()
             .filter { it.organizationId == organizationId }
-        val sourceIds = database.organizationSourceDao().getAll()
+        val sourcesById = database.organizationSourceDao().getAll()
             .filter { it.organizationId == organizationId }
-            .map { it.id }
-            .toSet()
+            .associateBy { it.id }
+        val sourceIds = sourcesById.keys
         require(claimRows.all { it.sourceId in sourceIds }) {
             "A company claim references a source outside its dossier."
         }
         val companyClaims = claimRows.map { row ->
-            val reviewState = when (row.reviewState) {
-                OrganizationClaimState.UNREVIEWED -> FitCompanyClaimReviewState.UNREVIEWED
-                OrganizationClaimState.SUPPORTED -> FitCompanyClaimReviewState.SUPPORTED
-                OrganizationClaimState.CONTRADICTED -> FitCompanyClaimReviewState.CONTRADICTED
-                OrganizationClaimState.REJECTED -> FitCompanyClaimReviewState.REJECTED
+            val source = sourcesById[row.sourceId]
+            val evidenceBacked = source != null &&
+                row.sourceCapturedAt == source.capturedAt &&
+                row.extractionMethod in OrganizationClaimExtractionMethod.ALL &&
+                row.extractorId.isNotBlank() &&
+                row.extractorVersion.isNotBlank() &&
+                row.extractedAt >= 0 &&
+                isEvidenceExcerptGrounded(row.evidenceExcerpt, source.excerpt)
+            val reviewState = when {
+                row.reviewState == OrganizationClaimState.SUPPORTED && !evidenceBacked ->
+                    FitCompanyClaimReviewState.UNREVIEWED
+                row.reviewState == OrganizationClaimState.UNREVIEWED -> FitCompanyClaimReviewState.UNREVIEWED
+                row.reviewState == OrganizationClaimState.SUPPORTED -> FitCompanyClaimReviewState.SUPPORTED
+                row.reviewState == OrganizationClaimState.CONTRADICTED -> FitCompanyClaimReviewState.CONTRADICTED
+                row.reviewState == OrganizationClaimState.REJECTED -> FitCompanyClaimReviewState.REJECTED
                 else -> throw IllegalArgumentException("A company claim has an unsupported review state.")
             }
             FitCompanyClaim(row.id, row.organizationId, row.field, row.statement, reviewState)

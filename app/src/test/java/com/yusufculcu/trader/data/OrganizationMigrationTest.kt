@@ -6,6 +6,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -72,6 +73,47 @@ class OrganizationMigrationTest {
             assertEquals(0, scalar(db, "SELECT COUNT(*) FROM organization_person_aliases"))
             assertEquals(0, scalar(db, "SELECT COUNT(*) FROM organization_person_identity_decisions"))
         } finally { helper.close() }
+    }
+
+    @Test
+    fun migration17To18BackfillsClaimExcerptAndSourceExtractionProvenance() {
+        val helper = FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(context)
+                .name(null)
+                .callback(object : SupportSQLiteOpenHelper.Callback(17) {
+                    override fun onCreate(db: SupportSQLiteDatabase) = Unit
+                    override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+                })
+                .build()
+        )
+        try {
+            val db = helper.writableDatabase
+            db.setForeignKeyConstraintsEnabled(true)
+            db.execSQL("CREATE TABLE organizations (id TEXT NOT NULL PRIMARY KEY, canonicalName TEXT NOT NULL, websiteUrl TEXT, domain TEXT, country TEXT, city TEXT, industry TEXT, notes TEXT, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+            db.execSQL("CREATE TABLE organization_sources (id TEXT NOT NULL PRIMARY KEY, organizationId TEXT NOT NULL, sourceKind TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, excerpt TEXT NOT NULL, capturedAt INTEGER NOT NULL, FOREIGN KEY(organizationId) REFERENCES organizations(id) ON DELETE CASCADE)")
+            db.execSQL("CREATE TABLE organization_claims (id TEXT NOT NULL PRIMARY KEY, organizationId TEXT NOT NULL, sourceId TEXT NOT NULL, field TEXT NOT NULL, statement TEXT NOT NULL, reviewState TEXT NOT NULL, reviewNote TEXT, reviewedAt INTEGER, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL, FOREIGN KEY(organizationId) REFERENCES organizations(id) ON DELETE CASCADE, FOREIGN KEY(sourceId) REFERENCES organization_sources(id) ON DELETE CASCADE)")
+            db.execSQL("INSERT INTO organizations VALUES ('org','Acme',NULL,NULL,NULL,NULL,NULL,NULL,1,1)")
+            db.execSQL("INSERT INTO organization_sources VALUES ('src','org','MANUAL_REFERENCE','Capabilities','https://acme.example/capabilities','Legacy source excerpt',42)")
+            db.execSQL("INSERT INTO organization_claims VALUES ('claim','org','src','Capability','Makes precision parts','SUPPORTED','Reviewed',43,40,43)")
+
+            MIGRATION_17_18.migrate(db)
+
+            val cursor = db.query("SELECT evidenceExcerpt, sourceCapturedAt, extractionMethod, extractorId, extractorVersion, extractedAt, reviewState FROM organization_claims WHERE id='claim'")
+            try {
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Legacy source excerpt", cursor.getString(0))
+                assertEquals(42L, cursor.getLong(1))
+                assertEquals(OrganizationClaimExtractionMethod.OPERATOR_ENTERED, cursor.getString(2))
+                assertEquals(OrganizationClaimExtractionMethod.LEGACY_ROOM_EXTRACTOR_ID, cursor.getString(3))
+                assertEquals("room-v17-migration", cursor.getString(4))
+                assertEquals(40L, cursor.getLong(5))
+                assertEquals(OrganizationClaimState.SUPPORTED, cursor.getString(6))
+            } finally {
+                cursor.close()
+            }
+        } finally {
+            helper.close()
+        }
     }
 
     private fun scalar(db: SupportSQLiteDatabase, sql: String): Int {

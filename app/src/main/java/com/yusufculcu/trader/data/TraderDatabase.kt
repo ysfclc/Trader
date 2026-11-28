@@ -1,5 +1,6 @@
 package com.yusufculcu.trader.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -517,7 +518,13 @@ data class OrganizationClaimEntity(
     val reviewNote: String?,
     val reviewedAt: Long?,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    @ColumnInfo(defaultValue = "''") val evidenceExcerpt: String = "",
+    @ColumnInfo(defaultValue = "0") val sourceCapturedAt: Long = 0L,
+    @ColumnInfo(defaultValue = "'OPERATOR_ENTERED'") val extractionMethod: String = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+    @ColumnInfo(defaultValue = "'operator-entry'") val extractorId: String = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+    @ColumnInfo(defaultValue = "'manual-v1'") val extractorVersion: String = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+    @ColumnInfo(defaultValue = "0") val extractedAt: Long = createdAt
 )
 
 @Entity(tableName = "organization_people", foreignKeys = [ForeignKey(entity = OrganizationEntity::class, parentColumns = ["id"], childColumns = ["organizationId"], onDelete = ForeignKey.CASCADE)], indices = [Index(value = ["organizationId"]), Index(value = ["email"])])
@@ -850,7 +857,7 @@ interface FitAssessmentOverrideDao {
         FitAssessmentEvidenceEntity::class,
         FitAssessmentOverrideEntity::class
     ],
-    version = 17,
+    version = 18,
     exportSchema = true
 )
 abstract class TraderDatabase : RoomDatabase() {
@@ -1211,5 +1218,26 @@ val MIGRATION_16_17 = object : Migration(16, 17) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_secondPersonId ON organization_person_identity_decisions (secondPersonId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_sourceId ON organization_person_identity_decisions (sourceId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_organization_person_identity_decisions_organizationId_firstPersonId_secondPersonId_reviewedAt ON organization_person_identity_decisions (organizationId, firstPersonId, secondPersonId, reviewedAt)")
+    }
+}
+
+/** Adds immutable claim-level source excerpts and explicit extraction provenance. */
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN evidenceExcerpt TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN sourceCapturedAt INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN extractionMethod TEXT NOT NULL DEFAULT 'OPERATOR_ENTERED'")
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN extractorId TEXT NOT NULL DEFAULT 'operator-entry'")
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN extractorVersion TEXT NOT NULL DEFAULT 'manual-v1'")
+        db.execSQL("ALTER TABLE organization_claims ADD COLUMN extractedAt INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("""
+            UPDATE organization_claims
+            SET evidenceExcerpt = COALESCE((SELECT substr(excerpt, 1, 2000) FROM organization_sources WHERE organization_sources.id = organization_claims.sourceId), ''),
+                sourceCapturedAt = COALESCE((SELECT capturedAt FROM organization_sources WHERE organization_sources.id = organization_claims.sourceId), 0),
+                extractionMethod = 'OPERATOR_ENTERED',
+                extractorId = 'legacy-import',
+                extractorVersion = 'room-v17-migration',
+                extractedAt = createdAt
+        """.trimIndent())
     }
 }

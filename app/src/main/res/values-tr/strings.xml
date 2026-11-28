@@ -304,6 +304,14 @@
     <string name="company_claims">Kaynağa bağlı iddialar</string>
     <string name="company_no_claims">Henüz iddia yok. Kaydedilmiş kaynaklardan birine bağlı iddia ekle.</string>
     <string name="company_claim_field">Alan / konu (ör. alıcı ihtiyacı)</string>
+    <string name="company_claim_excerpt">Kaynak alıntısı / tam pasaj</string>
+    <string name="company_claim_excerpt_hint">Kaydedilmiş kaynak görüntüsünde bulunan bir pasaj kullan. İddiayı sen inceleyene kadar doğrulanmış sayılmaz.</string>
+    <string name="company_claim_excerpt_display">“%1$s”</string>
+    <string name="company_claim_legacy_no_excerpt">Eski destekleniyor durumu korundu; ancak alıntı olmadığı için bu iddia uygunluk değerlendirmesine katılmaz.</string>
+    <string name="company_claim_no_excerpt">Alıntı kaydedilmedi. Bu iddia henüz destekleniyor olarak işaretlenemez.</string>
+    <string name="company_claim_capture_meta">Kaynak %1$s tarihinde alındı · %2$s tarihinde kaydedildi · %3$s · %4$s (%5$s)</string>
+    <string name="company_claim_operator_entered">Operatör tarafından girildi</string>
+    <string name="company_claim_unknown_extractor">Bilinmeyen çıkarım yöntemi</string>
     <string name="company_claim_statement">Bu kaynak tam olarak ne söylüyor?</string>
     <string name="company_claim_unreviewed">İncelenmedi</string>
     <string name="company_claim_supported">Destekleniyor</string>

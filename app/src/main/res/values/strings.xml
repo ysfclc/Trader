@@ -304,6 +304,14 @@
     <string name="company_claims">Source-linked claims</string>
     <string name="company_no_claims">No claims yet. Add a claim from one of the saved sources.</string>
     <string name="company_claim_field">Field / topic (e.g. buyer requirement)</string>
+    <string name="company_claim_excerpt">Source excerpt / exact passage</string>
+    <string name="company_claim_excerpt_hint">Use a passage present in the saved source snapshot. It remains unverified until you review the claim.</string>
+    <string name="company_claim_excerpt_display">“%1$s”</string>
+    <string name="company_claim_legacy_no_excerpt">Legacy supported status is retained, but without an excerpt this claim is excluded from fit assessment.</string>
+    <string name="company_claim_no_excerpt">No excerpt captured. This claim cannot be marked supported yet.</string>
+    <string name="company_claim_capture_meta">Source captured %1$s · recorded %2$s · %3$s · %4$s (%5$s)</string>
+    <string name="company_claim_operator_entered">Operator entered</string>
+    <string name="company_claim_unknown_extractor">Unknown extraction method</string>
     <string name="company_claim_statement">What does this source actually say?</string>
     <string name="company_claim_unreviewed">Unreviewed</string>
     <string name="company_claim_supported">Supported</string>

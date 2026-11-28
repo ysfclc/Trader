@@ -62,6 +62,65 @@ class OrganizationRepositoryTest {
     }
 
     @Test
+    fun claimStoresGroundedExcerptAndCannotBeSupportedWithoutOne() = runBlocking {
+        val company = repository.createOrganization(OrganizationDraft("Evidence Profile Works"))
+        val source = repository.addSource(
+            company.id,
+            OrganizationSourceDraft(
+                OrganizationSourceKind.MANUAL_REFERENCE,
+                "Capabilities",
+                "https://evidence-profile.example/capabilities",
+                "We manufacture precision-machined aluminum components for OEM customers.",
+                42L
+            )
+        )
+        val claim = repository.addClaim(
+            company.id,
+            OrganizationClaimDraft(
+                source.id,
+                "Manufacturing capability",
+                "Manufactures precision-machined aluminum components.",
+                "precision-machined aluminum components"
+            )
+        )
+        assertEquals("precision-machined aluminum components", claim.evidenceExcerpt)
+        assertEquals(42L, claim.sourceCapturedAt)
+        assertEquals(OrganizationClaimExtractionMethod.OPERATOR_ENTERED, claim.extractionMethod)
+        assertEquals(OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID, claim.extractorId)
+        assertEquals(OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION, claim.extractorVersion)
+        assertTrue(claim.extractedAt >= claim.createdAt)
+        assertTrue(repository.reviewClaim(claim.id, OrganizationClaimState.SUPPORTED))
+
+        var unrelatedExcerptRejected = false
+        try {
+            repository.addClaim(
+                company.id,
+                OrganizationClaimDraft(source.id, "Certification", "Certified to ISO 9001.", "ISO 9001")
+            )
+        } catch (_: IllegalArgumentException) {
+            unrelatedExcerptRejected = true
+        }
+        assertTrue(unrelatedExcerptRejected)
+
+        val noExcerptSource = repository.addSource(
+            company.id,
+            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Landing page", "https://evidence-profile.example/", "", 43L)
+        )
+        val ungrounded = repository.addClaim(
+            company.id,
+            OrganizationClaimDraft(noExcerptSource.id, "Capability", "Provides industrial services.")
+        )
+        var supportRejected = false
+        try {
+            repository.reviewClaim(ungrounded.id, OrganizationClaimState.SUPPORTED)
+        } catch (_: IllegalArgumentException) {
+            supportRejected = true
+        }
+        assertTrue(supportRejected)
+        assertEquals(OrganizationClaimState.UNREVIEWED, repository.observeClaims(company.id).first().first { it.id == ungrounded.id }.reviewState)
+    }
+
+    @Test
     fun correctingReviewedClaimPreservesIdentityInvalidatesReviewAndAppendsActivity() = runBlocking {
         val company = repository.createOrganization(OrganizationDraft("Claim Correction Works"))
         val source = repository.addSource(

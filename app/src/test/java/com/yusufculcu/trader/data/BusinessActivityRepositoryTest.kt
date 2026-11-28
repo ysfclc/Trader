@@ -85,7 +85,7 @@ class BusinessActivityRepositoryTest {
         val company = organizations.createOrganization(OrganizationDraft("Northstar Precision"))
         val source = organizations.addSource(
             company.id,
-            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Capabilities", "https://northstar.example/capabilities")
+            OrganizationSourceDraft(OrganizationSourceKind.MANUAL_REFERENCE, "Capabilities", "https://northstar.example/capabilities", "We manufacture precision-machined components for industrial buyers.")
         )
         val claim = organizations.addClaim(
             company.id,

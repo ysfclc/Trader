@@ -67,7 +67,14 @@ class TraderBackupManagerTest {
             assertEquals(1, target.organizationSourceDao().getAll().size)
             assertEquals("https://acme.example/rfq", target.organizationSourceDao().getAll().single().url)
             assertEquals(1, target.organizationClaimDao().getAll().size)
-            assertEquals(OrganizationClaimState.SUPPORTED, target.organizationClaimDao().getAll().single().reviewState)
+            val restoredClaim = target.organizationClaimDao().getAll().single()
+            assertEquals(OrganizationClaimState.SUPPORTED, restoredClaim.reviewState)
+            assertEquals("Public requirement page", restoredClaim.evidenceExcerpt)
+            assertEquals(1_700_000_000_012L, restoredClaim.sourceCapturedAt)
+            assertEquals(OrganizationClaimExtractionMethod.OPERATOR_ENTERED, restoredClaim.extractionMethod)
+            assertEquals(OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID, restoredClaim.extractorId)
+            assertEquals(OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION, restoredClaim.extractorVersion)
+            assertEquals(1_700_000_000_013L, restoredClaim.extractedAt)
             assertEquals(1, target.organizationPersonDao().getAll().size)
             assertEquals("Ada Buyer", target.organizationPersonDao().getAll().single().fullName)
             assertEquals("ada@acme.example", target.organizationPersonDao().getAll().single().email)
@@ -125,6 +132,56 @@ class TraderBackupManagerTest {
             targetStore.replaceAll(emptyList())
             source.close()
             target.close()
+        }
+    }
+
+    @Test
+    fun schemaSeventeenBackupBackfillsClaimProvenanceFromTheSavedSource() {
+        val database = Room.inMemoryDatabaseBuilder(context, TraderDatabase::class.java)
+            .allowMainThreadQueries().build()
+        try {
+            val root = JSONObject()
+                .put("formatVersion", 13)
+                .put("databaseSchemaVersion", 17)
+            listOf(
+                "problems", "planSteps", "activityEvents", "evidence", "opportunities",
+                "workflowRuns", "workflowSteps", "workflowEvents", "discoverySources",
+                "proofAssets", "discoveryStrategies", "discoveryRuns", "sourceRuns", "discoveryDocuments",
+                "organizationPeople", "organizationPersonAliases", "organizationPersonIdentityDecisions",
+                "buyerRequirements", "buyerRequirementItems", "buyerRequirementEvidence",
+                "supplierOffers", "supplierOfferItems", "supplierOfferEvidence", "sourcingReviews",
+                "businessActivityEvents", "products", "productEvidence",
+                "fitAssessments", "fitAssessmentEvidence", "fitAssessmentOverrides"
+            ).forEach { root.put(it, JSONArray()) }
+            root.put("organizations", JSONArray().put(
+                JSONObject().put("id", "org").put("canonicalName", "Acme")
+                    .put("createdAt", 1).put("updatedAt", 1)
+            ))
+            root.put("organizationSources", JSONArray().put(
+                JSONObject().put("id", "source").put("organizationId", "org")
+                    .put("sourceKind", OrganizationSourceKind.MANUAL_REFERENCE)
+                    .put("title", "Capabilities").put("url", "https://acme.example/capabilities")
+                    .put("excerpt", "Acme manufactures precision components.")
+                    .put("capturedAt", 42)
+            ))
+            root.put("organizationClaims", JSONArray().put(
+                JSONObject().put("id", "claim").put("organizationId", "org")
+                    .put("sourceId", "source").put("field", "Capability")
+                    .put("statement", "Manufactures precision components.")
+                    .put("reviewState", OrganizationClaimState.SUPPORTED)
+                    .put("createdAt", 40).put("updatedAt", 43).put("reviewedAt", 43)
+            ))
+
+            val claim = TraderBackupManager(database).decodeSnapshot(root.toString()).organizationClaims.single()
+            assertEquals("Acme manufactures precision components.", claim.evidenceExcerpt)
+            assertEquals(42L, claim.sourceCapturedAt)
+            assertEquals(OrganizationClaimExtractionMethod.OPERATOR_ENTERED, claim.extractionMethod)
+            assertEquals(OrganizationClaimExtractionMethod.LEGACY_BACKUP_EXTRACTOR_ID, claim.extractorId)
+            assertEquals("snapshot-v13", claim.extractorVersion)
+            assertEquals(40L, claim.extractedAt)
+            assertEquals(OrganizationClaimState.SUPPORTED, claim.reviewState)
+        } finally {
+            database.close()
         }
     }
 
@@ -339,7 +396,17 @@ class TraderBackupManagerTest {
             OrganizationSourceEntity("org-source-1", "org-1", OrganizationSourceKind.DISCOVERY_RESULT, "Acme RFQ", "https://acme.example/rfq", "Public requirement page", now + 12)
         )
         database.organizationClaimDao().insert(
-            OrganizationClaimEntity("org-claim-1", "org-1", "org-source-1", "Buyer requirement", "Requests 500 machined parts per quarter.", OrganizationClaimState.SUPPORTED, null, now + 13, now + 12, now + 13)
+            OrganizationClaimEntity(
+                "org-claim-1", "org-1", "org-source-1", "Buyer requirement",
+                "Requests 500 machined parts per quarter.", OrganizationClaimState.SUPPORTED, null,
+                now + 13, now + 12, now + 13,
+                evidenceExcerpt = "Public requirement page",
+                sourceCapturedAt = now + 12,
+                extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+                extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+                extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+                extractedAt = now + 13
+            )
         )
         database.organizationPersonDao().insert(
             OrganizationPersonEntity("org-person-1", "org-1", "Ada Buyer", "Procurement Manager", "ada@acme.example", "+48 600 000 000", "https://www.linkedin.com/in/ada-buyer", "User-confirmed contact", now + 14, now + 15)

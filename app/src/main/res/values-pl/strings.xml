@@ -304,6 +304,14 @@
     <string name="company_claims">Twierdzenia powiązane ze źródłami</string>
     <string name="company_no_claims">Brak twierdzeń. Dodaj je na podstawie jednego z zapisanych źródeł.</string>
     <string name="company_claim_field">Pole / temat (np. potrzeba kupującego)</string>
+    <string name="company_claim_excerpt">Fragment źródła / dokładny cytat</string>
+    <string name="company_claim_excerpt_hint">Użyj fragmentu obecnego w zapisanym źródle. Pozostaje niezweryfikowany do czasu Twojej oceny twierdzenia.</string>
+    <string name="company_claim_excerpt_display">„%1$s”</string>
+    <string name="company_claim_legacy_no_excerpt">Zachowano wcześniejszy status „poparte”, ale bez fragmentu to twierdzenie nie wpływa na ocenę dopasowania.</string>
+    <string name="company_claim_no_excerpt">Nie zapisano fragmentu. Tego twierdzenia nie można jeszcze oznaczyć jako popartego.</string>
+    <string name="company_claim_capture_meta">Źródło zapisano %1$s · wpisano %2$s · %3$s · %4$s (%5$s)</string>
+    <string name="company_claim_operator_entered">Wprowadzono przez operatora</string>
+    <string name="company_claim_unknown_extractor">Nieznana metoda ekstrakcji</string>
     <string name="company_claim_statement">Co dokładnie mówi to źródło?</string>
     <string name="company_claim_unreviewed">Niezweryfikowane</string>
     <string name="company_claim_supported">Poparte</string>

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.yusufculcu.trader.data.OrganizationClaimEntity
+import com.yusufculcu.trader.data.OrganizationClaimExtractionMethod
 import com.yusufculcu.trader.data.OrganizationClaimState
 import com.yusufculcu.trader.data.OrganizationSourceEntity
 import org.junit.Assert.assertEquals
@@ -52,11 +53,18 @@ class OrganizationClaimDialogTest {
             reviewNote = "Verified",
             reviewedAt = 3L,
             createdAt = 1L,
-            updatedAt = 3L
+            updatedAt = 3L,
+            evidenceExcerpt = "Original evidence",
+            sourceCapturedAt = 1L,
+            extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+            extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+            extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+            extractedAt = 2L
         )
         var savedSourceId: String? = null
         var savedField: String? = null
         var savedStatement: String? = null
+        var savedExcerpt: String? = null
         var saved = false
 
         composeRule.setContent {
@@ -66,10 +74,11 @@ class OrganizationClaimDialogTest {
                     sources = listOf(originalSource, correctedSource),
                     initial = claim,
                     onDismiss = {},
-                    onSave = { sourceId, field, statement ->
+                    onSave = { sourceId, field, statement, evidenceExcerpt ->
                         savedSourceId = sourceId
                         savedField = field
                         savedStatement = statement
+                        savedExcerpt = evidenceExcerpt
                         claim.id
                     },
                     onSaved = { saved = true }
@@ -87,6 +96,7 @@ class OrganizationClaimDialogTest {
             assertEquals(correctedSource.id, savedSourceId)
             assertEquals("Material", savedField)
             assertEquals("Uses aluminium", savedStatement)
+            assertEquals("Corrected evidence", savedExcerpt)
         }
     }
 }

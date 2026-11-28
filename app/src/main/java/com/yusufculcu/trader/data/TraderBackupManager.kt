@@ -305,6 +305,32 @@ class TraderBackupManager(
         } else {
             emptyList()
         }
+        val organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) {
+            decodeArray(root, "organizationSources", ::decodeOrganizationSource)
+        } else {
+            emptyList()
+        }
+        val decodedOrganizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) {
+            decodeArray(root, "organizationClaims") { decodeOrganizationClaim(it, requireProvenance = backupSchemaVersion >= 18) }
+        } else {
+            emptyList()
+        }
+        val organizationClaims = if (backupSchemaVersion >= 18) {
+            decodedOrganizationClaims
+        } else {
+            val sourcesById = organizationSources.associateBy { it.id }
+            decodedOrganizationClaims.map { claim ->
+                val source = sourcesById[claim.sourceId]
+                claim.copy(
+                    evidenceExcerpt = claim.evidenceExcerpt.ifBlank { source?.excerpt.orEmpty().take(2_000) },
+                    sourceCapturedAt = source?.capturedAt ?: claim.sourceCapturedAt,
+                    extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+                    extractorId = OrganizationClaimExtractionMethod.LEGACY_BACKUP_EXTRACTOR_ID,
+                    extractorVersion = "snapshot-v" + snapshotVersion,
+                    extractedAt = claim.extractedAt.takeIf { it > 0 } ?: claim.createdAt
+                )
+            }
+        }
         val snapshot = BackupSnapshot(
             problems = decodeArray(root, "problems", ::decodeProblem),
             planSteps = decodeArray(root, "planSteps", ::decodePlanStep),
@@ -321,8 +347,8 @@ class TraderBackupManager(
             sourceRuns = if (backupSchemaVersion >= 6 && root.has("sourceRuns")) decodeArray(root, "sourceRuns", ::decodeSourceRun) else emptyList(),
             discoveryDocuments = if (backupSchemaVersion >= 7 && root.has("discoveryDocuments")) decodeArray(root, "discoveryDocuments", ::decodeDiscoveryDocument) else emptyList(),
             organizations = if (backupSchemaVersion >= 8 && root.has("organizations")) decodeArray(root, "organizations", ::decodeOrganization) else emptyList(),
-            organizationSources = if (backupSchemaVersion >= 8 && root.has("organizationSources")) decodeArray(root, "organizationSources", ::decodeOrganizationSource) else emptyList(),
-            organizationClaims = if (backupSchemaVersion >= 8 && root.has("organizationClaims")) decodeArray(root, "organizationClaims", ::decodeOrganizationClaim) else emptyList(),
+            organizationSources = organizationSources,
+            organizationClaims = organizationClaims,
             organizationPeople = if (backupSchemaVersion >= 9) { require(root.has("organizationPeople")) { "Backup is missing its company contact records." }; decodeArray(root, "organizationPeople", ::decodeOrganizationPerson) } else emptyList(),
             organizationPersonAliases = if (backupSchemaVersion >= 17) { require(root.has("organizationPersonAliases")) { "Backup is missing contact aliases." }; decodeArray(root, "organizationPersonAliases", ::decodeOrganizationPersonAlias) } else emptyList(),
             organizationPersonIdentityDecisions = if (backupSchemaVersion >= 17) { require(root.has("organizationPersonIdentityDecisions")) { "Backup is missing identity review history." }; decodeArray(root, "organizationPersonIdentityDecisions", ::decodeOrganizationPersonIdentityDecision) } else emptyList(),
@@ -497,6 +523,16 @@ class TraderBackupManager(
             it.id.isNotBlank() && it.organizationId in organizationIds && source != null &&
                 source.organizationId == it.organizationId && it.field.isNotBlank() && it.field.length <= 80 &&
                 it.statement.isNotBlank() && it.statement.length <= 2_000 && it.reviewState in OrganizationClaimState.ALL &&
+                it.evidenceExcerpt.length <= 2_000 &&
+                (it.evidenceExcerpt.isBlank() || isEvidenceExcerptGrounded(it.evidenceExcerpt, source.excerpt)) &&
+                it.sourceCapturedAt == source.capturedAt &&
+                it.extractionMethod in OrganizationClaimExtractionMethod.ALL &&
+                it.extractorId.isNotBlank() && it.extractorId.length <= 120 &&
+                it.extractorVersion.isNotBlank() && it.extractorVersion.length <= 80 &&
+                it.extractedAt >= 0 &&
+                (it.reviewState != OrganizationClaimState.SUPPORTED || it.evidenceExcerpt.isNotBlank() ||
+                    it.extractorId == OrganizationClaimExtractionMethod.LEGACY_ROOM_EXTRACTOR_ID ||
+                    it.extractorId == OrganizationClaimExtractionMethod.LEGACY_BACKUP_EXTRACTOR_ID) &&
                 (it.reviewNote == null || it.reviewNote.length <= 1_000) &&
                 ((it.reviewState == OrganizationClaimState.UNREVIEWED && it.reviewedAt == null) ||
                     (it.reviewState != OrganizationClaimState.UNREVIEWED && it.reviewedAt != null && it.reviewedAt >= 0)) &&
@@ -784,15 +820,31 @@ class TraderBackupManager(
         "id" to row.id, "organizationId" to row.organizationId, "sourceId" to row.sourceId,
         "field" to row.field, "statement" to row.statement, "reviewState" to row.reviewState,
         "reviewNote" to row.reviewNote, "reviewedAt" to row.reviewedAt,
-        "createdAt" to row.createdAt, "updatedAt" to row.updatedAt
+        "createdAt" to row.createdAt, "updatedAt" to row.updatedAt,
+        "evidenceExcerpt" to row.evidenceExcerpt, "sourceCapturedAt" to row.sourceCapturedAt,
+        "extractionMethod" to row.extractionMethod, "extractorId" to row.extractorId,
+        "extractorVersion" to row.extractorVersion, "extractedAt" to row.extractedAt
     )
-    private fun decodeOrganizationClaim(o: JSONObject) = OrganizationClaimEntity(
-        id = o.getString("id"), organizationId = o.getString("organizationId"),
-        sourceId = o.getString("sourceId"), field = o.getString("field"),
-        statement = o.getString("statement"), reviewState = o.getString("reviewState"),
-        reviewNote = o.stringOrNull("reviewNote"), reviewedAt = o.longOrNull("reviewedAt"),
-        createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt")
-    )
+    private fun decodeOrganizationClaim(o: JSONObject, requireProvenance: Boolean = false): OrganizationClaimEntity {
+        if (requireProvenance) {
+            require(listOf("evidenceExcerpt", "sourceCapturedAt", "extractionMethod", "extractorId", "extractorVersion", "extractedAt").all(o::has)) {
+                "Backup is missing company claim extraction provenance."
+            }
+        }
+        return OrganizationClaimEntity(
+            id = o.getString("id"), organizationId = o.getString("organizationId"),
+            sourceId = o.getString("sourceId"), field = o.getString("field"),
+            statement = o.getString("statement"), reviewState = o.getString("reviewState"),
+            reviewNote = o.stringOrNull("reviewNote"), reviewedAt = o.longOrNull("reviewedAt"),
+            createdAt = o.getLong("createdAt"), updatedAt = o.getLong("updatedAt"),
+            evidenceExcerpt = o.optString("evidenceExcerpt", ""),
+            sourceCapturedAt = o.optLong("sourceCapturedAt", 0L),
+            extractionMethod = o.optString("extractionMethod", OrganizationClaimExtractionMethod.OPERATOR_ENTERED),
+            extractorId = o.optString("extractorId", OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID),
+            extractorVersion = o.optString("extractorVersion", OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION),
+            extractedAt = o.optLong("extractedAt", o.getLong("createdAt"))
+        )
+    }
 
     private fun encodeSupplierOffer(row: SupplierOfferEntity) = json("id" to row.id, "organizationId" to row.organizationId, "title" to row.title, "description" to row.description, "status" to row.status, "currency" to row.currency, "originCountry" to row.originCountry, "originCity" to row.originCity, "notes" to row.notes, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt, "deletedAt" to row.deletedAt)
     private fun decodeSupplierOffer(o: JSONObject) = SupplierOfferEntity(o.getString("id"), o.getString("organizationId"), o.getString("title"), o.stringOrNull("description"), o.getString("status"), o.stringOrNull("currency"), o.stringOrNull("originCountry"), o.stringOrNull("originCity"), o.stringOrNull("notes"), o.getLong("createdAt"), o.getLong("updatedAt"), o.longOrNull("deletedAt"))
@@ -968,8 +1020,8 @@ class TraderBackupManager(
 
     companion object {
         private const val MIN_SNAPSHOT_VERSION = 1
-        private const val SNAPSHOT_VERSION = 13
-        private const val DATABASE_SCHEMA_VERSION = 17
+        private const val SNAPSHOT_VERSION = 14
+        private const val DATABASE_SCHEMA_VERSION = 18
         private const val MIN_SUPPORTED_DATABASE_SCHEMA_VERSION = 3
         private const val FORMAT_VERSION: Byte = 1
         private val MAGIC = "TRDBKUP!".toByteArray(StandardCharsets.US_ASCII)

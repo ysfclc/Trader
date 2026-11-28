@@ -104,11 +104,19 @@ class FitAssessmentRepositoryTest {
         )
         database.organizationSourceDao().insert(
             OrganizationSourceEntity("other-source", otherOrganizationId, OrganizationSourceKind.MANUAL_REFERENCE,
-                "Other source", "https://other.example/reference", "", 2)
+                "Other source", "https://other.example/reference", "A claim belonging to another company.", 2)
         )
         database.organizationClaimDao().insert(
-            OrganizationClaimEntity("other-claim", otherOrganizationId, "other-source", "Capability",
-                "A claim belonging to another company.", OrganizationClaimState.SUPPORTED, null, 3, 2, 3)
+            OrganizationClaimEntity(
+                "other-claim", otherOrganizationId, "other-source", "Capability",
+                "A claim belonging to another company.", OrganizationClaimState.SUPPORTED, null, 3, 2, 3,
+                evidenceExcerpt = "A claim belonging to another company.",
+                sourceCapturedAt = 2,
+                extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+                extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+                extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+                extractedAt = 3
+            )
         )
         var rejected = false
         try {
@@ -124,6 +132,28 @@ class FitAssessmentRepositoryTest {
         assertTrue(rejected)
         assertEquals(1, database.fitAssessmentDao().observeForOrganization(ids.organizationId).first().size)
         assertEquals(0, database.fitAssessmentOverrideDao().getAll().size) // No reviewer override was created.
+    }
+
+    @Test
+    fun legacySupportedCompanyClaimWithoutGroundedExcerptRemainsUnknown() = runBlocking {
+        val ids = seedAssessmentData()
+        val claim = requireNotNull(database.organizationClaimDao().getById(ids.companyClaimId))
+        database.organizationClaimDao().update(claim.copy(evidenceExcerpt = ""))
+
+        val result = repository.assess(
+            ids.organizationId,
+            ids.proofAssetId,
+            listOf(FitEvidenceLink(
+                ids.companyClaimId,
+                ids.proofClaimId,
+                FitEvidenceRelationship.SUPPORTS,
+                "The old claim has no preserved excerpt.",
+                300
+            )),
+            evaluatedAt = 400
+        )
+
+        assertEquals(FitAssessmentOutcome.UNKNOWN, result.computed.outcome)
     }
 
     @Test
@@ -176,7 +206,13 @@ class FitAssessmentRepositoryTest {
             OrganizationClaimEntity(
                 companyClaimId, organizationId, "company-source", "Operational need",
                 "The company is seeking workflow automation.", companyReviewState, null,
-                if (companyReviewState == OrganizationClaimState.SUPPORTED) 3 else null, 2, 3
+                if (companyReviewState == OrganizationClaimState.SUPPORTED) 3 else null, 2, 3,
+                evidenceExcerpt = "Company source excerpt",
+                sourceCapturedAt = 2,
+                extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+                extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+                extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+                extractedAt = 3
             )
         )
         val asset = ProofAsset(

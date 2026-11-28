@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.yusufculcu.trader.R
 import com.yusufculcu.trader.data.OrganizationClaimDraft
 import com.yusufculcu.trader.data.OrganizationClaimEntity
+import com.yusufculcu.trader.data.OrganizationClaimExtractionMethod
 import com.yusufculcu.trader.data.OrganizationClaimState
 import com.yusufculcu.trader.data.OrganizationDraft
 import com.yusufculcu.trader.data.OrganizationEntity
@@ -550,8 +551,8 @@ private fun OrganizationDossierScreen(
             source = source,
             sources = sources,
             onDismiss = { claimSource = null },
-            onSave = { sourceId, field, statement ->
-                repository.addClaim(organizationId, OrganizationClaimDraft(sourceId, field, statement)).id
+            onSave = { sourceId, field, statement, evidenceExcerpt ->
+                repository.addClaim(organizationId, OrganizationClaimDraft(sourceId, field, statement, evidenceExcerpt)).id
             },
             onSaved = {
                 claimSource = null
@@ -566,8 +567,8 @@ private fun OrganizationDossierScreen(
                 source = source,
                 sources = sources,
                 onDismiss = { editingClaim = null },
-                onSave = { sourceId, field, statement ->
-                    repository.updateClaim(claim.id, OrganizationClaimDraft(sourceId, field, statement)).id
+                onSave = { sourceId, field, statement, evidenceExcerpt ->
+                    repository.updateClaim(claim.id, OrganizationClaimDraft(sourceId, field, statement, evidenceExcerpt)).id
                 },
                 onSaved = {
                     editingClaim = null
@@ -842,6 +843,15 @@ private fun OrganizationClaimCard(
         OrganizationClaimState.REJECTED -> R.string.company_claim_rejected
         else -> R.string.company_claim_unreviewed
     }
+    val extractionLabel = when (claim.extractionMethod) {
+        OrganizationClaimExtractionMethod.OPERATOR_ENTERED -> R.string.company_claim_operator_entered
+        else -> R.string.company_claim_unknown_extractor
+    }
+    val noExcerptLabel = if (claim.reviewState == OrganizationClaimState.SUPPORTED) {
+        R.string.company_claim_legacy_no_excerpt
+    } else {
+        R.string.company_claim_no_excerpt
+    }
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -850,13 +860,30 @@ private fun OrganizationClaimCard(
                 AssistChip(onClick = {}, enabled = false, label = { Text(stringResource(stateLabel)) })
             }
             Text(claim.statement, style = MaterialTheme.typography.bodyMedium)
+            if (claim.evidenceExcerpt.isNotBlank()) {
+                Text(stringResource(R.string.company_claim_excerpt_display, claim.evidenceExcerpt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Text(stringResource(noExcerptLabel), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
             source?.let {
                 Text(stringResource(R.string.company_claim_source, it.title), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
                 Text(it.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            Text(
+                stringResource(
+                    R.string.company_claim_capture_meta,
+                    formatCompanyClaimTimestamp(claim.sourceCapturedAt),
+                    formatCompanyClaimTimestamp(claim.extractedAt),
+                    stringResource(extractionLabel),
+                    claim.extractorId,
+                    claim.extractorVersion
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             if (claim.reviewState == OrganizationClaimState.UNREVIEWED) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = { onReview(OrganizationClaimState.SUPPORTED) }) { Text(stringResource(R.string.company_mark_supported)) }
+                    TextButton(onClick = { onReview(OrganizationClaimState.SUPPORTED) }, enabled = claim.evidenceExcerpt.isNotBlank()) { Text(stringResource(R.string.company_mark_supported)) }
                     TextButton(onClick = { onReview(OrganizationClaimState.CONTRADICTED) }) { Text(stringResource(R.string.company_mark_contradicted)) }
                 }
                 TextButton(onClick = { onReview(OrganizationClaimState.REJECTED) }) { Text(stringResource(R.string.company_reject_claim)) }
@@ -867,6 +894,9 @@ private fun OrganizationClaimCard(
         }
     }
 }
+
+private fun formatCompanyClaimTimestamp(value: Long): String =
+    java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(value))
 
 @Composable
 private fun OrganizationEditorDialog(
@@ -965,13 +995,14 @@ internal fun OrganizationClaimDialog(
     sources: List<OrganizationSourceEntity>,
     initial: OrganizationClaimEntity? = null,
     onDismiss: () -> Unit,
-    onSave: suspend (String, String, String) -> String,
+    onSave: suspend (String, String, String, String) -> String,
     onSaved: (String) -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var field by remember(initial) { mutableStateOf(initial?.field.orEmpty()) }
     var statement by remember(initial) { mutableStateOf(initial?.statement.orEmpty()) }
     var selectedSourceId by remember(initial, source) { mutableStateOf(initial?.sourceId ?: source.id) }
+    var evidenceExcerpt by remember(initial, source) { mutableStateOf(initial?.evidenceExcerpt?.takeIf { it.isNotBlank() } ?: source.excerpt.take(2_000)) }
     var sourceMenuExpanded by remember { mutableStateOf(false) }
     val selectedSource = sources.firstOrNull { it.id == selectedSourceId } ?: source
     var saving by remember { mutableStateOf(false) }
@@ -991,6 +1022,7 @@ internal fun OrganizationClaimDialog(
                                 text = { Text(option.title) },
                                 onClick = {
                                     selectedSourceId = option.id
+                                    evidenceExcerpt = if (initial?.sourceId == option.id && initial.evidenceExcerpt.isNotBlank()) initial.evidenceExcerpt else option.excerpt.take(2_000)
                                     sourceMenuExpanded = false
                                 }
                             )
@@ -999,6 +1031,8 @@ internal fun OrganizationClaimDialog(
                 }
                 OutlinedTextField(field, { field = it.take(80); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_field)) }, singleLine = true)
                 OutlinedTextField(statement, { statement = it.take(2_000); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_statement)) }, minLines = 3, maxLines = 7)
+                OutlinedTextField(evidenceExcerpt, { evidenceExcerpt = it.take(2_000); error = null }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.company_claim_excerpt)) }, minLines = 2, maxLines = 5)
+                Text(stringResource(R.string.company_claim_excerpt_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(stringResource(if (initial == null) R.string.company_unreviewed_notice else R.string.company_claim_edit_resets_review), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
@@ -1007,7 +1041,7 @@ internal fun OrganizationClaimDialog(
             Button(onClick = {
                 scope.launch {
                     saving = true
-                    val result = runCatching { onSave(selectedSourceId, field, statement) }
+                    val result = runCatching { onSave(selectedSourceId, field, statement, evidenceExcerpt) }
                     saving = false
                     result.onSuccess(onSaved).onFailure { error = it.message ?: "Could not save claim." }
                 }

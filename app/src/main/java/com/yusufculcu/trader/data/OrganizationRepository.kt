@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.yusufculcu.trader.discovery.DiscoveryDocument
 import kotlinx.coroutines.flow.Flow
 import java.net.URI
+import java.text.Normalizer
 import java.util.Locale
 import java.util.UUID
 
@@ -20,6 +21,15 @@ object OrganizationClaimState {
     const val CONTRADICTED = "CONTRADICTED"
     const val REJECTED = "REJECTED"
     val ALL = setOf(UNREVIEWED, SUPPORTED, CONTRADICTED, REJECTED)
+}
+
+object OrganizationClaimExtractionMethod {
+    const val OPERATOR_ENTERED = "OPERATOR_ENTERED"
+    const val OPERATOR_EXTRACTOR_ID = "operator-entry"
+    const val OPERATOR_EXTRACTOR_VERSION = "manual-v1"
+    const val LEGACY_ROOM_EXTRACTOR_ID = "legacy-import"
+    const val LEGACY_BACKUP_EXTRACTOR_ID = "legacy-backup-import"
+    val ALL = setOf(OPERATOR_ENTERED)
 }
 
 data class OrganizationPersonDraft(val fullName: String, val role: String = "", val email: String = "", val phone: String = "", val profileUrl: String = "", val notes: String = "")
@@ -48,8 +58,18 @@ data class OrganizationSourceDraft(
 data class OrganizationClaimDraft(
     val sourceId: String,
     val field: String,
-    val statement: String
+    val statement: String,
+    val evidenceExcerpt: String = ""
 )
+
+internal fun isEvidenceExcerptGrounded(excerpt: String, sourceExcerpt: String): Boolean {
+    fun normalize(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKC)
+        .lowercase(Locale.ROOT)
+        .replace(Regex("\\s+"), " ")
+        .trim()
+    val normalizedExcerpt = normalize(excerpt)
+    return normalizedExcerpt.isNotBlank() && normalize(sourceExcerpt).contains(normalizedExcerpt)
+}
 
 /**
  * Local-first organization dossier storage. Sources are bounded snapshots.
@@ -256,6 +276,7 @@ class OrganizationRepository(private val database: TraderDatabase) {
         require(source.organizationId == organizationId) {
             "A claim can only use a source attached to the same company dossier."
         }
+        val evidenceExcerpt = buildClaimEvidenceExcerpt(draft, source)
         val now = System.currentTimeMillis()
         val claim = OrganizationClaimEntity(
             id = UUID.randomUUID().toString(),
@@ -267,7 +288,13 @@ class OrganizationRepository(private val database: TraderDatabase) {
             reviewNote = null,
             reviewedAt = null,
             createdAt = now,
-            updatedAt = now
+            updatedAt = now,
+            evidenceExcerpt = evidenceExcerpt,
+            sourceCapturedAt = source.capturedAt,
+            extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+            extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+            extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+            extractedAt = now
         )
         database.organizationClaimDao().insert(claim)
         database.organizationDao().touch(organizationId, now)
@@ -292,7 +319,9 @@ class OrganizationRepository(private val database: TraderDatabase) {
         }
         val field = cleanRequired(draft.field, 80, "Claim field")
         val statement = cleanRequired(draft.statement, 2_000, "Claim statement")
-        if (existing.sourceId == source.id && existing.field == field && existing.statement == statement) {
+        val evidenceExcerpt = buildClaimEvidenceExcerpt(draft, source)
+        if (existing.sourceId == source.id && existing.field == field && existing.statement == statement &&
+            existing.evidenceExcerpt == evidenceExcerpt) {
             return@withTransaction existing
         }
 
@@ -304,7 +333,13 @@ class OrganizationRepository(private val database: TraderDatabase) {
             reviewState = OrganizationClaimState.UNREVIEWED,
             reviewNote = null,
             reviewedAt = null,
-            updatedAt = now
+            updatedAt = now,
+            evidenceExcerpt = evidenceExcerpt,
+            sourceCapturedAt = source.capturedAt,
+            extractionMethod = OrganizationClaimExtractionMethod.OPERATOR_ENTERED,
+            extractorId = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_ID,
+            extractorVersion = OrganizationClaimExtractionMethod.OPERATOR_EXTRACTOR_VERSION,
+            extractedAt = now
         )
         database.organizationClaimDao().update(updated)
         database.organizationDao().touch(existing.organizationId, now)
@@ -324,6 +359,20 @@ class OrganizationRepository(private val database: TraderDatabase) {
         val existing = database.organizationClaimDao().getById(claimId) ?: return@withTransaction false
         val organization = database.organizationDao().getById(existing.organizationId)
             ?: return@withTransaction false
+        if (state == OrganizationClaimState.SUPPORTED) {
+            val source = database.organizationSourceDao().getById(existing.sourceId)
+                ?: throw IllegalArgumentException("The saved claim source no longer exists.")
+            require(
+                existing.sourceCapturedAt == source.capturedAt &&
+                    existing.extractionMethod in OrganizationClaimExtractionMethod.ALL &&
+                    existing.extractorId.isNotBlank() &&
+                    existing.extractorVersion.isNotBlank() &&
+                    existing.extractedAt >= 0 &&
+                    isEvidenceExcerptGrounded(existing.evidenceExcerpt, source.excerpt)
+            ) {
+                "A claim needs current source provenance and an excerpt from its saved source before it can be marked supported."
+            }
+        }
         val cleanNote = note.trim().ifBlank { null }
         if (existing.reviewState == state && existing.reviewNote == cleanNote) return@withTransaction true
         val now = System.currentTimeMillis()
@@ -361,6 +410,15 @@ class OrganizationRepository(private val database: TraderDatabase) {
         )
         database.organizationDao().deleteById(id) > 0
     }
+    private fun buildClaimEvidenceExcerpt(draft: OrganizationClaimDraft, source: OrganizationSourceEntity): String {
+        val supplied = cleanOptional(draft.evidenceExcerpt, 2_000, "Evidence excerpt")
+        val excerpt = supplied ?: source.excerpt.take(2_000)
+        require(excerpt.isBlank() || isEvidenceExcerptGrounded(excerpt, source.excerpt)) {
+            "The claim excerpt must be present in the saved source snapshot."
+        }
+        return excerpt
+    }
+
     private fun buildPerson(organizationId: String, draft: OrganizationPersonDraft, id: String, now: Long): OrganizationPersonEntity {
         val name = cleanRequired(draft.fullName, 160, "Contact name")
         val role = cleanOptional(draft.role, 160, "Role")
