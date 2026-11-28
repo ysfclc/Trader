@@ -1,6 +1,6 @@
 # Trader Product Roadmap
 
-_Last reconciled: 2026-11-27 — canonical main, installable 0.14.0-debug, physical-device acceptance open._
+_Last reconciled: 2026-11-28 — canonical main at `12bac6b`; 0.14.1-debug CI-verified, installable artifact publication and physical-device acceptance open._
 
 ## 1. Product north star
 
@@ -32,11 +32,11 @@ Current Inbox, Pipeline, Sourcing, Activity, Browser and AI surfaces are capabil
 **Release status:** installable candidate; physical-device acceptance still open.
 
 - **Latest released build:** `0.14.0-debug`, versionCode 14
-- **Next candidate (merged and CI-verified):** `0.14.1-debug`, versionCode 15; PR #23 merged as [b34a863](https://github.com/ysfclc/Trader/commit/b34a8635c47a70ed8e52d41f2a0ab4255969daca), final main CI [#657](https://github.com/ysfclc/Trader/actions/runs/46051113140) passed. This increments versionCode so it can update the existing install without uninstalling. Installable artifact upload still requires explicit workflow-dispatch approval.
+- **Next candidate (merged and CI-verified):** `0.14.1-debug`, versionCode 15; current main commit [12bac6b](https://github.com/ysfclc/Trader/commit/12bac6bb4a56ff5ffedb8d40e7d0e2204b2ccb7e) includes PR #23 Sourcing navigation, PR #24 Compose click tests, PR #25 auditable claim correction and PR #26 same-dossier source reassignment. Main CI [#699](https://github.com/ysfclc/Trader/actions/runs/46077907672) passed all gates. Installable artifact upload still requires explicit workflow-dispatch approval.
 - **Package:** `com.yusufculcu.trader.debug`
-- **Canonical main commit:** `b34a8635c47a70ed8e52d41f2a0ab4255969daca`
-- **Latest main CI:** [run #657](https://github.com/ysfclc/Trader/actions/runs/46051113140) — build, tests, coverage, lint, SBOM/OSV and persistent package/signature checks passed
-- **Latest published installable APK:** [0.14.0-debug artifact 15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610); it predates the Sourcing route fix. Main CI #657 skipped artifact upload because it was not a manually approved workflow dispatch.
+- **Canonical main commit:** `12bac6bb4a56ff5ffedb8d40e7d0e2204b2ccb7e`
+- **Latest main CI:** [run #699](https://github.com/ysfclc/Trader/actions/runs/46077907672) — build, tests, coverage, lint, SBOM/OSV and persistent package/signature checks passed
+- **Latest published installable APK:** [0.14.0-debug artifact 15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610); it predates the Sourcing route fix and claim-correction/source-reassignment work. Main CI #699 skipped artifact upload because it was not a manually approved workflow dispatch.
 - **Installable APK:** [artifact 15220676610](https://github.com/ysfclc/Trader/actions/runs/46041691925/artifacts/15220676610)
 - **Verification:** 201 Android unit tests, 0 failures/errors/skips; coverage floor, clean build, lint, SBOM/OSV and persistent package/signature checks passed.
 - **Room / backup:** schema v17; encrypted backup snapshot v13.
@@ -51,7 +51,7 @@ This is a signed installable development APK. It is **not** proof that the app h
 Target device: Redmi Note 12 Pro 5G, Android 14.
 
 1. Export a fresh encrypted workspace backup and retain its passphrase independently.
-2. Install `0.14.0-debug` over the existing Trader installation. Do not uninstall, clear storage or reset app data as an update strategy. Confirm package identity and that Android accepts the existing signing certificate.
+2. Install `0.14.1-debug` over the existing `0.14.0-debug` Trader installation. Do not uninstall, clear storage or reset app data as an update strategy. Confirm package identity and that Android accepts the existing signing certificate.
 3. Verify Room v16→v17 migration and preservation of existing companies, contacts, cases, evidence, sourcing records, fit assessments, aliases and review history. Verify preferences and browser login/session behavior separately; they are not all part of the encrypted workspace backup.
 4. Exercise navigation and the real screens. Every visible control must respond without crashes, dead ends, stale state or misleading success messages.
 5. Complete one real Industrial Sourcing Desk journey:
@@ -68,7 +68,7 @@ Target device: Redmi Note 12 Pro 5G, Android 14.
 
 **Sourcing navigation fix merged:** PR #23 makes Pipeline section state parent-owned and routes Sourcing's `Open Companies` actions and discovery-created organizations to Companies through one explicit reducer. Reducer tests passed PR CI #656 and final main CI #657 passed after merge. Follow-up PR #24 added stable semantics tags and Robolectric Compose click tests for both Sourcing entry controls; PR CI #668 passed and it was merged as `684e9cd`. Main post-merge CI [#669](https://github.com/ysfclc/Trader/actions/runs/46074119026) passed all build, test, coverage, lint, SBOM/OSV and signing gates. The published `0.14.0-debug` APK still predates the fix; `0.14.1-debug` must be manually published from verified main before installation. Broader vertical-slice UI smoke coverage remains open under T6.0f.
 
-**Claim correction increment:** source snapshots remain immutable; editing a claim preserves its record ID and creation time, clears any prior human review back to UNREVIEWED, and appends an immutable Activity event. PR [#25](https://github.com/ysfclc/Trader/pull/25) merged this behavior as `0abfdba`; final-head CI [#686](https://github.com/ysfclc/Trader/actions/runs/46076104134) passed. Follow-up P1.7b adds a source picker so the operator can reassign a corrected claim to another saved source in the same dossier; a Compose UI test is in progress on `feature/claim-source-reassignment`.
+**Claim correction increment:** source snapshots remain immutable; editing a claim preserves its record ID and creation time, clears any prior human review back to UNREVIEWED, and appends an immutable Activity event. PR [#25](https://github.com/ysfclc/Trader/pull/25) merged this behavior as `0abfdba`; final-head CI [#686](https://github.com/ysfclc/Trader/actions/runs/46076104134) passed. Follow-up PR [#26](https://github.com/ysfclc/Trader/pull/26) adds a source picker so the operator can reassign a corrected claim to another saved source in the same dossier. Its Compose UI test passed feature CI #698; merged main CI [#699](https://github.com/ysfclc/Trader/actions/runs/46077907672) passed. T6.0f remains the next automated UI increment: a broader vertical-slice smoke suite for navigation, dossiers, buyer requirements, supplier offers and shortlist decisions.
 
 **Exit gate:** the operator can complete and repeat that journey on the target phone without crashes, data loss, misleading status or workarounds, and can recover the workspace from the encrypted backup. Until then, this phase remains open.
 
