@@ -570,7 +570,7 @@ private fun SupplierOfferCreateDialog(
                     Text(stringResource(R.string.sourcing_attach_evidence), style = MaterialTheme.typography.titleSmall)
                     sources.forEach { source ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(checked = source.id in selectedSources, onCheckedChange = { checked -> selectedSources = if (checked) selectedSources + source.id else selectedSources - source.id })
+                            Checkbox(checked = source.id in selectedSources, onCheckedChange = { checked -> selectedSources = if (checked) selectedSources + source.id else selectedSources - source.id }, modifier = Modifier.testTag("offer-evidence-${source.id}"))
                             Column(Modifier.weight(1f)) {
                                 Text(source.title, style = MaterialTheme.typography.bodySmall)
                                 Text(source.url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
